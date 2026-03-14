@@ -75,5 +75,15 @@
 
         <!-- Move JS to end of body and add defer -->
         <script src="{{ get_url(path='js/script.js') }}" defer></script>
+        {% if page and page.lang == "ar" or section and section.lang == "ar" %}
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            document.querySelectorAll('time, .date, .content-meta').forEach(function(el) {
+                el.textContent = el.textContent.replace(/[0-9]/g, function(d) { return ar[d]; });
+            });
+        });
+        </script>
+        {% endif %}
     </body>
 </html>
