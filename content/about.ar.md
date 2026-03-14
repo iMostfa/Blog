@@ -12,7 +12,7 @@ display_published = false
 
 لغتي الأولى كانت Objective-C — قبل أن يظهر Swift، ولا، HTML لا تُعدّ لغة برمجة. من هناك، تجولت في رؤية الحاسوب، ثم البرمجة المدمجة، والآن أجد نفسي غارقاً في المُصرِّفات وRust ونماذج اللغة الكبيرة وأنظمة البناء المعزولة. الاهتمامات تتغير، لكن الفضول لا يتوقف.
 
-تجدني على [GitHub](https://github.com/iMostfa) · [Twitter](https://x.com/KallamMostafa).
+تجدني على [GitHub](https://github.com/iMostfa) · [Twitter](https://x.com/KallamMostafa) · [السيرة الذاتية](/resume.pdf).
 
 ---
 

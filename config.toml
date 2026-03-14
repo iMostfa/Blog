@@ -27,11 +27,18 @@ taxonomies = [
 render_emoji = true
 external_links_target_blank = true
 smart_punctuation = true
+highlighting = { theme = "dracula" }
 
 [extra]
 author = { name = "Mostafa" }
 list_pages = true
 display_author = true
+
+[extra.giscus]
+repo = "iMostfa/Blog"
+repo_id = ""
+category = ""
+category_id = ""
 
 header_nav = [
   { url = "/", name_en = "/home/", name_ar = "/الرئيسية/" },
