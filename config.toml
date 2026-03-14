@@ -34,14 +34,14 @@ author = { name = "Mostafa" }
 list_pages = true
 display_author = true
 
-[extra.giscus]
-repo = "iMostfa/Blog"
-repo_id = ""
-category = ""
-category_id = ""
-
 header_nav = [
   { url = "/", name_en = "/home/", name_ar = "/الرئيسية/" },
   { url = "/blog", name_en = "/blog/", name_ar = "/مقالات/" },
   { url = "/about", name_en = "/about/", name_ar = "/عني/" },
 ]
+
+[extra.giscus]
+repo = "iMostfa/Blog"
+repo_id = ""
+category = ""
+category_id = ""
