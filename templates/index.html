@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {{ section.content | safe }}
+
+    {% if config.extra.list_pages %}
+    <ul class="posts">
+        {% for page in section.pages %}
+        <li>
+            <a href="{{ page.permalink }}">{{ page.title }}</a>
+            <span class="date">{{ page.date | date(format="%Y-%m-%d") }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if paginator %}
+        {% include "partials/pagination.html" %}
+    {% endif %}
+
+    {% set tags = get_taxonomy(kind="tags", lang=lang) %}
+    {% if tags.items %}
+    <section class="tags-section">
+        <h2>Tags</h2>
+        {% for term in tags.items %}
+        <div class="tag-group">
+            <h3 class="tag-heading"><a href="{{ term.permalink }}">{{ term.name }}</a> <span class="tag-count">({{ term.pages | length }})</span></h3>
+            <ul class="posts">
+                {% for page in term.pages %}
+                <li>
+                    <a href="{{ page.permalink }}">{{ page.title }}</a>
+                    <span class="date">{{ page.date | date(format="%Y-%m-%d") }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+{% endblock %}

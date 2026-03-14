@@ -1,0 +1,40 @@
+base_url = "https://yourusername.github.io"
+theme = "anemone"
+
+compile_sass = false
+minify_html = false
+generate_feeds = true
+generate_sitemap = true
+
+taxonomies = [
+    {name = "tags", feed = true, paginate_by = 10},
+]
+
+default_language = "en"
+
+[languages.en]
+title = "Mostafa"
+description = "Thoughts, learnings, and experiences from a computer engineer chasing the fundamentals."
+
+[languages.ar]
+title = "مصطفى"
+description = "أفكار وتجارب من مهندس حاسوب يطارد الأساسيات."
+taxonomies = [
+    {name = "tags", feed = true, paginate_by = 10},
+]
+
+[markdown]
+render_emoji = true
+external_links_target_blank = true
+smart_punctuation = true
+
+[extra]
+author = { name = "Mostafa" }
+list_pages = true
+display_author = true
+
+header_nav = [
+  { url = "/", name_en = "/home/", name_ar = "/الرئيسية/" },
+  { url = "/blog", name_en = "/blog/", name_ar = "/مقالات/" },
+  { url = "/about", name_en = "/about/", name_ar = "/عني/" },
+]
