@@ -29,6 +29,13 @@ a.lang-switch:hover {
     opacity: 0.6;
 }
 
+/* Code blocks always LTR regardless of page language */
+pre, code {
+    direction: ltr;
+    unicode-bidi: embed;
+    text-align: left;
+}
+
 /* RTL support for Arabic */
 [dir="rtl"] {
     font-family: system-ui, -apple-system, sans-serif;
