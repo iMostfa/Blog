@@ -6,9 +6,7 @@ minify_html = false
 generate_feeds = true
 generate_sitemap = true
 
-taxonomies = [
-    {name = "tags", feed = true, paginate_by = 10},
-]
+taxonomies = [{ name = "tags", feed = true, paginate_by = 10 }]
 
 default_language = "en"
 
@@ -19,9 +17,7 @@ description = "Thoughts, learnings, and experiences from a computer engineer cha
 [languages.ar]
 title = "مصطفى"
 description = "أفكار وتجارب من مهندس حاسوب يطارد الأساسيات."
-taxonomies = [
-    {name = "tags", feed = true, paginate_by = 10},
-]
+taxonomies = [{ name = "tags", feed = true, paginate_by = 10 }]
 
 [markdown]
 render_emoji = true
