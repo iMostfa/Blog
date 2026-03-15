@@ -41,7 +41,7 @@ header_nav = [
 ]
 
 [extra.giscus]
-repo = "iMostfa/Blog"
-repo_id = ""
-category = ""
-category_id = ""
+repo = "imostfa/blog"
+repo_id = "R_kgDOGXqJnA"
+category = "Announcements"
+category_id = "DIC_kwDOGXqJnM4C4a0o"
