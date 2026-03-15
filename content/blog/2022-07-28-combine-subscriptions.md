@@ -26,11 +26,11 @@ func viewDidLoad(_ animated: Bool) {
 
 What's happening here: when we subscribe, we store the `AnyCancellable` in a `Set` that acts as our dispose bag.
 
-Why? Because if you don't hold a reference to the `AnyCancellable` in an Array, variable, or Set — ARC will immediately deallocate it. In Combine, you must keep the subscription alive to keep receiving values.
+Why? Because if you don't hold a reference to the `AnyCancellable` in an Array, variable, or Set - ARC will immediately deallocate it. In Combine, you must keep the subscription alive to keep receiving values.
 
 Think of it as having to hold onto the wire connecting you to the publisher sending data.
 
-Now — say you've received what you needed, and the user is about to leave this screen. How do you cancel the subscription and stop receiving values? Does it happen automatically? What if you leave the `AnyCancellable` stored and never remove it?
+Now - say you've received what you needed, and the user is about to leave this screen. How do you cancel the subscription and stop receiving values? Does it happen automatically? What if you leave the `AnyCancellable` stored and never remove it?
 
 ### Option 1: Cancel on disappear
 
@@ -85,10 +85,10 @@ class ViewController: UIViewController {
 }
 ```
 
-This actually solves two problems at once. The `sink` closure captures `self` strongly by default — which can cause a memory leak if you never empty the dispose bag. But when you capture `self` weakly, ARC can release the view controller, which releases the `disposeBag` with it, which cancels all the subscriptions.
+This actually solves two problems at once. The `sink` closure captures `self` strongly by default - which can cause a memory leak if you never empty the dispose bag. But when you capture `self` weakly, ARC can release the view controller, which releases the `disposeBag` with it, which cancels all the subscriptions.
 
 So the best approach when you're inside a `ViewController` or `ViewModel`: **don't strongly capture `self` in closures**. Actually, as a general rule, avoid strong captures in closures altogether 😂
 
-This applies to any reactive framework — RxSwift, ReactiveSwift, you name it.
+This applies to any reactive framework - RxSwift, ReactiveSwift, you name it.
 
 This post is an expanded version of [my answer on Stack Overflow](https://stackoverflow.com/a/62964220/5253913) on the same question.

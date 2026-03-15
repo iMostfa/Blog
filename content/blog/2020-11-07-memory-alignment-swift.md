@@ -8,7 +8,7 @@ tags = ["swift", "memory"]
 
 # How to Know the Size of Your Types in Swift
 
-In Swift, any object or type has 3 properties that describe how memory interacts with it. In this post we'll look at two of them — `size` and `alignment`.
+In Swift, any object or type has 3 properties that describe how memory interacts with it. In this post we'll look at two of them - `size` and `alignment`.
 
 ## Size 📦
 
@@ -30,7 +30,7 @@ let mostfa = Student(age: 10)
 let ahmed = Professor(age: 10, phoneNumber: 010)
 ```
 
-If I asked you which object is larger — `mostfa` or `ahmed` — logic says `ahmed`, because it's made of two variables: `age` and `phoneNumber`.
+If I asked you which object is larger - `mostfa` or `ahmed` - logic says `ahmed`, because it's made of two variables: `age` and `phoneNumber`.
 
 But how do we confirm that with actual numbers? We use `MemoryLayout`.
 
@@ -38,7 +38,7 @@ But how do we confirm that with actual numbers? We use `MemoryLayout`.
 
 ---
 
-Swift has a type called `MemoryLayout` that lets us check the sizes of our types — like `Student`, `Professor`, or any built-in type like `String` or `Bool`:
+Swift has a type called `MemoryLayout` that lets us check the sizes of our types - like `Student`, `Professor`, or any built-in type like `String` or `Bool`:
 
 ```swift
 let studentSize = MemoryLayout<Student>.size
@@ -66,7 +66,7 @@ But why 8? And why 16? Let's dig into size a bit more.
 
 ---
 
-In Swift, calculating the size of a struct is straightforward — **the size of a struct equals the sum of the sizes of its properties**. So:
+In Swift, calculating the size of a struct is straightforward - **the size of a struct equals the sum of the sizes of its properties**. So:
 
 ```swift
 struct Student {
@@ -91,7 +91,7 @@ struct OtherStudent {
 }
 ```
 
-This is the same as `Student` above — just with the properties in a different order. You'd expect the same size, right?
+This is the same as `Student` above - just with the properties in a different order. You'd expect the same size, right?
 
 ```swift
 let OtherStudentSize = MemoryLayout<OtherStudent>.size // 16 !
@@ -110,7 +110,7 @@ let A = 88
 let b = 17
 ```
 
-Both `A` and `b` must be placed at memory addresses that are multiples of 8. If `A` is at address 0 (a multiple of 8) and `b` is at address 8 (also a multiple of 8) — no problem.
+Both `A` and `b` must be placed at memory addresses that are multiples of 8. If `A` is at address 0 (a multiple of 8) and `b` is at address 8 (also a multiple of 8) - no problem.
 
 ---
 
@@ -130,7 +130,7 @@ A lot of other code in the app which will be saved in memory
 let A = 88
 ```
 
-If other data already occupies addresses 0 through 4, and we try to place `A` at address 5 — we can't. Because 5 is not a multiple of 8. So the compiler places `A` at address 8 instead, leaving addresses 5, 6, and 7 empty (wasted as padding).
+If other data already occupies addresses 0 through 4, and we try to place `A` at address 5 - we can't. Because 5 is not a multiple of 8. So the compiler places `A` at address 8 instead, leaving addresses 5, 6, and 7 empty (wasted as padding).
 
 This brings us back to the original question: why does `OtherStudent` have a different size than `Student`?
 
@@ -161,8 +161,8 @@ For `Student`:
 
 ```swift
 struct OtherStudent {
-    let inSchool: Bool  // alignment: 1 — goes at address 0 ✅
-    let age: Int        // alignment: 8 — can't go at address 1 ❌
+    let inSchool: Bool  // alignment: 1 - goes at address 0 ✅
+    let age: Int        // alignment: 8 - can't go at address 1 ❌
 }
 ```
 
@@ -173,6 +173,6 @@ For `OtherStudent`:
 - `Int` goes at address 8 (✅ multiple of 8)
 - Total size = 16 🤯
 
-So the **order of properties in a struct matters** — it can affect the size due to alignment padding.
+So the **order of properties in a struct matters** - it can affect the size due to alignment padding.
 
 To be continued ...
