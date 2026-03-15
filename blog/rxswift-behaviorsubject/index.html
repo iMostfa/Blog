@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en"
+      dir="ltr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="index, follow">
+        
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://imostfa.github.io/Blog/rss.xml">
+        
+        <title>Mostafa | Why is it Called BehaviorSubject?</title>
+
+        <link rel="preload" href="https://imostfa.github.io/Blog/css/style.css" as="style">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/reset-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/suCSS-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/style.css">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/custom.css">
+
+        <!-- Add favicon with appropriate sizes -->
+        <link rel="icon" href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/favicon.ico">
+        
+
+
+    </head>
+    <body>
+        
+        
+        
+        
+        <nav id="nav-bar">
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog" class="">
+                
+                &#x2F;home&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;blog" class="">
+                
+                &#x2F;blog&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;about" class="">
+                
+                &#x2F;about&#x2F;
+            </a>
+            
+
+            
+                
+                
+                <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;blog&#x2F;rxswift-behaviorsubject&#x2F;" class="lang-switch">Arabic</a>
+                
+                
+                
+                
+            
+
+            <div class="theme-toggle" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle theme"
+                data-icon-base="https://imostfa.github.io/Blog/icons.svg"
+                data-icon-dark="#darkMode"
+                data-icon-light="#lightMode"
+                data-sound-src="https://imostfa.github.io/Blog/click.ogg">
+                <svg class="icon">
+                    <use id="theme-icon"></use>
+                </svg>
+            </div>
+        </nav>
+
+        <main>
+            
+<article class="post">
+    <header class="post-header">
+        
+        <time datetime="2022-07-27">
+            
+            Published on:
+            
+            <span class="accent-data">2022-07-27</span>
+        </time>
+        
+
+        
+
+        <h1>Why is it Called BehaviorSubject?</h1>
+    </header>
+
+
+
+    <div class="post-content" dir="auto">
+        <h3 id="intro">Intro</h3>
+<p>I’m a fan of the ideas and concepts that reactive programming brings - it often makes code easier to reason about and eliminates certain categories of bugs. Lately I started reading about RxSwift, even though my main reactive framework is Combine.</p>
+<p>I came across a <code>Subject</code> called <code>BehaviorSubject</code> - it’s a subject that emits the last value it received to any new subscriber, and then continues to emit any future values.</p>
+<h3 id="why-the-name">Why the name?</h3>
+<p>I found myself asking: where’s the “behavior” in this? Why is the word “behavior” in the name at all? Especially since the equivalent in Combine has a much more self-explanatory name: <code>CurrentValueSubject</code>.</p>
+<p>That name is obvious - it’s a subject that holds and emits the current value. So why isn’t the naming in RxSwift as clear? The answer I found:</p>
+<blockquote>
+<p>In the world of functional reactive programming, a behavior is a value that changes over time. This is exactly what a <code>BehaviorSubject</code> represents: when you subscribe you get the current value, and then you can continue to observe the changes.</p>
+</blockquote>
+<p>So the word “behavior” in the reactive programming world means <em>a value being observed as it changes over time</em>.</p>
+<p>A small thing I learned and wanted to share. I’ll probably write more about RxSwift as I dig deeper into the differences between it and Combine.</p>
+
+    </div>
+
+    
+    <footer class="post-tags">
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/tags/swift/" class="tag">#swift</a>
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/tags/rxswift/" class="tag">#rxswift</a>
+        
+    </footer>
+    
+
+    
+    <br>
+    <script src="https://giscus.app/client.js"
+            data-repo="imostfa&#x2F;blog"
+            data-repo-id="R_kgDOGXqJnA"
+            data-category="Announcements"
+            data-category-id="DIC_kwDOGXqJnM4C4a0o"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="preferred_color_scheme"
+            data-lang="en"
+            crossorigin="anonymous"
+            async>
+    </script>
+    
+</article>
+
+        </main>
+
+        <footer>
+            <hr>
+<div id="footer-container">
+    <p>Made using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> Zola theme</p>
+</div>
+
+        </footer>
+
+        <!-- Move JS to end of body and add defer -->
+        <script src="https://imostfa.github.io/Blog/js/script.js" defer></script>
+        
+    </body>
+</html>

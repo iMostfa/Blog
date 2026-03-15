@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ar"
+      dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="index, follow">
+        
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://imostfa.github.io/Blog/rss.xml">
+        
+        <title>مصطفى | ازاي تعمل Volume Casting</title>
+
+        <link rel="preload" href="https://imostfa.github.io/Blog/css/style.css" as="style">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/reset-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/suCSS-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/style.css">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/custom.css">
+
+        <!-- Add favicon with appropriate sizes -->
+        <link rel="icon" href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/favicon.ico">
+        
+
+
+    </head>
+    <body>
+        
+        
+        
+        
+        <nav id="nav-bar">
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar" class="">
+                
+                &#x2F;الرئيسية&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;blog" class="">
+                
+                &#x2F;مقالات&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;about" class="">
+                
+                &#x2F;عني&#x2F;
+            </a>
+            
+
+            
+                
+                
+                <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;blog&#x2F;volume-casting-scenekit&#x2F;" class="lang-switch">EN</a>
+                
+                
+                
+                
+            
+
+            <div class="theme-toggle" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle theme"
+                data-icon-base="https://imostfa.github.io/Blog/icons.svg"
+                data-icon-dark="#darkMode"
+                data-icon-light="#lightMode"
+                data-sound-src="https://imostfa.github.io/Blog/click.ogg">
+                <svg class="icon">
+                    <use id="theme-icon"></use>
+                </svg>
+            </div>
+        </nav>
+
+        <main>
+            
+<article class="post">
+    <header class="post-header">
+        
+        <time datetime="2022-08-07">
+            
+            نُشر في:
+            
+            <span class="accent-data">2022-08-07</span>
+        </time>
+        
+
+        
+
+        <h1>ازاي تعمل Volume Casting</h1>
+    </header>
+
+
+
+    <div class="post-content" dir="auto">
+        <h1 id="zy-t-ml-volume-casting">ازاي تعمل Volume Casting</h1>
+<p>في المدونة دي هنتكلم عن ازاي نعمل امبلمنتيشن لفيتشر مش موجودة في SceneKit بس علشان نعمل الامبلمنتيشن محتاجين نفهم اكتر من عن الكونسبت نفسه، بعدين نشوف ايه المشكلة اللي عندنا، بعدين نشوف ازاي ممكن نحلها بالكودينج</p>
+<h2 id="yh-hy-lry-ray">إيه هي الراي Ray</h2>
+<p>الراي في سياق الكمبيوتر جرافيكس و في سياق حديثنا النهاردة هي عبارة عن نقطة مع اتجاه، يعني تقدر تقول انه اسم آخر ل الڤيكتور</p>
+<p>و تقدر تتخيل الراي على انها قلم ليزر في ايدك، ليه بوزيشن، وقطعا ليه اتجاه، اللي هو اتجاه الانارة</p>
+<p>في الصورة</p>
+<p>rPos = ray position in the space</p>
+<p>rDir = ray dieraction in the space</p>
+<h2 id="yh-hw-lry-kstynj-ray-casting">ايه هو الراي-كاستينج Ray Casting</h2>
+<p>الراي كاستينج هو عملية بنحاول نعرف فيها، اذا الراي اللي عندنا هتتقاطع مع اي جزء في السبيس ولا لا</p>
+<p>لأنه الراي ليها نقطة واتجاه تقدر تمدها في السبيس براحتك، في الصورة دي الراي تم مدها في الفرغ، لغاية ما قطعت الكورة الكبيرة في النص، وبكدا نكون عرفنا انه الراي دي، بتقطع الكورة اللي في النص..</p>
+<h2 id="mthl-l-lry-kstnj">مثال على الراي-كاستنج</h2>
+<p>فيه استخدامات كتير للموضوع دا، من اشهرها و اهمها، بيكون مع الماوس بتاع الكمبيوتر</p>
+<p>تخيل انه عندك شاشة فيه اوبجكتس كتير كلها ثري-دي و عاوز لما تضغط بالماوس، الجزء المعين اللي ضغط عليه لونه يتغير، او يتحدد، زيه زي اي لعبة بالماوس بتلعبها ع الكمبيوتر، او حتى في الموبايل التاتش</p>
+<p>لما تكون انت شايف اللعبة (سكرين سبيس) فأنت شايف العالم من زاوية(عالم) الكاميرا، لما بتضغط بالماوس على مكان معين، اللي بيحصل انه بيطلع راي، و الراي دي بتكمل لغاية ما تخبط في اي عنصر، و ممكن في الواقع متخبطش خالص لو انت ضغط في حتة مفيهاش اوبجكت</p>
+<p>لاحظ انه التحدي/المشكلة هنا انه لما بتضغط بالماوس فأنت بتضغط في السكرين سبيس ودا بيكون 2D لكن العالم اللي فيه الاوبجكتس بتاعتك بيكون ثري دي، و الهدف بتاع الراي كاستنج انه يعرف اذا مكان الماوس بتاعك في التو-دي بعد ما يتحول لثري-دي هيلمس جزء من الاوبجكتس بتاعتك ولا لا</p>
+<p>لما بنقول اوبجكتس فأحنا نقصد اي جزء ثري-دي في البرنامج/اللعبة زي الاشكال اللي فوق ع اليمين، او الكور اللي في اول ومثال، وهكذا</p>
+<h2 id="lhyt-tystnj-fy-mhrkt-ll-b">الهيت تيستنج في محركات الالعاب</h2>
+<h3 id="unity-ray-casting">Unity Ray casting</h3>
+<p>الهيت-تيستنج زي ما وضحنا فوق ببساطة بيستخدم لمعرفة اذا انت لمست جزء معين في اللعبة او البرنامج الثري-دي اللي انت شغال فيه ولا لا، ونظرا لأنه يعتبر شيء اساسي، يعتبر موجود ليه امبلمنتيشن في كل محركات الالعاب</p>
+<p>في يونيتي ممكن تعمل كدا</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span>Ray ray </span><span style="color: #FF79C6;">=</span><span> Camera.main.</span><span style="color: #8BE9FD;">ScreenPointToRay</span><span>(Input.mousePosition);</span></span>
+<span class="giallo-l"><span>            RaycastHit hit;</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">            if</span><span> (Physics.</span><span style="color: #8BE9FD;">Raycast</span><span>(ray, out hit, </span><span style="color: #BD93F9;">100</span><span>))</span></span>
+<span class="giallo-l"><span>            {</span></span>
+<span class="giallo-l"><span>                Debug.</span><span style="color: #8BE9FD;">Log</span><span>(hit.transform.name);</span></span>
+<span class="giallo-l"><span>                Debug.</span><span style="color: #8BE9FD;">Log</span><span>(</span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">hit</span><span style="color: #E9F284;">&quot;</span><span>);</span></span>
+<span class="giallo-l"><span>            }</span></span></code></pre>
+<p>فانكشن Phisycs.RayCast هي اللي بتقوم بعمل كل حسابات الكاستنج في يونيتي</p>
+<h3 id="scenekit-ray-cast">SceneKit Ray Cast</h3>
+<p>في سين كيت ممكن تعمل راي كاستنج(آبل بتسميه هيت تيستنج) عن طريق الكود الآتي و هيجيبلك اذا كانت الضغطة بتاعتك على اوبجكت معين</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> locationOfTapIn2D </span><span style="color: #FF79C6;">=</span><span> tapRecognizer.</span><span style="color: #8BE9FD;">location</span><span>(</span><span style="color: #8BE9FD;">in</span><span>: sceneView)</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> hitResults </span><span style="color: #FF79C6;">=</span><span> diagramView.sceneView.</span><span style="color: #8BE9FD;">hitTest</span><span>(locationOfTapIn2D, </span><span style="color: #8BE9FD;">options</span><span>:</span><span style="color: #BD93F9;"> nil</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> tappedNode </span><span style="color: #FF79C6;">=</span><span> hitResults.</span><span style="color: #BD93F9;">first</span><span style="color: #FF79C6;">?</span><span>.node</span><span style="color: #6272A4;"> //the object you have tapped</span></span></code></pre>
+<p>كل اللي فات دا جميل، اتكلمنا عن الراي، و عن عملية الراي كاستنج، و ازاي متوفر في محركات الالعاب المختلفة</p>
+<h2 id="hjt-lry-kstnj-myqdrsh-y-mlh">حاجات الراي-كاستنج ميقدرش يعملها</h2>
+<p>تخيل انه عندك ابلكيشن بيتطلب انك تجيب اقرب اوبجكتس لضغطة معينة</p>
+<p>بمعنى انه في الصورة دي مطلوب منك تجيب اقرب اوبجكتس للضغطة، لأنه فعليا مكان الضغطة هنا في الفراغ</p>
+<p>و النتيجة المرادة كالآتي، انه احنا نقدر نحدد اقرب ٤ اوبجكتس للضغطة، او اقرب ٥، المهم نقدر نحدد</p>
+<p>الموضوع يصبح اكثر تعقيدا و اكثر اهمية لو بشكل عام انت عايز تجيب الاوبجكتس المتجاورة لأي ضغطة لو افترضت انه اليوزر ضغط بصباعه مكان ما</p>
+<p>لأنه فيه اجزاء متداخلة، ممكن يكون اليوزر قاصده الجزء الصغير اللي لونه جراي، او الجزء البورتقالي الكبير</p>
+<p>لو احنا استخدمنا الهيت-تيستنج مش هنقدر نعرف الاجزاء اللي جنب بعض، لأنه زي ما وضحنا فوق، هو بطلع راي واحدة بس، من مكان اللمسة، و و لما تخبط في جزء معين، يقولك انها خبطت فيه وبناء عليه يقولك انك حاولت تلمس الجزء المعين دا، في حالتنا عاوزين نحاول نعرف الاجزاء اللي الاقرب ل اللمسة</p>
+<p>اللي احنا محتاجينه، اننا نعمل حاجة مشابهة توصلنا لزيادة القطر بتاع الراي نفسها، فبدل ما تخبط في اوبجكت واحد، تخبط في الاتنين اللي جنب بعض</p>
+<p>لاحظ ازاي الراي متقاطعة مع الجزئين، بدل جزء واحد</p>
+<p>الصورة اللي فوق بتوضح اللي نتمنى اننا نقدر نعمله، لكن فعليا منقدرش نعمل دا بالراي لأنها عبارة عن فيكتور مش حاجة ليها ثيكنس او نصف قطر، لكن دي اول نقطة تجاه الوصول للحل،اننا تخيلناه..</p>
+<h2 id="nw-akhr-mn-lkstnj">انواع آخرى من الكاستنج</h2>
+<p>في بعض محركات الالعاب، فيه حل للموضوع دا، ببساطة بدل ما بتعمل كاستنج ب راي، ممكن تعمل كاستنج بمكعب، او كاستنج بسليندر</p>
+<p>ازاي ؟ تعالى نتخيل انه مكان ما الراي هتخبط في جزء معين، هنحط مكعب</p>
+<p>وبعد ما نحط المكعب، نشوف بقى المكعب دا بيتقاطع مع اوبجكتس ولا لا، لو قدرنا نعمل كدا، نظريا المكعب هيتقاطع مع الاوبجكتس القريبة من الراي، حسب حجمه</p>
+<p>الطريقة دي من الكاستنج، اسمها ڤوليوم كاستنج، لأنك فيها بتعمل الكاستنج بالڤوليوم بتاع المكعب، او بتاع اي شكل اخر حسب اختيارك</p>
+<p>في محرك زي يونيتي، موجود امبلمنتيشنز جاهزة بتعمل كاستنج للڤوليومز دي بأستخدام الطريقة دي، هيرجعلنا مثلا انه اليوزر بيحاول يضغط على</p>
+<p>Option 1, or option 2</p>
+<p>وبناء عليه ممكن نطلع دا في منيو بحيث هو يختار قصده انهي اوبجكت من الاتنين
+BoxCast 📦Capsule Cast💊Sphere Cast 🏀RigidBody Cast 🥎</p>
+<h2 id="volume-casting-in-scenekit">Volume Casting In SceneKit</h2>
+<p>علشان نعمل شيء مشابهة للڤوليوم كاستنج في سين كيت، محتاجين نحاول نعمل مجموعة من الخطوات</p>
+<p>1- Detect Touch Location using Normal HitTesting (already discussed the code)</p>
+<p>In this stage we will convert the touch location from 2D space (Device screen) to a 3D space (World space) which will let us know where our touches belong to in the 3D world.</p>
+<p>2- place a cube, which has an origin equal to the detected point of hit testing</p>
+<p>In this step, we will place an cube on the previously determined 3D Point from step 1</p>
+<p>3- calculate/process the intersections with that cube This will be fun …</p>
+<h2 id="technical-implementation-of-volume-casting-in-scenekit">Technical Implementation of Volume Casting In SceneKit</h2>
+<h3 id="1-detect-touch-location">1. Detect Touch Location</h3>
+<p>في الخطوة دي هنشتغل كأننا كنا عاوزين نعمل راي كاستنج عادي</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #6272A4;">//Inside the tap gesture Selector</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> locationOfTapIn2D </span><span style="color: #FF79C6;">=</span><span> tapRecognizer.</span><span style="color: #8BE9FD;">location</span><span>(</span><span style="color: #8BE9FD;">in</span><span>: sceneView)</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> hitResults </span><span style="color: #FF79C6;">=</span><span> diagramView.sceneView.</span><span style="color: #8BE9FD;">hitTest</span><span>(locationOfTapIn2D, </span><span style="color: #8BE9FD;">options</span><span>:</span><span style="color: #BD93F9;"> nil</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> firstTappedNode </span><span style="color: #FF79C6;">=</span><span> hitResults.</span><span style="color: #BD93F9;">first</span><span style="color: #6272A4;"> //the object you have tapped</span></span></code></pre><h3 id="2-place-the-cube-box">2. Place the cube(Box)</h3>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> boxHeight </span><span style="color: #FF79C6;">=</span><span style="color: #BD93F9;"> 12</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> boxGeometry </span><span style="color: #FF79C6;">=</span><span> SCNBox.</span><span style="color: #FF79C6;">init</span><span>(</span><span style="color: #8BE9FD;">width</span><span>: boxHeight,</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;"> height</span><span>: boxHeight,</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;"> length</span><span>: boxHeight,</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;"> chamferRadius</span><span>:</span><span style="color: #BD93F9;"> 2</span><span>)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> boxNode </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;"> SCNNode</span><span>(</span><span style="color: #8BE9FD;">geometry</span><span>: boxGeometry)</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">//Note that the node is placed to the root node (World space)</span></span>
+<span class="giallo-l"><span>sceneView</span><span style="color: #FF79C6;">?</span><span>.scene</span><span style="color: #FF79C6;">?</span><span>.rootNode.</span><span style="color: #8BE9FD;">addChildNode</span><span>(boxNode)</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">//Place the box at the touch Coordinates</span></span>
+<span class="giallo-l"><span>boxNode.worldPosition</span><span style="color: #FF79C6;"> =</span><span> firstHit.worldCoordinates</span></span>
+<span class="giallo-l"><span>boxNode.name</span><span style="color: #FF79C6;"> =</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">VOLUME_CASTING_BOX</span><span style="color: #E9F284;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">//This&#39;s important because you don&#39;t want the user to see the box you&#39;ve placed.</span></span>
+<span class="giallo-l"><span>boxNode.isHidden</span><span style="color: #FF79C6;"> =</span><span style="color: #BD93F9;"> true</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">//PhisycsBody is needed so we can check later which objects</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// &#39;are intersecting with this box</span></span>
+<span class="giallo-l"><span>boxNode.physicsBody</span><span style="color: #FF79C6;"> =</span><span> .</span><span style="color: #FF79C6;">init</span><span>(</span><span style="color: #8BE9FD;">type</span><span>: .kinematic,</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;"> shape</span><span>: .</span><span style="color: #FF79C6;">init</span><span>(</span><span style="color: #8BE9FD;">node</span><span>: boxNode, </span><span style="color: #8BE9FD;">options</span><span>: [</span><span style="color: #FF79C6;">:</span><span>]))</span></span></code></pre>
+<p>هنا حطينا البوكس اللي بنتكلم عنه، اللي هو هيبقى زي البوكس الاصفر اللي في الصورة اللي فوق، و حددنا له اسم، و حددنا المكان بتاعه ، بالظبط زي الصورة اللي فوق</p>
+<h3 id="3-check-which-objects-are-intersecting-with-the-placed-box">3. Check which objects are intersecting with the placed box:</h3>
+<p>اللي احنا عاوزين نعمله هنا، اننا نشوف البادي بتاع البوكس، بيتقاطع مع مين، ممكن تحقق دا عن طريق استخدام الفانكشن بترجع اراي من <code>SCNPhysicsContact</code></p>
+<p>ودا تايب بيحفظ جواه تفاصيل التقاطع الخاصة بالمكعب، و بما انها اراي، فدا معناه انه المكعب قد يتقاطع مع اكتر من اوبجكت، يعني لو معانا الاراي دي، نقدر نعرف اللمسة بتاعتنا قريبة من اي اوبجكت في الورلد</p>
+<p>التايب الخاص ب <code>SCNPhysicsContact</code></p>
+<p>مهم جدا و بيحتوي على كل التفاصيل الخاصة بالكونتاكت، الكونتاكت الواحد في حالتنا معناه انه دا اوبجكت يتقاطع مع المكعب اللي احنا حطيناه</p>
+<p>لو عندنا ٢ كونتاكت، يبقى فيه ٢ اوجكت يتقاطع مع المكعب</p>
+<p>لاحظ هنا انه كل كونتاكت بيعطيلك ٢ نود</p>
+<p>NodeA, NodeB</p>
+<p>الاولاني هيكون المكعب بتاعك، التاني، اللي هو نود بي، هيكون الجزء اللي بيتقاطع معاه وبناء عليه ممكن تكتب الآتي</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> boxContacts </span><span style="color: #FF79C6;">=</span><span> scene.physicsWorld.</span><span style="color: #8BE9FD;">contactTest</span><span>(</span><span style="color: #8BE9FD;">with</span><span>: boxNode.physicsBody</span><span style="color: #FF79C6;">!</span><span>, </span><span style="color: #8BE9FD;">options</span><span>: [</span><span style="color: #FF79C6;">:</span><span>]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">if</span><span> boxContacts.</span><span style="color: #BD93F9;">count</span><span style="color: #FF79C6;"> &gt;</span><span style="color: #BD93F9;"> 0</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">//Print Contacts name</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;"> let</span><span> nodesNames </span><span style="color: #FF79C6;">=</span><span> boxContacts</span></span>
+<span class="giallo-l"><span>    .</span><span style="color: #8BE9FD;">map</span><span> {</span><span style="color: #BD93F9;font-style: italic;"> $0</span><span>.nodeB.name</span><span style="color: #FF79C6;"> ??</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">NO_OBJECT_NAME</span><span style="color: #E9F284;">&quot;</span><span> }</span></span>
+<span class="giallo-l"><span>    .</span><span style="color: #8BE9FD;">filter</span><span> {</span><span style="color: #BD93F9;font-style: italic;"> $0</span><span style="color: #FF79C6;"> !=</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">VOLUME_CASTING_BOX</span><span style="color: #E9F284;">&quot;</span><span> }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">    print</span><span>(nodesNames)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6272A4;">// Also, you have access to the node itself</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// in case you want to highlight it/scale it/do whatever you want</span></span>
+<span class="giallo-l"><span>boxContacts.</span><span style="color: #8BE9FD;">forEach</span><span> { contactWithBox </span><span style="color: #FF79C6;">in</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">    print</span><span>(contactWithBox.nodeB)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span> }</span></span></code></pre><h2 id="khtm-lmblmntyshn">ختام الامبلمنتيشن</h2>
+<p>الكود الاخير لو محطوط في Main Thread</p>
+<p>غالبا الكود هيكراش، ليه ؟ علشان سين كيت شغالة من ثريد خاص بيها و بناء عليه فيه احتمالية مش قليلة ل الريس كونديشنز، و عموما افضل حاجة انها تأكسس سين كيت ديما و ابدا من الثريد بتاعها.. ازاي ؟</p>
+<p>محتاج تكونفيرم ل SCNSceneRendererDelegate</p>
+<p>و يكون الكود بتاعك في الفانكشن دي،</p>
+<p>الفانكشن دي بيتعملها كول لكل فريم هيتعمله رندر، نظريا اللعبة او البرنامج بتاعك ممكن يكون كله في الفانكشن دي، ودا الصح لو انت عايز البرنامج بتاعك يكون ثريد سيف، بس في اغلب الاحيان هتجد صعوبة كبيرة في انك تهندل اللوجيك كله فيها</p>
+<p>لأنه علشان دي فانكشن بيتعملها كول لكل فريم، المفروض ميكونش فيها انستراكشنز كتير تاخد وقت طويل..</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> renderer</span><span>(</span><span style="color: #50FA7B;">_</span><span style="color: #FFB86C;font-style: italic;"> renderer</span><span>: SCNSceneRenderer, </span><span style="color: #50FA7B;">willRenderScene</span><span style="color: #FFB86C;font-style: italic;"> scene</span><span>: SCNScene, </span><span style="color: #50FA7B;">atTime</span><span style="color: #FFB86C;font-style: italic;"> time</span><span>: TimeInterval) {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// Place your code here</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6272A4;">//this variable will be true when user taps on the screen</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// from the selector of tap gesture</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// Note: - This also not safe, the app will crach if main thread is setting it while</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// SceneKit tries to read it, but for the sake of simplicity i will left it like this..</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// Also, it doesn&#39;t happen to crach because of this particular propertiy, but yeah..</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">if</span><span> isCheckingCloseObjectsToTap,</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> node </span><span style="color: #FF79C6;">=</span><span> scene.</span><span style="color: #8BE9FD;">nodeNamed</span><span>(</span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">VOLUME_CASTING_BOX</span><span style="color: #E9F284;">&quot;</span><span>)</span><span style="color: #FF79C6;"> as?</span><span> SCNNode {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">defer</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// after checking convert it to false, because we don&#39;t want to check in the next frame</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// Also, you have access to the node itself</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// in case you want to highlight it/scale it/do whatever you want</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// if this looks too verbose, then it&#39;s, this&#39;s how Rendering loops work :/</span></span>
+<span class="giallo-l"><span>isCheckingCloseObjectsToTap </span><span style="color: #FF79C6;">=</span><span style="color: #BD93F9;"> false</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> boxContacts </span><span style="color: #FF79C6;">=</span><span> scene.physicsWorld.</span><span style="color: #8BE9FD;">contactTest</span><span>(</span><span style="color: #8BE9FD;">with</span><span>: boxNode.physicsBody</span><span style="color: #FF79C6;">!</span><span>, </span><span style="color: #8BE9FD;">options</span><span>: [</span><span style="color: #FF79C6;">:</span><span>]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">if</span><span> boxContacts.</span><span style="color: #BD93F9;">count</span><span style="color: #FF79C6;"> &gt;</span><span style="color: #BD93F9;"> 0</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;"> let</span><span> nodesNames </span><span style="color: #FF79C6;">=</span><span> boxContacts</span></span>
+<span class="giallo-l"><span>    .</span><span style="color: #8BE9FD;">map</span><span> {</span><span style="color: #BD93F9;font-style: italic;"> $0</span><span>.nodeB.name</span><span style="color: #FF79C6;"> ??</span><span style="color: #E9F284;"> &quot;&quot;</span><span> }</span></span>
+<span class="giallo-l"><span>    .</span><span style="color: #8BE9FD;">filter</span><span> {</span><span style="color: #BD93F9;font-style: italic;"> $0</span><span style="color: #FF79C6;"> !=</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">VOLUME_CASTING_BOX</span><span style="color: #E9F284;">&quot;</span><span> }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">    print</span><span>(nodesNames)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>boxContacts.</span><span style="color: #8BE9FD;">forEach</span><span> { contactWithBox </span><span style="color: #FF79C6;">in</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">    print</span><span>(contactWithBox.nodeB)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span> }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><h2 id="lkhtm">الختام</h2>
+<p>بأستخدام الطريقة دي نقدر نحاكي البيهافيور بتاع الڤوليوم كاستنج اللي في يونيتي، انا بقول نحاكي لأني حتى الان مش متأكد اذا فيه طريقة احسن ولا لا، لكن في كل الاحوال هي الطريقة دي شغالة كويس، و منها تقدر تسأل اليوزر عن الاوبجكت اللي عايز يختاره بالظبط اللي قريب من مكان لمسته, كان ممكن نحاول نعمل امبلمنتيشن بنفسنا لبعض الفانكشنز الموجودة في سين-كيت زي هيت تيستنج و كونتاكت تيست، بس دا كان هيضيف تعقيد اكبر..</p>
+<p>سين-كيت عبارة عن محرك جميل و قوي في عالم آبل لكن مش فيه كل الفانكشنز و الدعم اللي موجود في يونيتي، و كمان ينقصه الدوكيمنتيشن بشكل كبير جدا جدا، مفيش حتى الان حسب ما اعرف حد عمل امبلمنتيشن مشابه للفوليوم كاستنج في سين كيت و بناء عليه ممكت ابقى اكتب نفس البلوج لكن بالانجليزي بما انه دا محتوى مش موجود ابدا ع النت.</p>
+
+    </div>
+
+    
+    <footer class="post-tags">
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/ar/tags/swift/" class="tag">#swift</a>
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/ar/tags/graphics/" class="tag">#graphics</a>
+        
+    </footer>
+    
+
+    
+    <br>
+    <script src="https://giscus.app/client.js"
+            data-repo="imostfa&#x2F;blog"
+            data-repo-id="R_kgDOGXqJnA"
+            data-category="Announcements"
+            data-category-id="DIC_kwDOGXqJnM4C4a0o"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="preferred_color_scheme"
+            data-lang="ar"
+            crossorigin="anonymous"
+            async>
+    </script>
+    
+</article>
+
+        </main>
+
+        <footer>
+            <hr>
+<div id="footer-container">
+    <p>Made using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> Zola theme</p>
+</div>
+
+        </footer>
+
+        <!-- Move JS to end of body and add defer -->
+        <script src="https://imostfa.github.io/Blog/js/script.js" defer></script>
+        
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            document.querySelectorAll('time, .date, .content-meta').forEach(function(el) {
+                el.textContent = el.textContent.replace(/[0-9]/g, function(d) { return ar[d]; });
+            });
+        });
+        </script>
+        
+    </body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en"
+      dir="ltr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="index, follow">
+        
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://imostfa.github.io/Blog/rss.xml">
+        
+        <title>Mostafa | How to Know the Size of Your Types in Swift</title>
+
+        <link rel="preload" href="https://imostfa.github.io/Blog/css/style.css" as="style">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/reset-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/suCSS-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/style.css">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/custom.css">
+
+        <!-- Add favicon with appropriate sizes -->
+        <link rel="icon" href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/favicon.ico">
+        
+
+
+    </head>
+    <body>
+        
+        
+        
+        
+        <nav id="nav-bar">
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog" class="">
+                
+                &#x2F;home&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;blog" class="">
+                
+                &#x2F;blog&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;about" class="">
+                
+                &#x2F;about&#x2F;
+            </a>
+            
+
+            
+                
+                
+                <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;blog&#x2F;memory-alignment-swift&#x2F;" class="lang-switch">Arabic</a>
+                
+                
+                
+                
+            
+
+            <div class="theme-toggle" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle theme"
+                data-icon-base="https://imostfa.github.io/Blog/icons.svg"
+                data-icon-dark="#darkMode"
+                data-icon-light="#lightMode"
+                data-sound-src="https://imostfa.github.io/Blog/click.ogg">
+                <svg class="icon">
+                    <use id="theme-icon"></use>
+                </svg>
+            </div>
+        </nav>
+
+        <main>
+            
+<article class="post">
+    <header class="post-header">
+        
+        <time datetime="2020-11-07">
+            
+            Published on:
+            
+            <span class="accent-data">2020-11-07</span>
+        </time>
+        
+
+        
+
+        <h1>How to Know the Size of Your Types in Swift</h1>
+    </header>
+
+
+
+    <div class="post-content" dir="auto">
+        <h1 id="how-to-know-the-size-of-your-types-in-swift">How to Know the Size of Your Types in Swift</h1>
+<p>In Swift, any object or type has 3 properties that describe how memory interacts with it. In this post we’ll look at two of them - <code>size</code> and <code>alignment</code>.</p>
+<h2 id="size-package">Size 📦</h2>
+<hr />
+<p>Say you have two <code>struct</code>s in your program like these:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">struct</span><span style="color: #8BE9FD;font-style: italic;"> Student</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> age:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">struct</span><span style="color: #8BE9FD;font-style: italic;"> Professor</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> age:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> phoneNumber:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> mostfa </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;"> Student</span><span>(</span><span style="color: #8BE9FD;">age</span><span>:</span><span style="color: #BD93F9;"> 10</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> ahmed </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;"> Professor</span><span>(</span><span style="color: #8BE9FD;">age</span><span>:</span><span style="color: #BD93F9;"> 10</span><span>, </span><span style="color: #8BE9FD;">phoneNumber</span><span>:</span><span style="color: #BD93F9;"> 010</span><span>)</span></span></code></pre>
+<p>If I asked you which object is larger - <code>mostfa</code> or <code>ahmed</code> - logic says <code>ahmed</code>, because it’s made of two variables: <code>age</code> and <code>phoneNumber</code>.</p>
+<p>But how do we confirm that with actual numbers? We use <code>MemoryLayout</code>.</p>
+<h2 id="computer-memory-layout">💻 Memory Layout</h2>
+<hr />
+<p>Swift has a type called <code>MemoryLayout</code> that lets us check the sizes of our types - like <code>Student</code>, <code>Professor</code>, or any built-in type like <code>String</code> or <code>Bool</code>:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> studentSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span style="color: #FF79C6;">&lt;</span><span>Student</span><span style="color: #FF79C6;">&gt;</span><span>.</span><span style="color: #BD93F9;">size</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> professorSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span style="color: #FF79C6;">&lt;</span><span>Professor</span><span style="color: #FF79C6;">&gt;</span><span>.</span><span style="color: #BD93F9;">size</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">print</span><span>(studentSize)</span><span style="color: #6272A4;"> // prints 8</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">print</span><span>(professorSize)</span><span style="color: #6272A4;"> //prints 16 😉</span></span></code></pre>
+<p>As expected, <code>Professor</code> takes up more memory.</p>
+<p>If we want to check specific instances like <code>mostfa</code> and <code>ahmed</code>:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> mostfaSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span>.</span><span style="color: #BD93F9;">size</span><span>(</span><span style="color: #8BE9FD;">ofValue</span><span>: mostfa)</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> ahmedSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span>.</span><span style="color: #BD93F9;">size</span><span>(</span><span style="color: #8BE9FD;">ofValue</span><span>: ahmed)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">print</span><span>(mostfaSize)</span><span style="color: #6272A4;"> //prints 8</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">print</span><span>(ahmedSize)</span><span style="color: #6272A4;"> //also prints 16</span></span></code></pre>
+<p>But why 8? And why 16? Let’s dig into size a bit more.</p>
+<h2 id="back-to-size-package">Back to Size 📦</h2>
+<hr />
+<p>In Swift, calculating the size of a struct is straightforward - <strong>the size of a struct equals the sum of the sizes of its properties</strong>. So:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">struct</span><span style="color: #8BE9FD;font-style: italic;"> Student</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">     let</span><span> age:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> inSchool:</span><span style="color: #8BE9FD;font-style: italic;"> Bool</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;"> let</span><span> intSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span style="color: #FF79C6;">&lt;</span><span style="color: #8BE9FD;font-style: italic;">Int</span><span style="color: #FF79C6;">&gt;</span><span>.</span><span style="color: #BD93F9;">size</span><span style="color: #6272A4;">    //prints out 8</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;"> let</span><span> boolSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span style="color: #FF79C6;">&lt;</span><span style="color: #8BE9FD;font-style: italic;">Bool</span><span style="color: #FF79C6;">&gt;</span><span>.</span><span style="color: #BD93F9;">size</span><span style="color: #6272A4;">  //prints out 1</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> studentSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span style="color: #FF79C6;">&lt;</span><span>Student</span><span style="color: #FF79C6;">&gt;</span><span>.</span><span style="color: #BD93F9;">size</span><span style="color: #6272A4;"> //prints out 9 ( 1 + 8 )</span></span></code></pre>
+<p>The struct has one <code>Int</code> and one <code>Bool</code>, so its size is 8 + 1 = 9. Easy, right? 🦹🏻‍♂️</p>
+<p>Now let’s verify with another example:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">struct</span><span style="color: #8BE9FD;font-style: italic;"> OtherStudent</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> inSchool:</span><span style="color: #8BE9FD;font-style: italic;"> Bool</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> age:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>This is the same as <code>Student</code> above - just with the properties in a different order. You’d expect the same size, right?</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> OtherStudentSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span style="color: #FF79C6;">&lt;</span><span>OtherStudent</span><span style="color: #FF79C6;">&gt;</span><span>.</span><span style="color: #BD93F9;">size</span><span style="color: #6272A4;"> // 16 !</span></span></code></pre>
+<p>It’s 16, not 9. That’s because of <strong>alignment</strong>.</p>
+<h2 id="alignment">Alignment</h2>
+<p>The alignment of any <code>Int</code> in Swift is 8. What does that mean? It means the memory address where an <code>Int</code> is stored must be a <strong>multiple of 8</strong>.</p>
+<p>Say we have:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> A </span><span style="color: #FF79C6;">=</span><span style="color: #BD93F9;"> 88</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> b </span><span style="color: #FF79C6;">=</span><span style="color: #BD93F9;"> 17</span></span></code></pre>
+<p>Both <code>A</code> and <code>b</code> must be placed at memory addresses that are multiples of 8. If <code>A</code> is at address 0 (a multiple of 8) and <code>b</code> is at address 8 (also a multiple of 8) - no problem.</p>
+<hr />
+<p>When do we have a problem? In this situation:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #6272A4;">/*</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">A lot of other code in the app which will be saved in memory</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">.</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">.</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">.</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">.</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">.</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">.</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">*/</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> A </span><span style="color: #FF79C6;">=</span><span style="color: #BD93F9;"> 88</span></span></code></pre>
+<p>If other data already occupies addresses 0 through 4, and we try to place <code>A</code> at address 5 - we can’t. Because 5 is not a multiple of 8. So the compiler places <code>A</code> at address 8 instead, leaving addresses 5, 6, and 7 empty (wasted as padding).</p>
+<p>This brings us back to the original question: why does <code>OtherStudent</code> have a different size than <code>Student</code>?</p>
+<h2 id="alignment-and-size-bowling">Alignment and Size 🎳</h2>
+<hr />
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> boolAlignment </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span style="color: #FF79C6;">&lt;</span><span style="color: #8BE9FD;font-style: italic;">Bool</span><span style="color: #FF79C6;">&gt;</span><span>.</span><span style="color: #BD93F9;">alignment</span><span style="color: #6272A4;">    //prints out 1</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> IntegerAlignment </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span style="color: #FF79C6;">&lt;</span><span style="color: #8BE9FD;font-style: italic;">Int</span><span style="color: #FF79C6;">&gt;</span><span>.</span><span style="color: #BD93F9;">alignment</span><span style="color: #6272A4;">  //prints out 8</span></span></code></pre><pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">struct</span><span style="color: #8BE9FD;font-style: italic;"> Student</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">     let</span><span> age:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span><span style="color: #6272A4;">    // alignment: 8</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> inSchool:</span><span style="color: #8BE9FD;font-style: italic;"> Bool</span><span style="color: #6272A4;">  // alignment: 1</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>Since <code>Bool</code> has alignment 1, it can go at any address (every number is a multiple of 1). Since <code>Int</code> has alignment 8, it must go at a multiple-of-8 address.</p>
+<p>For <code>Student</code>:</p>
+<ul>
+<li><code>Int</code> goes at address 0 (✅ multiple of 8)</li>
+<li><code>Bool</code> goes at address 8 (✅ multiple of 1)</li>
+<li>Total size = 9</li>
+</ul>
+<hr />
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">struct</span><span style="color: #8BE9FD;font-style: italic;"> OtherStudent</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> inSchool:</span><span style="color: #8BE9FD;font-style: italic;"> Bool</span><span style="color: #6272A4;">  // alignment: 1 - goes at address 0 ✅</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> age:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span><span style="color: #6272A4;">        // alignment: 8 - can&#39;t go at address 1 ❌</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>For <code>OtherStudent</code>:</p>
+<ul>
+<li><code>Bool</code> goes at address 0 (✅ multiple of 1)</li>
+<li><code>Int</code> <strong>cannot</strong> go at address 1 (❌ not a multiple of 8)</li>
+<li>The compiler leaves addresses 1–7 as padding</li>
+<li><code>Int</code> goes at address 8 (✅ multiple of 8)</li>
+<li>Total size = 16 🤯</li>
+</ul>
+<p>So the <strong>order of properties in a struct matters</strong> - it can affect the size due to alignment padding.</p>
+<p>To be continued …</p>
+
+    </div>
+
+    
+    <footer class="post-tags">
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/tags/swift/" class="tag">#swift</a>
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/tags/memory/" class="tag">#memory</a>
+        
+    </footer>
+    
+
+    
+    <br>
+    <script src="https://giscus.app/client.js"
+            data-repo="imostfa&#x2F;blog"
+            data-repo-id="R_kgDOGXqJnA"
+            data-category="Announcements"
+            data-category-id="DIC_kwDOGXqJnM4C4a0o"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="preferred_color_scheme"
+            data-lang="en"
+            crossorigin="anonymous"
+            async>
+    </script>
+    
+</article>
+
+        </main>
+
+        <footer>
+            <hr>
+<div id="footer-container">
+    <p>Made using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> Zola theme</p>
+</div>
+
+        </footer>
+
+        <!-- Move JS to end of body and add defer -->
+        <script src="https://imostfa.github.io/Blog/js/script.js" defer></script>
+        
+    </body>
+</html>

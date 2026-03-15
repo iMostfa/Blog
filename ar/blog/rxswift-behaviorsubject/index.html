@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ar"
+      dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="index, follow">
+        
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://imostfa.github.io/Blog/rss.xml">
+        
+        <title>مصطفى | ايه سبب تسمية BehaviorSubject</title>
+
+        <link rel="preload" href="https://imostfa.github.io/Blog/css/style.css" as="style">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/reset-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/suCSS-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/style.css">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/custom.css">
+
+        <!-- Add favicon with appropriate sizes -->
+        <link rel="icon" href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/favicon.ico">
+        
+
+
+    </head>
+    <body>
+        
+        
+        
+        
+        <nav id="nav-bar">
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar" class="">
+                
+                &#x2F;الرئيسية&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;blog" class="">
+                
+                &#x2F;مقالات&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;about" class="">
+                
+                &#x2F;عني&#x2F;
+            </a>
+            
+
+            
+                
+                
+                
+                
+                <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;blog&#x2F;rxswift-behaviorsubject&#x2F;" class="lang-switch">EN</a>
+                
+                
+            
+
+            <div class="theme-toggle" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle theme"
+                data-icon-base="https://imostfa.github.io/Blog/icons.svg"
+                data-icon-dark="#darkMode"
+                data-icon-light="#lightMode"
+                data-sound-src="https://imostfa.github.io/Blog/click.ogg">
+                <svg class="icon">
+                    <use id="theme-icon"></use>
+                </svg>
+            </div>
+        </nav>
+
+        <main>
+            
+<article class="post">
+    <header class="post-header">
+        
+        <time datetime="2022-07-27">
+            
+            نُشر في:
+            
+            <span class="accent-data">2022-07-27</span>
+        </time>
+        
+
+        
+
+        <h1>ايه سبب تسمية BehaviorSubject</h1>
+    </header>
+
+
+
+    <div class="post-content" dir="auto">
+        <h3 id="mqdm">مقدمة</h3>
+<p>بصراحة انا من محبي الافكار و المفاهيم اللي بتقدمها الريأكتڤ بروجرامينج، لأنها في اغلب الاوقات بتسهل فهم الكود و بتقلل بعض الباجز الفترة دي ابتديت اقرا عن rxSwift، علمًا بأني اصلا بستخدم Combine كأريكتڤ فريمورك،</p>
+<p>لقيت انه فيه Subject اسمه BehaviorSubject وهو عبارة عن سابجكت بيبعت اخر فاليو اتبعتت عليه،اول ما السبسكرايبر يسبسكرايب و طبعا بيبعت بعد كدا اي ڤاليو تتبعت عليه</p>
+<h3 id="sbb-ltsmy">سبب التسمية</h3>
+<p>بصراحة لقيت نفسي بقول، هو فين البيهاڤيور في الموضوع ؟ ليه فيه كلمة بيهاڤيور، علمات انه الSubject اللي بيعمل نفس الكلام دا في Combine اسمه واضح جدا، الا وهو CurrentValueSubject</p>
+<p>و الاسم واضح جدا، عبارة عن سابجكت بيحفظ و بيبعت الكارنت فاليو، فليه التسمية مش واضحة في RxSwift زي ماهي واضحة في Combine ؟ الاجابة كانت كالآتي</p>
+<p>In the world of functional reactive programming, a behavior is a value that changes over time. This is exactly what a BehaviorSubject represents: when you subscribe you get the current value, and then you can continue to observe the changes.</p>
+<p>ودا معناه انه كلمة بيهافيور في عالم الريآكتيف بروجرامينج معناها الڤاليو التي يتم مراقبتها و يتم متابعة تغيرها..</p>
+<p>معلومة جديدة، حبيت اني شاركها، و الايام الجاية ممكن اكتب اكتر عن rxSwift لأني بدرس الفرق بينها و Combine</p>
+
+    </div>
+
+    
+    <footer class="post-tags">
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/ar/tags/swift/" class="tag">#swift</a>
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/ar/tags/rxswift/" class="tag">#rxswift</a>
+        
+    </footer>
+    
+
+    
+    <br>
+    <script src="https://giscus.app/client.js"
+            data-repo="imostfa&#x2F;blog"
+            data-repo-id="R_kgDOGXqJnA"
+            data-category="Announcements"
+            data-category-id="DIC_kwDOGXqJnM4C4a0o"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="preferred_color_scheme"
+            data-lang="ar"
+            crossorigin="anonymous"
+            async>
+    </script>
+    
+</article>
+
+        </main>
+
+        <footer>
+            <hr>
+<div id="footer-container">
+    <p>Made using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> Zola theme</p>
+</div>
+
+        </footer>
+
+        <!-- Move JS to end of body and add defer -->
+        <script src="https://imostfa.github.io/Blog/js/script.js" defer></script>
+        
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            document.querySelectorAll('time, .date, .content-meta').forEach(function(el) {
+                el.textContent = el.textContent.replace(/[0-9]/g, function(d) { return ar[d]; });
+            });
+        });
+        </script>
+        
+    </body>
+</html>

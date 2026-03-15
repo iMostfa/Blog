@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en"
+      dir="ltr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="index, follow">
+        
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://imostfa.github.io/Blog/rss.xml">
+        
+        <title>Mostafa | Thoughts on Agentic tooling and future of engineering</title>
+
+        <link rel="preload" href="https://imostfa.github.io/Blog/css/style.css" as="style">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/reset-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/suCSS-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/style.css">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/custom.css">
+
+        <!-- Add favicon with appropriate sizes -->
+        <link rel="icon" href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/favicon.ico">
+        
+
+
+    </head>
+    <body>
+        
+        
+        
+        
+        <nav id="nav-bar">
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog" class="">
+                
+                &#x2F;home&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;blog" class="">
+                
+                &#x2F;blog&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;about" class="">
+                
+                &#x2F;about&#x2F;
+            </a>
+            
+
+            
+                
+                
+                <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;blog&#x2F;agent-world-skills&#x2F;" class="lang-switch">Arabic</a>
+                
+                
+                
+                
+            
+
+            <div class="theme-toggle" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle theme"
+                data-icon-base="https://imostfa.github.io/Blog/icons.svg"
+                data-icon-dark="#darkMode"
+                data-icon-light="#lightMode"
+                data-sound-src="https://imostfa.github.io/Blog/click.ogg">
+                <svg class="icon">
+                    <use id="theme-icon"></use>
+                </svg>
+            </div>
+        </nav>
+
+        <main>
+            
+<article class="post">
+    <header class="post-header">
+        
+        <time datetime="2026-03-15">
+            
+            Published on:
+            
+            <span class="accent-data">2026-03-15</span>
+        </time>
+        
+
+        
+
+        <h1>Thoughts on Agentic tooling and future of engineering</h1>
+    </header>
+
+
+
+    <div class="post-content" dir="auto">
+        <p><img src="https://imostfa.github.io/Blog/blog/agent-world-skills/cover.png" alt="" /></p>
+<p>With the current rise of agentic coding tools, many (and I’m included) are starting to wonder, what skills will actually matter for engineers in the future? If agents can write code, tests, and even design systems, what does that leave for us? My take on this varies depending on the topic. Here I’m trying to break down my thoughts.</p>
+<h3 id="how-did-you-become-highly-skilled">How Did You Become Highly Skilled?</h3>
+<p>No matter how you started programming, likely the process of learning is the same:</p>
+<ol>
+<li>You start by learning the syntax (the building blocks)</li>
+<li>You make small projects, and you learn how to use the building blocks to create something useful.</li>
+<li>You try to create more complex projects, make mistakes, and learn from them over time. -Repeat-</li>
+<li>You start to develop deep understanding of how the tools work, and study/understand the details. -Repeat-</li>
+<li>Your scope gets wider, and you start to build wider/more complex systems, and you learn how to design systems -Repeat-</li>
+</ol>
+<p>And eventually you become a skilled engineer, and start to move from thinking about code to thinking about systems, and how to design them, and how to make them work together.</p>
+<p>What truly makes you skilled is the cycle of learning, making mistakes, and growing from them.</p>
+<p>We (engineers) used to say that “Programming isn’t all about writing code, it’s more than this” which is true, and false at the same time.</p>
+<p>When you are building an MVP, it’s actually more about writing code, and less about design, because you are trying to quickly validate an idea, and you don’t care about the design at this stage. As you start to grow the project, you notice that you are writing less code and thinking more about design, and how to make the system work together, and how to make it scalable, maintainable, and so on.</p>
+<h3 id="most-projects-are-simpler-than-you-think">Most Projects Are Simpler Than You Think</h3>
+<h4 id="repetitive-knowledge-and-tools">Repetitive Knowledge and Tools</h4>
+<p>The reality is that many projects don’t require extensive knowledge or deep expertise. Often, they involve repeating the same basic concepts and tools you are already familiar with.</p>
+<p>To elaborate, think about the last project you worked on. How many times did you find yourself using the same libraries, frameworks, and design patterns? The truth is that many projects are built on top of existing tools and technologies, and they don’t require deep expertise to be successful.</p>
+<p>Because of this, agentic tools can handle these projects easily.</p>
+<p>LLMs are trained on these problems 100x more than any human, so they’re likely faster and better at solving them.</p>
+<h4 id="just-fix-it">Just Fix It</h4>
+<p>As projects grow, you start hitting harder problems - scaling, performance, or features that keep breaking each other. These are the problems where real expertise starts to matter.</p>
+<p>LLMs are good at solving these problems, but they’re not great at weighing trade-offs or thinking about cost and efficiency. For any problem, there are multiple solutions. Agents tend to pick one that works - often ignoring cost, efficiency, or long-term impact.</p>
+<p>If you’re dealing with a simple project (like a CRUD app), this might not be a concern. You could easily rely on tools like Claude, OpenCode, or Codex to solve these issues. However, what is often overlooked in this approach is the efficiency (time) and cost at which the solution is produced. How confident you are in that solution.</p>
+<p>Some projects never need to worry about this - they work fine without any optimization. But as a project grows, these trade-offs start to matter more. Bigger systems need more careful decisions to stay healthy over time.</p>
+<h4 id="what-still-needs-to-be-yours">What Still Needs to Be Yours</h4>
+<h5 id="rejection-meter">Rejection Meter</h5>
+<p>Knowing when to reject an agent’s suggestion is what ultimately matters. To say no, you must have a clear understanding of the issue you are solving. It is easy to fall into the trap of relying on agents entirely, but this approach only works up to a certain point.</p>
+<blockquote>
+<p>Example 1: Writing tests is more enjoyable than ever, but I once found a generated test case that used reflection to access private fields. While the test passed, it was brittle and coupled to implementation details - a clear case where saying <code>no</code> and asking for a better approach was the right call.</p>
+</blockquote>
+<h5 id="the-fundamentals">The Fundamentals</h5>
+<p>Understanding how computer systems work still matters. Keep in mind that agents are good at coding because of their ability to detect patterns and replicate them very well. They mimic thinking by replaying patterns from their training data. But they don’t actually understand how computer systems work.</p>
+<p>Example 2:</p>
+<blockquote>
+<p>While analyzing a performance issue in a project, the agentic tools said that based on the profiling information there’s a bottleneck in one function, and it’s caused by a very big switch case statement. A big switch case is O(N) time complexity, and it is not efficient. So the agentic tool suggested to refactor the code to use a hash map instead of a switch case, which is O(1) time complexity, and it will improve the performance of the function.</p>
+</blockquote>
+<p>While the function was indeed a bottleneck according to the profiler, what caught my attention was that a switch case isn’t O(N), instead in modern languages, it’s implemented as a jump table, which is O(1) time complexity. (think of a HashMap /dictionary)</p>
+<p>I’ve seen many mistakes like this. The lesson: you need to understand the technology to solve problems efficiently. If I hadn’t caught this, I would have refactored the code and released it - only to find it didn’t help. Or worse, the agent would have kept trying different theories that were also wrong.</p>
+<h5 id="stackoverflow-era-vs-agentic-coding-era">Stackoverflow Era vs Agentic coding era</h5>
+<p>Back in the old days (that I hope you still remember), many devs relied heavily on StackOverflow to solve their coding problems. They would search for solutions, copy and paste code snippets, and call it a day, and depending on what you work on, maybe you can live with this forever.</p>
+<p>And I don’t see any difference between this and relying on agentic coding tools, it’s just way easier, and way cheaper (compared to the output you get) to get things working, and issues fixed.</p>
+<h5 id="10-10-multiplier">[-10…10] Multiplier</h5>
+<p>The output you get from coding agents depends heavily on your own expertise. The multiplier isn’t always positive - if you blindly accept bad suggestions, it can go negative. If you are skilled at the problem you are solving, you will get 10x results; if not, expect 10x worse results - and the gap compounds over time.</p>
+<h3 id="so-are-agents-going-to-replace-us">So are agents going to replace us?</h3>
+<p>Agents have already replaced a lot of the repetitive parts of software development, and they’ll keep doing so. But they won’t replace the parts of the work that require deep expertise, real systems thinking, and careful design decisions.</p>
+<p>Many will disagree - some already feel that agents have replaced the need for developers entirely. This is simply because they’re working on projects that LLMs already solve easily, and they haven’t yet hit the point where trade-offs or design decisions require deep understanding. Efficiency isn’t a concern for them either, because whatever they’re facing, it’s still cheaper to solve with agents than with humans.</p>
+<h3 id="what-should-i-focus-on-learning">What should i focus on learning?</h3>
+<ol>
+<li>Understanding the details of what you are working on.</li>
+<li>Understadning the trade-offs and implications of different solutions.</li>
+<li>Understanding how to use the new tools effectively, and how to evaluate their output critically.</li>
+<li>Find and invest into making the validation of soltions faster and easier, if creating solutions is easier, validating them should be easier too. This is where the real bottleneck is, and where the real value is.</li>
+<li>Widen your scope, and learn how to design systems how to be a product owner, and how to make sure the system is healthy over time, and how to make sure it can grow and scale as needed.</li>
+</ol>
+
+    </div>
+
+    
+    <footer class="post-tags">
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/tags/ai/" class="tag">#ai</a>
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/tags/agents/" class="tag">#agents</a>
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/tags/software-engineering/" class="tag">#software-engineering</a>
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/tags/career/" class="tag">#career</a>
+        
+    </footer>
+    
+
+    
+    <br>
+    <script src="https://giscus.app/client.js"
+            data-repo="imostfa&#x2F;blog"
+            data-repo-id="R_kgDOGXqJnA"
+            data-category="Announcements"
+            data-category-id="DIC_kwDOGXqJnM4C4a0o"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="preferred_color_scheme"
+            data-lang="en"
+            crossorigin="anonymous"
+            async>
+    </script>
+    
+</article>
+
+        </main>
+
+        <footer>
+            <hr>
+<div id="footer-container">
+    <p>Made using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> Zola theme</p>
+</div>
+
+        </footer>
+
+        <!-- Move JS to end of body and add defer -->
+        <script src="https://imostfa.github.io/Blog/js/script.js" defer></script>
+        
+    </body>
+</html>

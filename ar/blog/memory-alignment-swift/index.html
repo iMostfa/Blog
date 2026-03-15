@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ar"
+      dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="index, follow">
+        
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://imostfa.github.io/Blog/rss.xml">
+        
+        <title>مصطفى | إزاي تعرف احجام ال Types بتاعتك في سويفت</title>
+
+        <link rel="preload" href="https://imostfa.github.io/Blog/css/style.css" as="style">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/reset-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/suCSS-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/style.css">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/custom.css">
+
+        <!-- Add favicon with appropriate sizes -->
+        <link rel="icon" href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/favicon.ico">
+        
+
+
+    </head>
+    <body>
+        
+        
+        
+        
+        <nav id="nav-bar">
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar" class="">
+                
+                &#x2F;الرئيسية&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;blog" class="">
+                
+                &#x2F;مقالات&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;about" class="">
+                
+                &#x2F;عني&#x2F;
+            </a>
+            
+
+            
+                
+                
+                
+                
+                <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;blog&#x2F;memory-alignment-swift&#x2F;" class="lang-switch">EN</a>
+                
+                
+            
+
+            <div class="theme-toggle" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle theme"
+                data-icon-base="https://imostfa.github.io/Blog/icons.svg"
+                data-icon-dark="#darkMode"
+                data-icon-light="#lightMode"
+                data-sound-src="https://imostfa.github.io/Blog/click.ogg">
+                <svg class="icon">
+                    <use id="theme-icon"></use>
+                </svg>
+            </div>
+        </nav>
+
+        <main>
+            
+<article class="post">
+    <header class="post-header">
+        
+        <time datetime="2020-11-07">
+            
+            نُشر في:
+            
+            <span class="accent-data">2020-11-07</span>
+        </time>
+        
+
+        
+
+        <h1>إزاي تعرف احجام ال Types بتاعتك في سويفت</h1>
+    </header>
+
+
+
+    <div class="post-content" dir="auto">
+        <h1 id="zy-t-rf-hjm-l-types-bt-tk-fy-swyft">إزاي تعرف احجام ال Types بتاعتك في سويفت ؟</h1>
+<p>في سويفت، اي اوبجيكت او تايب، ليه ٣ خصائص ممكن يعبرولك عن تعامل الميموري مع الأوبجيكت دا، هنتعرف على خاصيتين من الخصائص دي في التدوينة دي، و بعضها فيه تدوينات اخرى،</p>
+<p>الخصائص اللي هنتكلم عنها النهاردة هي Size , alignment</p>
+<h2 id="lhjm-size-package">الحجم | Size 📦</h2>
+<hr />
+<p>لو عندك اتنين <code>struct</code> في البرنامج بتاعك زي دول:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">struct</span><span style="color: #8BE9FD;font-style: italic;"> Student</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> age:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">struct</span><span style="color: #8BE9FD;font-style: italic;"> Professor</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> age:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> phoneNumber:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> mostfa </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;"> Student</span><span>(</span><span style="color: #8BE9FD;">age</span><span>:</span><span style="color: #BD93F9;"> 10</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> ahmed </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;"> Professor</span><span>(</span><span style="color: #8BE9FD;">age</span><span>:</span><span style="color: #BD93F9;"> 10</span><span>, </span><span style="color: #8BE9FD;">phoneNumber</span><span>:</span><span style="color: #BD93F9;"> 010</span><span>)</span></span></code></pre>
+<p>و سألتك تتوقع الأوبجيكت اللي اسمه مصطفى اكبر ؟ ولا الللي اسمه احمد ؟ بالمنطق، الأوبجيكت اللي اسمه احمد اكبر علشان هو مكون من متغيرين، <code>age</code> و <code>phoneNumber</code></p>
+<p>بس ازاي نتأكد من انه كلامنا صح ؟ لازم ارقام تثبت صحة كلامنا ؟ علشان نتأكد هنستخدم MemoryLayout</p>
+<h2 id="computer-memory-layout">💻 Memory Layout</h2>
+<hr />
+<p>فيه في سويفت نوع اسمه MemoryLayout النوع دا بيخلينا نقدر نتأكد من احجام الأنواع اللي عندنا زي Student و Professor و اي نوع في سويفت زي String و Bool علشان نعرف الSize اللي اي اوبجيكت من نوع Student او من نوع Professor هياخده من الميموري:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> studentSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span>.</span><span style="color: #BD93F9;">size</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> professorSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span>.</span><span style="color: #BD93F9;">size</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">print</span><span>(studentSize)</span><span style="color: #6272A4;"> // prints 8</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">print</span><span>(professorSize)</span><span style="color: #6272A4;"> //prints 16 😉</span></span></code></pre>
+<p>هنا استخدمنا MemoryLayout و طلبنا منها تجيب حجم/size اي اوبجيكت هيتعمل من الtypes هيبقى حجمه كام زي ما توقعنا، professor هتاخد مساحة اكبر من الميموري</p>
+<p>ولو عاوزين نتأكد من الكلام على الأوبجيكتس، زي اوبجيكت آحمد و مصطفى اللي فوق</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> mostfaSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span>.</span><span style="color: #BD93F9;">size</span><span>(</span><span style="color: #8BE9FD;">ofValue</span><span>: mostfa)</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> ahmedSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span>.</span><span style="color: #BD93F9;">size</span><span>(</span><span style="color: #8BE9FD;">ofValue</span><span>: ahmed)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">print</span><span>(mostfaSize)</span><span style="color: #6272A4;"> //prints 8</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">print</span><span>(ahmedSize)</span><span style="color: #6272A4;"> //also prints 16</span></span></code></pre>
+<p>لكن ليه ؟ ليه ٨ ؟ و ليه ١٦ ؟ نرجع تاني للحجم## للحجم | Size</p>
+<h2 id="nrj-llhjm-size-package">نرجع للحجم | Size 📦</h2>
+<hr />
+<p>في سويفت سهل انك تحسب حجم اي ستراكت في البرنامج، لأنه حجم الستراكت = حجم المتغيرات اللي جواه بمعنى إيه ؟ بمعنى انه</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">struct</span><span style="color: #8BE9FD;font-style: italic;"> Student</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">     let</span><span> age:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> inSchool:</span><span style="color: #8BE9FD;font-style: italic;"> Bool</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;"> let</span><span> intSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span>.</span><span style="color: #BD93F9;">size</span><span style="color: #6272A4;">  //prints out 8</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;"> let</span><span> boolSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span>.</span><span style="color: #BD93F9;">size</span><span style="color: #6272A4;">  //prints out 1</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> studentSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span>.</span><span style="color: #BD93F9;">size</span><span style="color: #6272A4;"> //prints out 9 ( 1+ 8 )</span></span></code></pre>
+<p>علشان الستراكت دا متكون من متغير من نوع Int و متغير من نوع Bool , حجمه هيساوي مجموع حجم الBool و حجم الInt ، سهلة خالص، صح ؟🦹🏻‍♂️</p>
+<p>طيب خلينا نتأكد بمثال تاني</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">struct</span><span style="color: #8BE9FD;font-style: italic;"> OtherStudent</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> inSchool:</span><span style="color: #8BE9FD;font-style: italic;"> Bool</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> age:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>هنا دا OtherStudent نفس الStudent اللي فوق بالظبط، لكن الفرق اننا غيرنا ترتيب الproperties بتاعنا، المفروض يكون نفس الSize ؟!!!</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> OtherStudentSize </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span>.</span><span style="color: #BD93F9;">size</span><span style="color: #6272A4;"> // 16 .alignment //prints out 8</span></span></code></pre>
+<p>ال Alignment لأي Integer في سويفت عبارة عن ٨، الرقم دا معناه إيه ؟ معناه انه عنوان الMemory اللي هيتم وضع فيه الInteger لازم يكون من مضاعفات ال٨</p>
+<p>لو عندي الكود الآتي</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> A </span><span style="color: #FF79C6;">=</span><span style="color: #BD93F9;"> 88</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> b </span><span style="color: #FF79C6;">=</span><span style="color: #BD93F9;"> 17</span></span></code></pre>
+<p>دا معناه انه المتغير A و b لازم يتحطوا في عنوان ميموري من مضاعفات ال٨، نلاحظ عنوان الميموري للمتغير A في الصورة = صفر، و بما انه الصفر من مضاعفات ال٨، يبقى معندناش مشكلة ايضًا، المتغير b موجود في العنوان ٨ وبما انه ال٨ من مضاعفات ال ٨ ايضًا معندناش مشاكل</p>
+<hr />
+<p>امتى يكون عندنا مشكلة ؟ يكون عندنا مشكلة في الموقف الآتي</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #6272A4;">/*</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">A lot of other code in the app which will be saved in memory</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">.</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">.</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">.</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">.</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">.</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">.</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">*/</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> A </span><span style="color: #FF79C6;">=</span><span style="color: #BD93F9;"> 88</span></span></code></pre>
+<p>لو فيه بيانات اخرى Other موجودة في الميموري من العنوان صفر الى العنوان ٤ ، و جينا نحط المتغير a في العنوان رقم ٥، مش هنقدر ! ليه ؟ لأنه طبقًا ل Alignment الخاص ب Integer لازم يتم وضعه في عنوان من مضاعفات ال ٨ وبناء عليه هيتم وضع المتغير A في العنوان رقم ٨، و هيكون العناوين ٥،٦،٧ فاضيين</p>
+<p>ومن هنا نقدر نرجع للسؤال الأساسي، ليه OtherStudent حجمه اختلف عن Student</p>
+<h2 id="alignment-and-size-bowling">Alignment and size 🎳</h2>
+<hr />
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> boolAlignment </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span>.</span><span style="color: #BD93F9;">alignment</span><span style="color: #6272A4;"> //prints out 1</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> IntegerAlignment </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;font-style: italic;"> MemoryLayout</span><span>.</span><span style="color: #BD93F9;">alignment</span><span style="color: #6272A4;"> //prints out 8</span></span></code></pre><pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">struct</span><span style="color: #8BE9FD;font-style: italic;"> Student</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">     let</span><span> age:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> inSchool:</span><span style="color: #8BE9FD;font-style: italic;"> Bool</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>بمعرفة انه ال Alignment للBool يساوي ١، دا يعني انه ممكن احط الBoolean values في اي عنوان في الميموري، لأنه كل الارقام تعتبر من مضاعفات الواحد، وايضا بمعرفة انه الAlignment للIntegers يساوي ٨ دا معناه انه ممكن نحط الIntegers في العنواين اللي من مضاعفات ٨</p>
+<p>هنا، الInteger عنوان صفر، و الصفر من مضاعفات ال ٨</p>
+<p>و الBoolean عنوان٨، و ال٨ من مضاعفات ال ١ ودا معناه انه ال Alignment تحقق و شغال و زي الفل و بناء عليه حجم الStudent يساوي ٩</p>
+<hr />
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">struct</span><span style="color: #8BE9FD;font-style: italic;"> OtherStudent</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> inSchool:</span><span style="color: #8BE9FD;font-style: italic;"> Bool</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> age:</span><span style="color: #8BE9FD;font-style: italic;"> Int</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>لو جينا نطبق قواعد الAlignment هنا هنلاقي الآتي</p>
+<p>اول حاجة هيتم وضع الBoolean value في العنوان صفر، و لأنه الصفر من مضاعفات ال١، الAlignment تصبح مظبوطة ✅</p>
+<p>لكن الInteger مينفعش يتحط في العنوان رقم ١ ❌ لأن العنوان رقم ١ مش من مضاعفات ال ٨ وبناء عليه هيتم تركه فاضي، وترك جميع العناوين اللي مش من مضاعفات ٨ فاضية، حتى نصل الى اول رقم من مضاعفات ٨، وهو ال ٨، ونحط فيه الInteger</p>
+<p>النتيجة هنا، انه بسبب ال Alignment اصبح الstruct حجمه ١٦ 🤯</p>
+<p>To be continued …</p>
+
+    </div>
+
+    
+    <footer class="post-tags">
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/ar/tags/swift/" class="tag">#swift</a>
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/ar/tags/memory/" class="tag">#memory</a>
+        
+    </footer>
+    
+
+    
+    <br>
+    <script src="https://giscus.app/client.js"
+            data-repo="imostfa&#x2F;blog"
+            data-repo-id="R_kgDOGXqJnA"
+            data-category="Announcements"
+            data-category-id="DIC_kwDOGXqJnM4C4a0o"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="preferred_color_scheme"
+            data-lang="ar"
+            crossorigin="anonymous"
+            async>
+    </script>
+    
+</article>
+
+        </main>
+
+        <footer>
+            <hr>
+<div id="footer-container">
+    <p>Made using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> Zola theme</p>
+</div>
+
+        </footer>
+
+        <!-- Move JS to end of body and add defer -->
+        <script src="https://imostfa.github.io/Blog/js/script.js" defer></script>
+        
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            document.querySelectorAll('time, .date, .content-meta').forEach(function(el) {
+                el.textContent = el.textContent.replace(/[0-9]/g, function(d) { return ar[d]; });
+            });
+        });
+        </script>
+        
+    </body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en"
+      dir="ltr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="index, follow">
+        
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://imostfa.github.io/Blog/rss.xml">
+        
+        <title>Mostafa | What is Unit Testing?</title>
+
+        <link rel="preload" href="https://imostfa.github.io/Blog/css/style.css" as="style">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/reset-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/suCSS-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/style.css">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/custom.css">
+
+        <!-- Add favicon with appropriate sizes -->
+        <link rel="icon" href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/favicon.ico">
+        
+
+
+    </head>
+    <body>
+        
+        
+        
+        
+        <nav id="nav-bar">
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog" class="">
+                
+                &#x2F;home&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;blog" class="">
+                
+                &#x2F;blog&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;about" class="">
+                
+                &#x2F;about&#x2F;
+            </a>
+            
+
+            
+                
+                
+                <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;blog&#x2F;unit-testing-intro&#x2F;" class="lang-switch">Arabic</a>
+                
+                
+                
+                
+            
+
+            <div class="theme-toggle" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle theme"
+                data-icon-base="https://imostfa.github.io/Blog/icons.svg"
+                data-icon-dark="#darkMode"
+                data-icon-light="#lightMode"
+                data-sound-src="https://imostfa.github.io/Blog/click.ogg">
+                <svg class="icon">
+                    <use id="theme-icon"></use>
+                </svg>
+            </div>
+        </nav>
+
+        <main>
+            
+<article class="post">
+    <header class="post-header">
+        
+        <time datetime="2020-11-02">
+            
+            Published on:
+            
+            <span class="accent-data">2020-11-02</span>
+        </time>
+        
+
+        
+
+        <h1>What is Unit Testing?</h1>
+    </header>
+
+
+
+    <div class="post-content" dir="auto">
+        <h1 id="what-is-unit-testing">What is Unit Testing?</h1>
+<p>In this post we’ll talk about what unit testing is as a general concept, with some simplified code examples.</p>
+<p>If we had to define unit testing in one sentence, we could say: it’s writing code that verifies the functions you wrote always work the way you intend, and always fulfill their purpose.</p>
+<p>Why bother? There are many reasons, but here are a few:</p>
+<ul>
+<li>Sometimes we write code, come back to it after a long time not remembering what it does, modify it, and the app seems to work fine - but we didn’t notice we broke something else.</li>
+</ul>
+<ol>
+<li>Sometimes we have a bug, fix it by changing some old working code, and the bug gets fixed - but we didn’t realize we broke something else in the process.</li>
+<li>When a team is working together, one person might write working code, then a teammate edits it mid-task and doesn’t realize they changed something fundamental.</li>
+<li>You can catch bugs before your QA tester or the client does.</li>
+<li>It reduces unnecessary code in your functions and encourages writing cleaner, better code - this is especially true with practices like TDD.</li>
+</ol>
+<p>Now that we have a basic definition and some reasons to write unit tests, let’s look at an example. And let’s never forget our goal:</p>
+<h2 id="the-goal-any-function-we-write-should-always-work-as-we-intend-and-always-fulfill-its-purpose">The goal: any function we write should always work as we intend and always fulfill its purpose</h2>
+<p>What does that mean? Imagine we have this function:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> insertDot</span><span>(</span><span style="color: #50FA7B;">to</span><span style="color: #FFB86C;font-style: italic;"> sentance</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">String</span><span>)</span><span style="color: #FF79C6;"> -&gt;</span><span style="color: #8BE9FD;font-style: italic;"> String</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">    //if the last character in sentance is &quot;.&quot; will return the sentance without any modification</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    guard</span><span> sentance.</span><span style="color: #BD93F9;">last</span><span style="color: #FF79C6;"> !=</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">.</span><span style="color: #E9F284;">&quot;</span><span style="color: #FF79C6;"> else</span><span> {</span><span style="color: #FF79C6;"> return</span><span> sentance }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6272A4;">    //return the senance with a dot added at the end</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    return</span><span> sentance </span><span style="color: #FF79C6;">+</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">.</span><span style="color: #E9F284;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>}</span></span></code></pre><h3 id="this-function-s-purpose-is-to-add-a-period-at-the-end-of-a-sentence">This function’s purpose is to add a period at the end of a sentence</h3>
+<p>How does it fulfill that purpose? Through two behaviors:</p>
+<ol>
+<li>If the sentence already ends with a period, don’t add another one.</li>
+<li>If the sentence doesn’t end with a period, add one.</li>
+</ol>
+<p>What we want to do is protect those two behaviors - in other words, write code that verifies this function always achieves both goals. That code is called a “test”, or more precisely a “unit test”. We’ll need to write 2 unit tests, one for each goal.</p>
+<p>Here’s the code we need to verify both goals - without worrying about where exactly this code lives in the project, just focusing on the concept:</p>
+<hr />
+<p>The unit test for the first goal:</p>
+<p>The goal of this test: when the function receives <code>"Mostfa."</code>, the output should be <code>"Mostfa."</code> - unchanged.</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> test_NoDublicate_dots</span><span>() {</span><span style="color: #6272A4;"> //1</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">        let</span><span> output </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;"> insertDot</span><span>(</span><span style="color: #8BE9FD;">to</span><span>:</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">Mostfa.</span><span style="color: #E9F284;">&quot;</span><span>)</span><span style="color: #6272A4;"> //2</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">           XCTAssertEqual</span><span>(output, </span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">Mostfa.</span><span style="color: #E9F284;">&quot;</span><span>, </span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">No dot&#39;s should be added</span><span style="color: #E9F284;">&quot;</span><span>)</span><span style="color: #6272A4;"> //3</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    }</span></span></code></pre>
+<p>In <code>//1</code>:</p>
+<p>We name the function to describe what it’s testing. The name here says we don’t want duplicate dots in the output.</p>
+<p>In <code>//2</code>:</p>
+<p>We call the function we’re testing and store the result in <code>output</code>.</p>
+<p>Notice that the sentence we’re passing already ends with a period - so the function should return it unchanged, without adding a second period.</p>
+<p>In <code>//3</code>: We use <code>XCTAssertEqual</code>, a function from the testing framework, to declare our expectation. We’re saying: <code>output</code> should equal <code>"Mostfa."</code> - that’s our goal.</p>
+<p>You can think of this function as doing this:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> test_NoDublicate_dots</span><span>() {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">        let</span><span> output </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;"> insertDot</span><span>(</span><span style="color: #8BE9FD;">to</span><span>:</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">Mostfa.</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">        XCTAssertEqual</span><span>(output, </span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">Mostfa.</span><span style="color: #E9F284;">&quot;</span><span>, </span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">No dots should be added</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">        if</span><span> output </span><span style="color: #FF79C6;">==</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">Mostfa.</span><span style="color: #E9F284;">&quot;</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">            //we are happy, no errors!</span></span>
+<span class="giallo-l"><span>        }</span><span style="color: #FF79C6;"> else</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">            assertionFailure</span><span>(</span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">stop here!, we are not happy, that&#39;s not supposed to happen</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span></code></pre>
+<p>When you run this test, you’ll get a green checkmark ✅ because <code>insertDot</code> correctly doesn’t add a period to a sentence that already ends with one.</p>
+<p>Congrats, that’s your first test!</p>
+<p>Now imagine someone went and tampered with the original function like this:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> insertDot</span><span>(</span><span style="color: #50FA7B;">to</span><span style="color: #FFB86C;font-style: italic;"> sentance</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">String</span><span>)</span><span style="color: #FF79C6;"> -&gt;</span><span style="color: #8BE9FD;font-style: italic;"> String</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">    //if the last character in sentance is &quot;.&quot; will return it with any modification</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    guard</span><span> sentance.</span><span style="color: #BD93F9;">last</span><span style="color: #FF79C6;"> !=</span><span style="color: #E9F284;"> &quot; &quot;</span><span style="color: #FF79C6;"> else</span><span> {</span><span style="color: #FF79C6;"> return</span><span> sentance }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6272A4;">    //return the senance with a dot added at the end</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    return</span><span> sentance </span><span style="color: #FF79C6;">+</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">.</span><span style="color: #E9F284;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>When we run our test, we’ll see a red X ❌</p>
+<p>Why? Because the test found that the output was <code>"Mostfa.."</code> - not what we expected, and not what the function is supposed to do.</p>
+<p>In practice, after every change we make to the project, we run the test functions. If everything is green, we’re good. If something is red, we know we broke something and we go find out what.</p>
+<hr />
+<p>Now let’s write the second test - which is actually more intuitive:</p>
+<p>Here we verify that if the sentence doesn’t already end with a period, one gets added:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> test_dot_isAdded</span><span>() {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">        let</span><span> output </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;"> insertDot</span><span>(</span><span style="color: #8BE9FD;">to</span><span>:</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">Essam</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">        XCTAssertEqual</span><span>(output, </span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">Essam.</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span>    }</span></span></code></pre>
+<p>Simple - we call the function with <code>"Essam"</code> and assert that the output is always <code>"Essam."</code>.</p>
+<p>Now if someone goes and modifies the original function like this:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> insertDot</span><span>(</span><span style="color: #50FA7B;">to</span><span style="color: #FFB86C;font-style: italic;"> sentance</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">String</span><span>)</span><span style="color: #FF79C6;"> -&gt;</span><span style="color: #8BE9FD;font-style: italic;"> String</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">    //if the last character in sentance is &quot;.&quot; will return it with any modification</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    guard</span><span> sentance.</span><span style="color: #BD93F9;">last</span><span style="color: #FF79C6;"> !=</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">.</span><span style="color: #E9F284;">&quot;</span><span style="color: #FF79C6;"> else</span><span> {</span><span style="color: #FF79C6;"> return</span><span> sentance }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6272A4;">    //return the senance with a dot added at the end</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    return</span><span> sentance </span><span style="color: #FF79C6;">+</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">💕</span><span style="color: #E9F284;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>When we run the test, it fails - and that’s expected. It tells us the output should be <code>"Essam."</code>, not <code>"Essam💕"</code>. So we go look at the function and figure out what changed, and fix it so the test passes again.</p>
+<hr />
+<p>That’s the end of today’s post. We covered an introduction to testing with a very simple example that shows how to think about it and what to do to write a test.</p>
+<p>There are things still missing - like where exactly the test code lives in a project, and how to test something more complex. We can cover all of that in a follow-up post, and eventually write tests for our API layer in a more advanced way.</p>
+
+    </div>
+
+    
+    <footer class="post-tags">
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/tags/unit-testing/" class="tag">#unit-testing</a>
+        
+    </footer>
+    
+
+    
+    <br>
+    <script src="https://giscus.app/client.js"
+            data-repo="imostfa&#x2F;blog"
+            data-repo-id="R_kgDOGXqJnA"
+            data-category="Announcements"
+            data-category-id="DIC_kwDOGXqJnM4C4a0o"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="preferred_color_scheme"
+            data-lang="en"
+            crossorigin="anonymous"
+            async>
+    </script>
+    
+</article>
+
+        </main>
+
+        <footer>
+            <hr>
+<div id="footer-container">
+    <p>Made using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> Zola theme</p>
+</div>
+
+        </footer>
+
+        <!-- Move JS to end of body and add defer -->
+        <script src="https://imostfa.github.io/Blog/js/script.js" defer></script>
+        
+    </body>
+</html>

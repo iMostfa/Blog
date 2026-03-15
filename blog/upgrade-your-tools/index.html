@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en"
+      dir="ltr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="index, follow">
+        
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://imostfa.github.io/Blog/rss.xml">
+        
+        <title>Mostafa | Stop Using Tools That Are Just Good Enough</title>
+
+        <link rel="preload" href="https://imostfa.github.io/Blog/css/style.css" as="style">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/reset-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/suCSS-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/style.css">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/custom.css">
+
+        <!-- Add favicon with appropriate sizes -->
+        <link rel="icon" href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/favicon.ico">
+        
+
+
+    </head>
+    <body>
+        
+        
+        
+        
+        <nav id="nav-bar">
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog" class="">
+                
+                &#x2F;home&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;blog" class="">
+                
+                &#x2F;blog&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;about" class="">
+                
+                &#x2F;about&#x2F;
+            </a>
+            
+
+            
+                
+                
+                
+            
+
+            <div class="theme-toggle" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle theme"
+                data-icon-base="https://imostfa.github.io/Blog/icons.svg"
+                data-icon-dark="#darkMode"
+                data-icon-light="#lightMode"
+                data-sound-src="https://imostfa.github.io/Blog/click.ogg">
+                <svg class="icon">
+                    <use id="theme-icon"></use>
+                </svg>
+            </div>
+        </nav>
+
+        <main>
+            
+<article class="post">
+    <header class="post-header">
+        
+        <time datetime="2026-03-15">
+            
+            Published on:
+            
+            <span class="accent-data">2026-03-15</span>
+        </time>
+        
+
+        
+
+        <h1>Stop Using Tools That Are Just Good Enough</h1>
+    </header>
+
+
+
+    <div class="post-content" dir="auto">
+        <p>Every day you spend using a tool that’s merely “good enough” is time you’re paying a tax you don’t have to pay — slower edits, unnecessary friction, workflows that almost fit but never quite do. The cost is invisible because you never see the version of you that switched earlier.</p>
+<p>Here I will share two tools that have impacted my workflow and made it more efficient, and I think you should give them a try.</p>
+<h2 id="vim-motions">Vim Motions</h2>
+<p>I spend most of my day in text — writing code, editing prompts, drafting messages. Even with the rise of LLMs and agentic tooling, you’re still the one navigating and shaping the words. When I started using vim motions, I stopped thinking about <em>how</em> to move and started thinking about <em>what</em> to say.</p>
+<h3 id="why-vim-motions">Why Vim Motions?</h3>
+<p>Most text operations are repetitive and can be described in two words: delete word, change inside quotes, select around argument. Without vim motions, you reach for the mouse or arrow keys — it works, but it’s slow and pulls your hands out of rhythm.</p>
+<p>The key insight is that motions <em>compose</em>. You learn a handful of verbs (<code>d</code>, <code>c</code>, <code>y</code>) and a handful of nouns (<code>w</code>, <code>b</code>, <code>i</code>, <code>aa</code>), and suddenly you have a vocabulary for almost any edit. The combinations multiply your ability without multiplying what you have to memorize.</p>
+<p>You don’t need to switch to Neovim. Just enable vim mode in your current editor — VS Code, JetBrains, or even Claude’s prompt input supports it.</p>
+<ol>
+<li>To delete a word, you press <code>dw</code></li>
+<li>To select an argument of a function call, you press <code>vaa</code> (visual around argument) — then press <code>d</code> to delete it</li>
+</ol>
+<script src="https://asciinema.org/a/Ge366jSGE4jhndLK.js" id="asciicast-Ge366jSGE4jhndLK" async="true"></script>
+<p>This is a short clip where i’m trying to show you how fast and fluid it is to edit text with vim motions. (note: the contextual visual selecting is
+powered by a plugin in Neovim, and i can’t live without it)</p>
+<p>It takes time to get used to, but once you do, you won’t want to go back. And if you’ve ever played a game where movement is muscle memory, you already know how this feels — it’s the same rewiring, just for text instead of a character. Getting comfortable with vim motions is honestly easier than adopting the next tool I’m going to talk about — and that one will challenge everything you thought you knew about version control.</p>
+<h2 id="jujutsu-jj">Jujutsu (JJ)</h2>
+<p><code>Jujutsu</code> is a version control system that’s <code>git</code> compatible, but it’s way better than <code>git</code>. Before you say “but I already know git, why should I learn a new tool? git works” — I want you to believe me. I used to be what they call a git wizard; things like <code>rerere</code>, <code>git reflog</code>, <code>merge drivers</code> were part of my workflow every day.</p>
+<h3 id="why-jujutsu">Why Jujutsu?</h3>
+<p>Git has become the English language of version control, and it’s a great tool, but it’s not perfect. Here I will list some of the problems with the design of git itself. None of these problems are a dealbreaker, but they are small things that add up to make your workflow less efficient and more cognitively overloaded.</p>
+<ol>
+<li>In Git you create a commit after you finish working, not before you start working on it</li>
+</ol>
+<p>Did it happen to you that you start working on something, and once you finish you find that you ended up with many files that you have to break down into smaller commits?</p>
+<p>This problem usually happens because in git you don’t have a way to describe what you will work on beforehand. In many cases you already know what you are going to work on before you start.</p>
+<p>In Jujutsu, you start your upcoming work by doing <code>jj new -m "Description of the work"</code> — this creates a new empty change (think: an empty box that you start adding changes to).</p>
+<p>Once you finish, you can start working on something else with <code>jj new</code>.</p>
+<p>Notice:</p>
+<ul>
+<li>You didn’t need to stage your files — they are staged by default</li>
+<li>It’s mentally easier to break down your work since you can already see the description of what you are doing</li>
+<li>You can always do <code>jj describe -m</code> if you find that you are going to do more things, or <code>jj split</code> to split your changes into smaller ones</li>
+</ul>
+<script src="https://asciinema.org/a/cBjymthUiJo4zNlU.js" id="asciicast-cBjymthUiJo4zNlU" async="true"></script>
+<ol start="2">
+<li>You don’t need a branch name until you need to push your work upstream (GitHub PR)</li>
+</ol>
+<p>How many times have you created a branch name just to start working on something, only to realize that you don’t need to push it upstream?
+Branch names are only useful when you want to push upstream (share work in general).</p>
+<p>JJ is branchless by default. You can set a name for a commit (change) only if you need to (mostly to push to GitHub); otherwise, you can use the change ID (think: commit SHA) to switch between changes.</p>
+<ol start="3">
+<li>You don’t really need the staging area</li>
+</ol>
+<p>The issue with the staging area is that it creates two states for any file. If most of the time you do <code>git add .</code>, then staging is just an extra step that’s mostly useless.</p>
+<p>In JJ there’s no staging area — everything is staged by default, and you have the following tools instead.</p>
+<ol start="4">
+<li>Conflicts shouldn’t be blocking for your workflow</li>
+</ol>
+<p>In Git, conflicts are a blocking state — you can’t do anything until you resolve the conflict, which isn’t usually what you want. Maybe you want to do other things first, then resolve conflicts.</p>
+<p>In JJ it informs you that there’s a conflict, and you can decide to solve it now or ignore it.
+This is why in Jujutsu, rebases are effortless — I just solve them after the rebase process is over.</p>
+<p>These four problems are just the ones worth naming — there are more. The point isn’t that git is bad; it’s that you’ve been absorbing its rough edges for so long you’ve stopped noticing them. I’ve been using Jujutsu for a while now and I can’t imagine going back. Give it a try.</p>
+
+    </div>
+
+    
+
+    
+    <br>
+    <script src="https://giscus.app/client.js"
+            data-repo="imostfa&#x2F;blog"
+            data-repo-id="R_kgDOGXqJnA"
+            data-category="Announcements"
+            data-category-id="DIC_kwDOGXqJnM4C4a0o"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="preferred_color_scheme"
+            data-lang="en"
+            crossorigin="anonymous"
+            async>
+    </script>
+    
+</article>
+
+        </main>
+
+        <footer>
+            <hr>
+<div id="footer-container">
+    <p>Made using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> Zola theme</p>
+</div>
+
+        </footer>
+
+        <!-- Move JS to end of body and add defer -->
+        <script src="https://imostfa.github.io/Blog/js/script.js" defer></script>
+        
+    </body>
+</html>

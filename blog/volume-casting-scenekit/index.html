@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en"
+      dir="ltr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="index, follow">
+        
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://imostfa.github.io/Blog/rss.xml">
+        
+        <title>Mostafa | How to Implement Volume Casting in SceneKit</title>
+
+        <link rel="preload" href="https://imostfa.github.io/Blog/css/style.css" as="style">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/reset-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/suCSS-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/style.css">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/custom.css">
+
+        <!-- Add favicon with appropriate sizes -->
+        <link rel="icon" href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/favicon.ico">
+        
+
+
+    </head>
+    <body>
+        
+        
+        
+        
+        <nav id="nav-bar">
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog" class="">
+                
+                &#x2F;home&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;blog" class="">
+                
+                &#x2F;blog&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;about" class="">
+                
+                &#x2F;about&#x2F;
+            </a>
+            
+
+            
+                
+                
+                
+                
+                <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;blog&#x2F;volume-casting-scenekit&#x2F;" class="lang-switch">Arabic</a>
+                
+                
+            
+
+            <div class="theme-toggle" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle theme"
+                data-icon-base="https://imostfa.github.io/Blog/icons.svg"
+                data-icon-dark="#darkMode"
+                data-icon-light="#lightMode"
+                data-sound-src="https://imostfa.github.io/Blog/click.ogg">
+                <svg class="icon">
+                    <use id="theme-icon"></use>
+                </svg>
+            </div>
+        </nav>
+
+        <main>
+            
+<article class="post">
+    <header class="post-header">
+        
+        <time datetime="2022-08-07">
+            
+            Published on:
+            
+            <span class="accent-data">2022-08-07</span>
+        </time>
+        
+
+        
+
+        <h1>How to Implement Volume Casting in SceneKit</h1>
+    </header>
+
+
+
+    <div class="post-content" dir="auto">
+        <h1 id="how-to-implement-volume-casting-in-scenekit">How to Implement Volume Casting in SceneKit</h1>
+<p>In this post we’ll talk about implementing a feature that doesn’t exist natively in SceneKit. To get there, we need to understand the concept first, identify the problem, then figure out how to solve it in code.</p>
+<h2 id="what-is-a-ray">What is a Ray?</h2>
+<p>In the context of computer graphics, a <strong>ray</strong> is a point with a direction - another name for a vector.</p>
+<p>Imagine a laser pointer in your hand: it has a position and a direction (where it’s pointing).</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="plain"><span class="giallo-l"><span>rPos = ray position in space</span></span>
+<span class="giallo-l"><span>rDir = ray direction in space</span></span></code></pre><h2 id="what-is-ray-casting">What is Ray Casting?</h2>
+<p>Ray casting is the process of determining whether a ray intersects with anything in a 3D scene.</p>
+<p>Since a ray has a position and a direction, you can extend it through space - until it hits something. In that example, the ray gets extended until it intersects the sphere in the middle. Now you know the ray is hitting that sphere.</p>
+<h2 id="a-practical-example">A Practical Example</h2>
+<p>One of the most common uses of ray casting is with mouse/touch input.</p>
+<p>Imagine you have a screen full of 3D objects, and you want to know which object the user tapped. When the user taps, a ray is fired from the tap location - it travels until it hits an object. If it hits nothing, the user tapped empty space.</p>
+<p>The challenge here: the tap is in 2D screen space, but the objects live in a 3D world. Ray casting is what bridges the two - it converts the 2D tap into a 3D ray and checks what it intersects.</p>
+<h2 id="hit-testing-in-game-engines">Hit Testing in Game Engines</h2>
+<h3 id="unity-ray-casting">Unity Ray Casting</h3>
+<p>Since hit testing is fundamental, every game engine has it built in. In Unity:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span>Ray ray </span><span style="color: #FF79C6;">=</span><span> Camera.main.</span><span style="color: #8BE9FD;">ScreenPointToRay</span><span>(Input.mousePosition);</span></span>
+<span class="giallo-l"><span>RaycastHit hit;</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">if</span><span> (Physics.</span><span style="color: #8BE9FD;">Raycast</span><span>(ray, out hit, </span><span style="color: #BD93F9;">100</span><span>))</span></span>
+<span class="giallo-l"><span>{</span></span>
+<span class="giallo-l"><span>    Debug.</span><span style="color: #8BE9FD;">Log</span><span>(hit.transform.name);</span></span>
+<span class="giallo-l"><span>    Debug.</span><span style="color: #8BE9FD;">Log</span><span>(</span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">hit</span><span style="color: #E9F284;">&quot;</span><span>);</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p><code>Physics.Raycast</code> handles all the math.</p>
+<h3 id="scenekit-hit-testing">SceneKit Hit Testing</h3>
+<p>In SceneKit (Apple calls it “hit testing”):</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> locationOfTapIn2D </span><span style="color: #FF79C6;">=</span><span> tapRecognizer.</span><span style="color: #8BE9FD;">location</span><span>(</span><span style="color: #8BE9FD;">in</span><span>: sceneView)</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> hitResults </span><span style="color: #FF79C6;">=</span><span> diagramView.sceneView.</span><span style="color: #8BE9FD;">hitTest</span><span>(locationOfTapIn2D, </span><span style="color: #8BE9FD;">options</span><span>:</span><span style="color: #BD93F9;"> nil</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> tappedNode </span><span style="color: #FF79C6;">=</span><span> hitResults.</span><span style="color: #BD93F9;">first</span><span style="color: #FF79C6;">?</span><span>.node</span><span style="color: #6272A4;"> // the object you have tapped</span></span></code></pre><h2 id="what-ray-casting-can-t-do">What Ray Casting Can’t Do</h2>
+<p>Imagine your app needs to find the <strong>closest objects</strong> to a tap, not just the one directly under it.</p>
+<p>Say the user taps in empty space. You want to know which objects are nearby - the 4 or 5 closest ones. This becomes even more useful when objects overlap and you can’t tell which one the user intended.</p>
+<p>For example: the user taps near a small gray area that partially overlaps a large orange shape. Did they mean to tap the gray one or the orange one? Standard hit testing can only tell you which one is directly under the ray - which may not be what the user wanted.</p>
+<p>Ray casting fires a single ray from the tap point. When it hits something, it stops. So if the tap falls in empty space between objects, it finds nothing at all.</p>
+<p>What we want is something like <strong>widening the ray’s diameter</strong> - so instead of a single-point pierce, we get a volume that can intersect multiple nearby objects at once.</p>
+<h2 id="other-types-of-casting">Other Types of Casting</h2>
+<p>Some game engines solve this by letting you cast a <strong>shape</strong> instead of a ray:</p>
+<ul>
+<li>BoxCast 📦</li>
+<li>CapsuleCast 💊</li>
+<li>SphereCast 🏀</li>
+<li>RigidBodyCast 🥎</li>
+</ul>
+<p>The idea: instead of casting a ray, place a box at the hit point and check which objects it overlaps. That’s <strong>volume casting</strong>.</p>
+<h2 id="volume-casting-in-scenekit">Volume Casting in SceneKit</h2>
+<p>SceneKit doesn’t have volume casting built in. Here’s how to approximate it:</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>Detect the touch location using normal hit testing (convert 2D → 3D)</li>
+<li>Place an invisible box at that 3D point</li>
+<li>Check which objects intersect with the box</li>
+</ol>
+<h2 id="technical-implementation">Technical Implementation</h2>
+<h3 id="1-detect-touch-location">1. Detect Touch Location</h3>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #6272A4;">// Inside the tap gesture selector</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> locationOfTapIn2D </span><span style="color: #FF79C6;">=</span><span> tapRecognizer.</span><span style="color: #8BE9FD;">location</span><span>(</span><span style="color: #8BE9FD;">in</span><span>: sceneView)</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> hitResults </span><span style="color: #FF79C6;">=</span><span> diagramView.sceneView.</span><span style="color: #8BE9FD;">hitTest</span><span>(locationOfTapIn2D, </span><span style="color: #8BE9FD;">options</span><span>:</span><span style="color: #BD93F9;"> nil</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> firstTappedNode </span><span style="color: #FF79C6;">=</span><span> hitResults.</span><span style="color: #BD93F9;">first</span><span style="color: #6272A4;"> // the object you have tapped</span></span></code></pre><h3 id="2-place-the-box">2. Place the Box</h3>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> boxHeight </span><span style="color: #FF79C6;">=</span><span style="color: #BD93F9;"> 12</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> boxGeometry </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;"> SCNBox</span><span>(</span><span style="color: #8BE9FD;">width</span><span>: boxHeight,</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">                         height</span><span>: boxHeight,</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">                         length</span><span>: boxHeight,</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">                         chamferRadius</span><span>:</span><span style="color: #BD93F9;"> 2</span><span>)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">let</span><span> boxNode </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;"> SCNNode</span><span>(</span><span style="color: #8BE9FD;">geometry</span><span>: boxGeometry)</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// Add to root node (world space)</span></span>
+<span class="giallo-l"><span>sceneView</span><span style="color: #FF79C6;">?</span><span>.scene</span><span style="color: #FF79C6;">?</span><span>.rootNode.</span><span style="color: #8BE9FD;">addChildNode</span><span>(boxNode)</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// Place the box at the touch coordinates</span></span>
+<span class="giallo-l"><span>boxNode.worldPosition</span><span style="color: #FF79C6;"> =</span><span> firstHit.worldCoordinates</span></span>
+<span class="giallo-l"><span>boxNode.name</span><span style="color: #FF79C6;"> =</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">VOLUME_CASTING_BOX</span><span style="color: #E9F284;">&quot;</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// Hide it - the user shouldn&#39;t see it</span></span>
+<span class="giallo-l"><span>boxNode.isHidden</span><span style="color: #FF79C6;"> =</span><span style="color: #BD93F9;"> true</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">// Physics body is required so we can check intersections</span></span>
+<span class="giallo-l"><span>boxNode.physicsBody</span><span style="color: #FF79C6;"> =</span><span> .</span><span style="color: #FF79C6;">init</span><span>(</span><span style="color: #8BE9FD;">type</span><span>: .kinematic,</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">                             shape</span><span>: .</span><span style="color: #FF79C6;">init</span><span>(</span><span style="color: #8BE9FD;">node</span><span>: boxNode, </span><span style="color: #8BE9FD;">options</span><span>: [</span><span style="color: #FF79C6;">:</span><span>]))</span></span></code></pre><h3 id="3-check-intersections">3. Check Intersections</h3>
+<p>The function <code>contactTest(with:)</code> returns an array of <code>SCNPhysicsContact</code> - each contact represents one object intersecting with our box.</p>
+<p>Each <code>SCNPhysicsContact</code> gives you <code>nodeA</code> and <code>nodeB</code>. In our case, <code>nodeA</code> will be our box, and <code>nodeB</code> will be the intersecting object.</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">let</span><span> boxContacts </span><span style="color: #FF79C6;">=</span><span> scene.physicsWorld.</span><span style="color: #8BE9FD;">contactTest</span><span>(</span><span style="color: #8BE9FD;">with</span><span>: boxNode.physicsBody</span><span style="color: #FF79C6;">!</span><span>, </span><span style="color: #8BE9FD;">options</span><span>: [</span><span style="color: #FF79C6;">:</span><span>])</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">if</span><span> boxContacts.</span><span style="color: #BD93F9;">count</span><span style="color: #FF79C6;"> &gt;</span><span style="color: #BD93F9;"> 0</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">    // Get the names of intersecting nodes</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    let</span><span> nodesNames </span><span style="color: #FF79C6;">=</span><span> boxContacts</span></span>
+<span class="giallo-l"><span>        .</span><span style="color: #8BE9FD;">map</span><span> {</span><span style="color: #BD93F9;font-style: italic;"> $0</span><span>.nodeB.name</span><span style="color: #FF79C6;"> ??</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">NO_OBJECT_NAME</span><span style="color: #E9F284;">&quot;</span><span> }</span></span>
+<span class="giallo-l"><span>        .</span><span style="color: #8BE9FD;">filter</span><span> {</span><span style="color: #BD93F9;font-style: italic;"> $0</span><span style="color: #FF79C6;"> !=</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">VOLUME_CASTING_BOX</span><span style="color: #E9F284;">&quot;</span><span> }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">    print</span><span>(nodesNames)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6272A4;">    // You also have access to the nodes themselves</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">    // - highlight them, scale them, do whatever you need</span></span>
+<span class="giallo-l"><span>    boxContacts.</span><span style="color: #8BE9FD;">forEach</span><span> { contactWithBox </span><span style="color: #FF79C6;">in</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">        print</span><span>(contactWithBox.nodeB)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><h2 id="thread-safety">Thread Safety</h2>
+<p>If you run the above code on the main thread, it will likely crash. SceneKit runs on its own render thread, and accessing it from the main thread creates race conditions. The safest approach: always access SceneKit from its own thread.</p>
+<p>How? Conform to <code>SCNSceneRendererDelegate</code> and put your code inside:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> renderer</span><span>(</span><span style="color: #50FA7B;">_</span><span style="color: #FFB86C;font-style: italic;"> renderer</span><span>: SCNSceneRenderer, </span><span style="color: #50FA7B;">willRenderScene</span><span style="color: #FFB86C;font-style: italic;"> scene</span><span>: SCNScene, </span><span style="color: #50FA7B;">atTime</span><span style="color: #FFB86C;font-style: italic;"> time</span><span>: TimeInterval) {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">    // This is called every frame - all SceneKit access should go here</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6272A4;">    // This boolean is set to true when the user taps (from the gesture selector)</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">    // Note: this isn&#39;t fully race-condition safe either, but works in practice</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    if</span><span> isCheckingCloseObjectsToTap,</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">       let</span><span> node </span><span style="color: #FF79C6;">=</span><span> scene.rootNode.</span><span style="color: #8BE9FD;">childNode</span><span>(</span><span style="color: #8BE9FD;">withName</span><span>:</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">VOLUME_CASTING_BOX</span><span style="color: #E9F284;">&quot;</span><span>, </span><span style="color: #8BE9FD;">recursively</span><span>:</span><span style="color: #BD93F9;"> true</span><span>) {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">        defer</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">            // Reset after checking - we only want to check for one frame</span></span>
+<span class="giallo-l"><span>            isCheckingCloseObjectsToTap </span><span style="color: #FF79C6;">=</span><span style="color: #BD93F9;"> false</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">        let</span><span> boxContacts </span><span style="color: #FF79C6;">=</span><span> scene.physicsWorld.</span><span style="color: #8BE9FD;">contactTest</span><span>(</span><span style="color: #8BE9FD;">with</span><span>: node.physicsBody</span><span style="color: #FF79C6;">!</span><span>, </span><span style="color: #8BE9FD;">options</span><span>: [</span><span style="color: #FF79C6;">:</span><span>])</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">        if</span><span> boxContacts.</span><span style="color: #BD93F9;">count</span><span style="color: #FF79C6;"> &gt;</span><span style="color: #BD93F9;"> 0</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">            let</span><span> nodesNames </span><span style="color: #FF79C6;">=</span><span> boxContacts</span></span>
+<span class="giallo-l"><span>                .</span><span style="color: #8BE9FD;">map</span><span> {</span><span style="color: #BD93F9;font-style: italic;"> $0</span><span>.nodeB.name</span><span style="color: #FF79C6;"> ??</span><span style="color: #E9F284;"> &quot;&quot;</span><span> }</span></span>
+<span class="giallo-l"><span>                .</span><span style="color: #8BE9FD;">filter</span><span> {</span><span style="color: #BD93F9;font-style: italic;"> $0</span><span style="color: #FF79C6;"> !=</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">VOLUME_CASTING_BOX</span><span style="color: #E9F284;">&quot;</span><span> }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">            print</span><span>(nodesNames)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>            boxContacts.</span><span style="color: #8BE9FD;">forEach</span><span> { contactWithBox </span><span style="color: #FF79C6;">in</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">                print</span><span>(contactWithBox.nodeB)</span></span>
+<span class="giallo-l"><span>            }</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>Since this delegate method is called every frame, you shouldn’t put heavy work in it.</p>
+<h2 id="wrap-up">Wrap Up</h2>
+<p>Using this approach, we can approximate Unity-style volume casting in SceneKit. I say “approximate” because I’m not sure there’s a better way - but this works well in practice. From here, you can ask the user which nearby object they intended to tap, and present them as options.</p>
+<p>SceneKit is a solid and capable framework in the Apple ecosystem, but it lacks many of the features and the documentation support you’d find in Unity. As far as I know, no one has written about a volume casting implementation in SceneKit before - so I may write this up in English too, since it’s content that simply doesn’t exist online yet.</p>
+
+    </div>
+
+    
+    <footer class="post-tags">
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/tags/swift/" class="tag">#swift</a>
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/tags/graphics/" class="tag">#graphics</a>
+        
+    </footer>
+    
+
+    
+    <br>
+    <script src="https://giscus.app/client.js"
+            data-repo="imostfa&#x2F;blog"
+            data-repo-id="R_kgDOGXqJnA"
+            data-category="Announcements"
+            data-category-id="DIC_kwDOGXqJnM4C4a0o"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="preferred_color_scheme"
+            data-lang="en"
+            crossorigin="anonymous"
+            async>
+    </script>
+    
+</article>
+
+        </main>
+
+        <footer>
+            <hr>
+<div id="footer-container">
+    <p>Made using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> Zola theme</p>
+</div>
+
+        </footer>
+
+        <!-- Move JS to end of body and add defer -->
+        <script src="https://imostfa.github.io/Blog/js/script.js" defer></script>
+        
+    </body>
+</html>

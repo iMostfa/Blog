@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ar"
+      dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="index, follow">
+        
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://imostfa.github.io/Blog/rss.xml">
+        
+        <title>مصطفى | ازاي تهندل السبسكريبشن في كومباين</title>
+
+        <link rel="preload" href="https://imostfa.github.io/Blog/css/style.css" as="style">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/reset-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/suCSS-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/style.css">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/custom.css">
+
+        <!-- Add favicon with appropriate sizes -->
+        <link rel="icon" href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/favicon.ico">
+        
+
+
+    </head>
+    <body>
+        
+        
+        
+        
+        <nav id="nav-bar">
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar" class="">
+                
+                &#x2F;الرئيسية&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;blog" class="">
+                
+                &#x2F;مقالات&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;about" class="">
+                
+                &#x2F;عني&#x2F;
+            </a>
+            
+
+            
+                
+                
+                
+                
+                <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;blog&#x2F;combine-subscriptions&#x2F;" class="lang-switch">EN</a>
+                
+                
+            
+
+            <div class="theme-toggle" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle theme"
+                data-icon-base="https://imostfa.github.io/Blog/icons.svg"
+                data-icon-dark="#darkMode"
+                data-icon-light="#lightMode"
+                data-sound-src="https://imostfa.github.io/Blog/click.ogg">
+                <svg class="icon">
+                    <use id="theme-icon"></use>
+                </svg>
+            </div>
+        </nav>
+
+        <main>
+            
+<article class="post">
+    <header class="post-header">
+        
+        <time datetime="2022-07-28">
+            
+            نُشر في:
+            
+            <span class="accent-data">2022-07-28</span>
+        </time>
+        
+
+        
+
+        <h1>ازاي تهندل السبسكريبشن في كومباين</h1>
+    </header>
+
+
+
+    <div class="post-content" dir="auto">
+        <p>لما تكون بتستخدم Combine في الفيوكنترولر/الفيوموديل، بيكون عليك مسؤلية هندلة و الحفاظ على السبسكريبشنز aka Disposals</p>
+<p>لو افترضنا الكود الآتي كمثال على بابلشر بيأبديت الUI في الابلكيشن:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">class</span><span style="color: #8BE9FD;"> ViewController</span><span>:</span><span style="color: #8BE9FD;font-style: italic;"> UIViewController</span><span> {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">var</span><span> disposeBag:</span><span style="color: #8BE9FD;font-style: italic;">Set</span><span style="color: #FF79C6;"> =</span><span> []</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> viewDidLoad</span><span>(</span><span style="color: #50FA7B;">_</span><span style="color: #FFB86C;font-style: italic;"> animated</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">Bool</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;">  super</span><span>.</span><span style="color: #8BE9FD;">viewDidLoad</span><span>(animated)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>  publisher.</span><span style="color: #8BE9FD;">sink</span><span> { newValue </span><span style="color: #FF79C6;">in</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;">    self</span><span>.</span><span style="color: #8BE9FD;">updateUI</span><span>(</span><span style="color: #8BE9FD;">with</span><span>: newValue)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>  }.</span><span style="color: #8BE9FD;">store</span><span>(</span><span style="color: #8BE9FD;">in</span><span>:</span><span style="color: #FF79C6;"> &amp;</span><span>disposeBag)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>اللي بيحصل هنا انه لما بنعمل سبسكرايب بنحفظ السبسكريبشن (AnyCancellable) في الSet الخاصة بالDisposeBag</p>
+<p>ليه بنعمل كدا ؟ علشان لو محفظتش الريفرينس بتاع الكانسيلبل في Array/normal variable/Set الARC هيشيل الفاريبل من الميموري وفي كومباين لازم علشان تستلم فاليوز، تكون حافظ السبسكريبشن</p>
+<p>كأنك لازم تفضل ماسك السلك اللي بيربطك بالبابلشر اللي بيبعت الداتا</p>
+<p>نفترض انه خلاص انا اخدت الداتا اللي انا عايزها و دلوقتي الكنترولر دا اليوزر هيخرج منه، ازاي اكنسل السبسكريبشن بتاعتي و معدتش استلم اي داتا ؟ هل دا بيحصل بشكل اوتوماتيك ؟ ولا لازم اهندله بنفسي ؟ ايه اللي هيحصل لو انا مشيلتش الكانسيلبل و فضلت سايبه محفوظ ؟</p>
+<p>كطريقة من طرق التعامل مع السؤال دي انه نعمل الآتي</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">class</span><span style="color: #8BE9FD;"> ViewController</span><span>:</span><span style="color: #8BE9FD;font-style: italic;"> UIViewController</span><span> {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">  deinit</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">    print</span><span>(</span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">i&#39;m leaving the memory</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span>  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">var</span><span> disposeBag:</span><span style="color: #8BE9FD;font-style: italic;">Set</span><span style="color: #FF79C6;"> =</span><span> []</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;"> func</span><span style="color: #50FA7B;"> viewDidDisappear</span><span>(</span><span style="color: #50FA7B;">_</span><span style="color: #FFB86C;font-style: italic;"> animated</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">Bool</span><span>)  {</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;"> super</span><span>.</span><span style="color: #8BE9FD;">viewDidDisappear</span><span>(animated)</span></span>
+<span class="giallo-l"><span>  disposeBag.</span><span style="color: #8BE9FD;">removeAll</span><span>()</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> viewDidLoad</span><span>(</span><span style="color: #50FA7B;">_</span><span style="color: #FFB86C;font-style: italic;"> animated</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">Bool</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;">  super</span><span>.</span><span style="color: #8BE9FD;">viewDidLoad</span><span>(animated)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>  publisher.</span><span style="color: #8BE9FD;">sink</span><span> { newValue </span><span style="color: #FF79C6;">in</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;">    self</span><span>.</span><span style="color: #8BE9FD;">updateUI</span><span>(</span><span style="color: #8BE9FD;">with</span><span>: newValue)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>  }.</span><span style="color: #8BE9FD;">store</span><span>(</span><span style="color: #8BE9FD;">in</span><span>:</span><span style="color: #FF79C6;"> &amp;</span><span>disposeBag)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>لما الفيوكنترولر يختفي من الشاشة(في اغلب الاحيان معاناه انه خلاص اليوزر مش شايفه، بس مش ديما) ممكن تفضي الDisposeBag كلها، و بكدا السبسكريبشنز اللي محفوظة جواها هتتشال و الكنترولر كله هيتشال من الميموري</p>
+<p>و تقدر تتأكد من دا بأنك تشوف deinit بيتعملها كول، لما تقفل الكنترولر، ورغم انه دا حل للمشكلة،،لكن هو بيترك عليك مسؤولية انك تعمل call للسطر دا كل في ViewDisAppear وفي بعض الاحيان مش هتبقى عايز تكنسل السبسكريبشن لما الفيو تختفي،</p>
+<p>كحل اخر، ممكن تخلي مسؤولية كنسلة السبسكريبشن على ARC</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">class</span><span style="color: #8BE9FD;"> ViewController</span><span>:</span><span style="color: #8BE9FD;font-style: italic;"> UIViewController</span><span> {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">  deinit</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">    print</span><span>(</span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">i&#39;m leaving the memory</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span>  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">var</span><span> disposeBag:</span><span style="color: #8BE9FD;font-style: italic;">Set</span><span style="color: #FF79C6;"> =</span><span> []</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> viewDidLoad</span><span>(</span><span style="color: #50FA7B;">_</span><span style="color: #FFB86C;font-style: italic;"> animated</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">Bool</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;">  super</span><span>.</span><span style="color: #8BE9FD;">viewDidLoad</span><span>(animated)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>  publisher.</span><span style="color: #8BE9FD;">sink</span><span> {  [</span><span style="color: #FF79C6;">weak</span><span style="color: #BD93F9;font-style: italic;"> self</span><span>]  newValue </span><span style="color: #FF79C6;">in</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;">    self</span><span>.</span><span style="color: #8BE9FD;">updateUI</span><span>(</span><span style="color: #8BE9FD;">with</span><span>: newValue)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>  }.</span><span style="color: #8BE9FD;">store</span><span>(</span><span style="color: #8BE9FD;">in</span><span>:</span><span style="color: #FF79C6;"> &amp;</span><span>disposeBag)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>هنا احنا في الواقع حلينا مشكلتين، لأنه الكلوجر بتاع Sink بيكابتشر self، ودا في حد ذاته ممكن يعمل Memory Leak لو مفضتش الDisposeBag لكن لما تخلي self weakly capturered دا هيخلي ARC يقدر يشيل الSet بتاعت DisposeBag</p>
+<p>وبناء عليه، احسن حل لو انت جوا الفيوكونترولر/فيو موديل، انك متعملش سترونج كابتشر على سيلف، و عموما حاول متعملش سترونج كابتشر في الكلوجرز طول حياتك 😂</p>
+<p>الكلام اللي في البلوج دي يمشي على اي ريآكتيف فريمورك زي RxSwift/ReactiveSwift وكدا..</p>
+<p>والبوست دا هو استفاضة في اجابتي على نفس السؤال في ستاك اوفرفولو https://stackoverflow.com/a/62964220/5253913</p>
+
+    </div>
+
+    
+    <footer class="post-tags">
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/ar/tags/swift/" class="tag">#swift</a>
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/ar/tags/combine/" class="tag">#combine</a>
+        
+    </footer>
+    
+
+    
+    <br>
+    <script src="https://giscus.app/client.js"
+            data-repo="imostfa&#x2F;blog"
+            data-repo-id="R_kgDOGXqJnA"
+            data-category="Announcements"
+            data-category-id="DIC_kwDOGXqJnM4C4a0o"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="preferred_color_scheme"
+            data-lang="ar"
+            crossorigin="anonymous"
+            async>
+    </script>
+    
+</article>
+
+        </main>
+
+        <footer>
+            <hr>
+<div id="footer-container">
+    <p>Made using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> Zola theme</p>
+</div>
+
+        </footer>
+
+        <!-- Move JS to end of body and add defer -->
+        <script src="https://imostfa.github.io/Blog/js/script.js" defer></script>
+        
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            document.querySelectorAll('time, .date, .content-meta').forEach(function(el) {
+                el.textContent = el.textContent.replace(/[0-9]/g, function(d) { return ar[d]; });
+            });
+        });
+        </script>
+        
+    </body>
+</html>

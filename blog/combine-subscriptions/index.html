@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en"
+      dir="ltr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="index, follow">
+        
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://imostfa.github.io/Blog/rss.xml">
+        
+        <title>Mostafa | Managing Combine Subscriptions</title>
+
+        <link rel="preload" href="https://imostfa.github.io/Blog/css/style.css" as="style">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/reset-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/suCSS-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/style.css">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/custom.css">
+
+        <!-- Add favicon with appropriate sizes -->
+        <link rel="icon" href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/favicon.ico">
+        
+
+
+    </head>
+    <body>
+        
+        
+        
+        
+        <nav id="nav-bar">
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog" class="">
+                
+                &#x2F;home&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;blog" class="">
+                
+                &#x2F;blog&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;about" class="">
+                
+                &#x2F;about&#x2F;
+            </a>
+            
+
+            
+                
+                
+                <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;blog&#x2F;combine-subscriptions&#x2F;" class="lang-switch">Arabic</a>
+                
+                
+                
+                
+            
+
+            <div class="theme-toggle" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle theme"
+                data-icon-base="https://imostfa.github.io/Blog/icons.svg"
+                data-icon-dark="#darkMode"
+                data-icon-light="#lightMode"
+                data-sound-src="https://imostfa.github.io/Blog/click.ogg">
+                <svg class="icon">
+                    <use id="theme-icon"></use>
+                </svg>
+            </div>
+        </nav>
+
+        <main>
+            
+<article class="post">
+    <header class="post-header">
+        
+        <time datetime="2022-07-28">
+            
+            Published on:
+            
+            <span class="accent-data">2022-07-28</span>
+        </time>
+        
+
+        
+
+        <h1>Managing Combine Subscriptions</h1>
+    </header>
+
+
+
+    <div class="post-content" dir="auto">
+        <p>When you use Combine inside a <code>ViewController</code> or <code>ViewModel</code>, you’re responsible for managing and retaining your subscriptions (a.k.a. disposals).</p>
+<p>Take this example of a publisher updating the UI:</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">class</span><span style="color: #8BE9FD;"> ViewController</span><span>:</span><span style="color: #8BE9FD;font-style: italic;"> UIViewController</span><span> {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">var</span><span> disposeBag:</span><span style="color: #8BE9FD;font-style: italic;"> Set</span><span>&lt;AnyCancellable&gt;</span><span style="color: #FF79C6;"> =</span><span> []</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> viewDidLoad</span><span>(</span><span style="color: #50FA7B;">_</span><span style="color: #FFB86C;font-style: italic;"> animated</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">Bool</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;">  super</span><span>.</span><span style="color: #8BE9FD;">viewDidLoad</span><span>(animated)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>  publisher.</span><span style="color: #8BE9FD;">sink</span><span> { newValue </span><span style="color: #FF79C6;">in</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;">    self</span><span>.</span><span style="color: #8BE9FD;">updateUI</span><span>(</span><span style="color: #8BE9FD;">with</span><span>: newValue)</span></span>
+<span class="giallo-l"><span>  }.</span><span style="color: #8BE9FD;">store</span><span>(</span><span style="color: #8BE9FD;">in</span><span>:</span><span style="color: #FF79C6;"> &amp;</span><span>disposeBag)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>What’s happening here: when we subscribe, we store the <code>AnyCancellable</code> in a <code>Set</code> that acts as our dispose bag.</p>
+<p>Why? Because if you don’t hold a reference to the <code>AnyCancellable</code> in an Array, variable, or Set - ARC will immediately deallocate it. In Combine, you must keep the subscription alive to keep receiving values.</p>
+<p>Think of it as having to hold onto the wire connecting you to the publisher sending data.</p>
+<p>Now - say you’ve received what you needed, and the user is about to leave this screen. How do you cancel the subscription and stop receiving values? Does it happen automatically? What if you leave the <code>AnyCancellable</code> stored and never remove it?</p>
+<h3 id="option-1-cancel-on-disappear">Option 1: Cancel on disappear</h3>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">class</span><span style="color: #8BE9FD;"> ViewController</span><span>:</span><span style="color: #8BE9FD;font-style: italic;"> UIViewController</span><span> {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">  deinit</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">    print</span><span>(</span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">i&#39;m leaving the memory</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span>  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">  var</span><span> disposeBag:</span><span style="color: #8BE9FD;font-style: italic;"> Set</span><span>&lt;AnyCancellable&gt;</span><span style="color: #FF79C6;"> =</span><span> []</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">  func</span><span style="color: #50FA7B;"> viewDidDisappear</span><span>(</span><span style="color: #50FA7B;">_</span><span style="color: #FFB86C;font-style: italic;"> animated</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">Bool</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;">    super</span><span>.</span><span style="color: #8BE9FD;">viewDidDisappear</span><span>(animated)</span></span>
+<span class="giallo-l"><span>    disposeBag.</span><span style="color: #8BE9FD;">removeAll</span><span>()</span></span>
+<span class="giallo-l"><span>  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">  func</span><span style="color: #50FA7B;"> viewDidLoad</span><span>(</span><span style="color: #50FA7B;">_</span><span style="color: #FFB86C;font-style: italic;"> animated</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">Bool</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;">    super</span><span>.</span><span style="color: #8BE9FD;">viewDidLoad</span><span>(animated)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    publisher.</span><span style="color: #8BE9FD;">sink</span><span> { newValue </span><span style="color: #FF79C6;">in</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;">      self</span><span>.</span><span style="color: #8BE9FD;">updateUI</span><span>(</span><span style="color: #8BE9FD;">with</span><span>: newValue)</span></span>
+<span class="giallo-l"><span>    }.</span><span style="color: #8BE9FD;">store</span><span>(</span><span style="color: #8BE9FD;">in</span><span>:</span><span style="color: #FF79C6;"> &amp;</span><span>disposeBag)</span></span>
+<span class="giallo-l"><span>  }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>When the view controller disappears (which usually means the user is done with it, though not always), you empty the dispose bag. All stored subscriptions get cancelled, and the view controller can be freed from memory.</p>
+<p>You can confirm this by checking that <code>deinit</code> gets called when you close the screen.</p>
+<p>The downside: this puts the burden on you to call <code>removeAll()</code> in every <code>viewDidDisappear</code>. And sometimes you don’t actually want to cancel subscriptions when the view disappears.</p>
+<h3 id="option-2-let-arc-handle-it">Option 2: Let ARC handle it</h3>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">class</span><span style="color: #8BE9FD;"> ViewController</span><span>:</span><span style="color: #8BE9FD;font-style: italic;"> UIViewController</span><span> {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">  deinit</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">    print</span><span>(</span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">i&#39;m leaving the memory</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span>  }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">  var</span><span> disposeBag:</span><span style="color: #8BE9FD;font-style: italic;"> Set</span><span>&lt;AnyCancellable&gt;</span><span style="color: #FF79C6;"> =</span><span> []</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">  func</span><span style="color: #50FA7B;"> viewDidLoad</span><span>(</span><span style="color: #50FA7B;">_</span><span style="color: #FFB86C;font-style: italic;"> animated</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">Bool</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;">    super</span><span>.</span><span style="color: #8BE9FD;">viewDidLoad</span><span>(animated)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    publisher.</span><span style="color: #8BE9FD;">sink</span><span> { [</span><span style="color: #FF79C6;">weak</span><span style="color: #BD93F9;font-style: italic;"> self</span><span>] newValue </span><span style="color: #FF79C6;">in</span></span>
+<span class="giallo-l"><span style="color: #BD93F9;font-style: italic;">      self</span><span style="color: #FF79C6;">?</span><span>.</span><span style="color: #8BE9FD;">updateUI</span><span>(</span><span style="color: #8BE9FD;">with</span><span>: newValue)</span></span>
+<span class="giallo-l"><span>    }.</span><span style="color: #8BE9FD;">store</span><span>(</span><span style="color: #8BE9FD;">in</span><span>:</span><span style="color: #FF79C6;"> &amp;</span><span>disposeBag)</span></span>
+<span class="giallo-l"><span>  }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>This actually solves two problems at once. The <code>sink</code> closure captures <code>self</code> strongly by default - which can cause a memory leak if you never empty the dispose bag. But when you capture <code>self</code> weakly, ARC can release the view controller, which releases the <code>disposeBag</code> with it, which cancels all the subscriptions.</p>
+<p>So the best approach when you’re inside a <code>ViewController</code> or <code>ViewModel</code>: <strong>don’t strongly capture <code>self</code> in closures</strong>. Actually, as a general rule, avoid strong captures in closures altogether 😂</p>
+<p>This applies to any reactive framework - RxSwift, ReactiveSwift, you name it.</p>
+<p>This post is an expanded version of <a rel="noopener external" target="_blank" href="https://stackoverflow.com/a/62964220/5253913">my answer on Stack Overflow</a> on the same question.</p>
+
+    </div>
+
+    
+    <footer class="post-tags">
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/tags/swift/" class="tag">#swift</a>
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/tags/combine/" class="tag">#combine</a>
+        
+    </footer>
+    
+
+    
+    <br>
+    <script src="https://giscus.app/client.js"
+            data-repo="imostfa&#x2F;blog"
+            data-repo-id="R_kgDOGXqJnA"
+            data-category="Announcements"
+            data-category-id="DIC_kwDOGXqJnM4C4a0o"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="preferred_color_scheme"
+            data-lang="en"
+            crossorigin="anonymous"
+            async>
+    </script>
+    
+</article>
+
+        </main>
+
+        <footer>
+            <hr>
+<div id="footer-container">
+    <p>Made using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> Zola theme</p>
+</div>
+
+        </footer>
+
+        <!-- Move JS to end of body and add defer -->
+        <script src="https://imostfa.github.io/Blog/js/script.js" defer></script>
+        
+    </body>
+</html>

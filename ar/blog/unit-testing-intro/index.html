@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar"
+      dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="robots" content="index, follow">
+        
+        <link rel="alternate" type="application/rss+xml" title="RSS" href="https://imostfa.github.io/Blog/rss.xml">
+        
+        <title>مصطفى | إيه هو الUnit testing</title>
+
+        <link rel="preload" href="https://imostfa.github.io/Blog/css/style.css" as="style">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/reset-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://raw.githack.com/Speyll/suCSS/main/suCSS-min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/style.css">
+        <link rel="stylesheet" href="https://imostfa.github.io/Blog/css/custom.css">
+
+        <!-- Add favicon with appropriate sizes -->
+        <link rel="icon" href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/favicon.ico">
+        
+
+
+    </head>
+    <body>
+        
+        
+        
+        
+        <nav id="nav-bar">
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar" class="">
+                
+                &#x2F;الرئيسية&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;blog" class="">
+                
+                &#x2F;مقالات&#x2F;
+            </a>
+            
+            
+                
+            
+            <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;ar&#x2F;about" class="">
+                
+                &#x2F;عني&#x2F;
+            </a>
+            
+
+            
+                
+                
+                
+                
+                <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog&#x2F;blog&#x2F;unit-testing-intro&#x2F;" class="lang-switch">EN</a>
+                
+                
+            
+
+            <div class="theme-toggle" id="theme-toggle" role="button" tabindex="0" aria-label="Toggle theme"
+                data-icon-base="https://imostfa.github.io/Blog/icons.svg"
+                data-icon-dark="#darkMode"
+                data-icon-light="#lightMode"
+                data-sound-src="https://imostfa.github.io/Blog/click.ogg">
+                <svg class="icon">
+                    <use id="theme-icon"></use>
+                </svg>
+            </div>
+        </nav>
+
+        <main>
+            
+<article class="post">
+    <header class="post-header">
+        
+        <time datetime="2020-11-02">
+            
+            نُشر في:
+            
+            <span class="accent-data">2020-11-02</span>
+        </time>
+        
+
+        
+
+        <h1>إيه هو الUnit testing</h1>
+    </header>
+
+
+
+    <div class="post-content" dir="auto">
+        <h1 id="yh-hw-lunit-testing">إيه هو الUnit testing</h1>
+<h1 id="yh-hw-l-unit-testing">إيه هو ال Unit testing</h1>
+<p>هنتكلم هنا عن إيه هو ال Unit testing كفكرة عامة، مع اجزاء من الكود اللازم بشكل مبسط</p>
+<p>لو هنعرف الunit testing كود في سطر واحد، نقدر نقول انه هو عبارة عن كتابة كود يتأكد من انه الفانكشنز اللي انت كتبتها، بتشتغل زي ما احنا عاوزين، ديمًا، و بتؤدي الهدف المطلوب منها ديمًا</p>
+<p>ليه ؟ فيه اسباب كتيرة، ممكن نقول منها</p>
+<p>علشان احيانًا بنكتب كود، و نيجي بعد فترة كبيرة، مش فاكرين هو كان بيعمل، و نعدل عليه، و الابلكييشن يشتغل عادي،</p>
+<ol>
+<li>احيانا بيكون عندنا bug، نيجي نحلها عن طريق انه نغير في كود مكتوب من زمان، و شغال، و نلاقي الbug اتحلت، بس مناخدش بالنا انه و احنا بنحلها بوظنا حاجة تانية مثلا</li>
+<li>احيانًا لو تيم بيشتغل مع بعضه، ممكن واحد يكتب كود شغال، يصحى صاحبه يعدل على الكود دا وسط شغله، و مياخدش باله انه بوظ حاجة او غير حاجة اساسية المفروض الفانكشن تعملها</li>
+<li>تقدر تكتشف الbugs قبل ما التيستر، او الكلاينت، يكتشفها</li>
+<li>بتقلل الكود اللي ممكن يبقى ملوش لازمة في الفانكشن بتاعتك و بتساعد على كتابة كود افضل و انضف - بيساعد على دا حاجات زي TDD</li>
+</ol>
+<p>دلوقتي قولنا تعريف بسيط، و قولنا بعض الاسباب اللي المفروض تخليك تكتب unit testing، نشوف مثال، و مننساش ديمًا الهدف بتاعنا</p>
+<h2 id="lhdf-y-fnkshn-bnktbh-fy-lkwd-l-dy-bt-n-tshtgl-dyman-zy-m-hn-wzyn-w-thqq-lmtlwb-mnh">الهدف : اي فانكشن بنكتبها في الكود العادي بتاعنا، تشتغل ديمًا زي ما احنا عاوزين، و تحقق المطلوب منها</h2>
+<p>بمعنى إيه ؟ تخيل لو عندنا الفانكشن دي</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> insertDot</span><span>(</span><span style="color: #50FA7B;">to</span><span style="color: #FFB86C;font-style: italic;"> sentance</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">String</span><span>)</span><span style="color: #FF79C6;"> -&gt;</span><span style="color: #8BE9FD;font-style: italic;"> String</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">    //if the last character in sentance is &quot;.&quot; will return the sentance without any modification</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    guard</span><span> sentance.</span><span style="color: #BD93F9;">last</span><span style="color: #FF79C6;"> !=</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">.</span><span style="color: #E9F284;">&quot;</span><span style="color: #FF79C6;"> else</span><span> {</span><span style="color: #FF79C6;"> return</span><span> sentance }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6272A4;">    //return the senance with a dot added at the end</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    return</span><span> sentance </span><span style="color: #FF79C6;">+</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">.</span><span style="color: #E9F284;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>}</span></span></code></pre><h3 id="lhdf-fy-lfnkshn-dy-hdfh-nh-tdyf-nqt-fy-khr-ljml-lly-htjylh">الهدف في الفانكشن دي هدفها انها تضيف نقطة في اخر الجملة اللي هتجيلها</h3>
+<p>الفانكشن دي بتحقق الهدف ازاي ؟ عن طريق حاجتين</p>
+<ol>
+<li>لو الجملة اللي اللي عاوزين نضيفلها نقطة، اصلا اخرها نقطة، في الحالة دي احنا مش عاوزين يتضافلها نقطة كمان</li>
+<li>لو الجملة مفيهاش نقطة في آخر الجملة، نضيف لها نقطة</li>
+</ol>
+<p>اللي احنا عاوزين نعمله، اننا نحافظ على الأهداف دي، بمعنى آخر، عايزين نكتب كود، يتأكد، انه ديما، الفانكشن دي بتحقق الهدفين دول.، الكود اللي احنا هنكتبه بيسمى“ test“ او بشكل ادق بيسمى unit test, هنحتاج نكتب ٢ unit tests، كل test بيتأكد من هدف واحد من الاهداف بتاعتنا</p>
+<p>هنا هنكتب الكود اللي محتاجينه علشان نحقق الهدفين دول - من غير توضيح تفاصيل الكود دا هيكون مكتوب فين - علشان نركز على الفكرة بس</p>
+<hr />
+<p>الكود اللازم لعمل test unit للهدف الاول في الفانكشن دي:</p>
+<p>و الهدف من التيست دا: انه لما لما الفانكشن اللي بنعملها تيست، يجيلها Mostfa. النتيجة تكون Mostfa.</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> test_NoDublicate_dots</span><span>() {</span><span style="color: #6272A4;"> //1</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">        let</span><span> output </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;"> insertDot</span><span>(</span><span style="color: #8BE9FD;">to</span><span>:</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">Mostfa.</span><span style="color: #E9F284;">&quot;</span><span>)</span><span style="color: #6272A4;"> //2</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">           XCTAssertEqual</span><span>(output, </span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">Mostfa.</span><span style="color: #E9F284;">&quot;</span><span>, </span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">No dot&#39;s should be added</span><span style="color: #E9F284;">&quot;</span><span>)</span><span style="color: #6272A4;"> //3</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    }</span></span></code></pre>
+<p>في ١:</p>
+<p>بنكتب اسم الفانكشن ، وبنقول هي هتعمل إيه test لإيه في الأسم، هنا الأسم بيقول انه مش عاوزين اكتر من نقطة في الجملة اللي هتطلع لنا</p>
+<p>في ٢:</p>
+<p>بنعمل كول للفانكشن اللي احنا بنجربها و هنحفظ النتيجة في output</p>
+<p>لاحظ انه الجملة اللي بنضيفلها نقطة في آخرها هنا اصلا، فيها نقطة، و من المفترض انه الجملة ترجع زي ماهي، من غير نقطتين في الآخر</p>
+<p>في ٣: بنستخدم فانكشن موجودة في الفريم ورك اللي بنستخدمها للتيست نعمل تيست، اسمها XCTAssertEqual ببساطة احنا بنقول إيه الهدف بتاعنا، او ايه الشيئ اللي عاوزينه يحصل، احنا عاوزن ، output يساوي. .Mostfa ، لأنه دا الهدف بتاعنا،</p>
+<p>الفانكشن دي ممكن نقول انها بتعمل كدا</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> test_NoDublicate_dots</span><span>() {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">        let</span><span> output </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;"> insertDot</span><span>(</span><span style="color: #8BE9FD;">to</span><span>:</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">Mostfa.</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">        XCTAssertEqual</span><span>(output, </span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">Mostfa.</span><span style="color: #E9F284;">&quot;</span><span>, </span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">No dots should be added</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FF79C6;">        if</span><span> output </span><span style="color: #FF79C6;">==</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">Mostfa.</span><span style="color: #E9F284;">&quot;</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">            //we are happy, no errors!</span></span>
+<span class="giallo-l"><span>        }</span><span style="color: #FF79C6;"> else</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">            assertionFailure</span><span>(</span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">stop here!, we are not happy, that&#39;s not supposed to happen</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span></code></pre>
+<p>لما تشغل التيست دا، النتيجة هتكون علامة صح ✅ علشان فعلا الفانكشن اللي بنعملها تيست insertDot، فعلا مش بتضيف نقطة للجملة لو في اخرها نقطة</p>
+<p>كدا مبروك اول تيست عملناه،</p>
+<p>لو واحد مجنون راح لعب في الفانكشن الاساسية وخلاها كدا</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> insertDot</span><span>(</span><span style="color: #50FA7B;">to</span><span style="color: #FFB86C;font-style: italic;"> sentance</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">String</span><span>)</span><span style="color: #FF79C6;"> -&gt;</span><span style="color: #8BE9FD;font-style: italic;"> String</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">    //if the last character in sentance is &quot;.&quot; will return it with any modification</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    guard</span><span> sentance.</span><span style="color: #BD93F9;">last</span><span style="color: #FF79C6;"> !=</span><span style="color: #E9F284;"> &quot; &quot;</span><span style="color: #FF79C6;"> else</span><span> {</span><span style="color: #FF79C6;"> return</span><span> sentance }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6272A4;">    //return the senance with a dot added at the end</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    return</span><span> sentance </span><span style="color: #FF79C6;">+</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">.</span><span style="color: #E9F284;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>و جينا نشغل التيست اللي كتبناه هنلاقي النتيجة كدا</p>
+<p>وجنبها اكس ❌</p>
+<p>ليه ؟ لأنه الtest لما اشتغل لقى انه النتيجة ..Mostfa و دا مش اللي احنا متوقعينه، و اللي مش المفروض الفانكشن دي تعمله</p>
+<p>في الوضع الحالي، بعد اي شغل نعمله في البروجكت، هنعمل run للtest فانكشنز اللي موجودة، المفروض لو شغلنا سليم، كله يبقى اخضر، لكن لو فيه حاجة لونها احمر، هنعرف انه احنا بوظنا حاجة، نروح نشوف بوظنا إيه</p>
+<p>نيجي للهدف التاني بتاعنا اللي بنعمله test وهو منطقي اكتر،</p>
+<p>في التيست دا، بنتأكد انه لو كان الجملة بتاعتنا مفيش نقطة في آخرها،</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> test_dot_isAdded</span><span>() {</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">        let</span><span> output </span><span style="color: #FF79C6;">=</span><span style="color: #8BE9FD;"> insertDot</span><span>(</span><span style="color: #8BE9FD;">to</span><span>:</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">Essam</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #8BE9FD;">        XCTAssertEqual</span><span>(output, </span><span style="color: #E9F284;">&quot;</span><span style="color: #F1FA8C;">Essam.</span><span style="color: #E9F284;">&quot;</span><span>)</span></span>
+<span class="giallo-l"><span>    }</span></span></code></pre>
+<p>بكل بساطة بنعمل فاريبل output و بقول للفانكشن بتاعتنا تضيف نقطة في آخر الجملة Essam</p>
+<p>و بستخدم نفس الفانكشن اللي استخدمناها فوق، بنقول، انه احنا بنتوقع، انه ديمًا، الأوت بوت يكون .Essam</p>
+<p>ولو كل حاجة ماشية زي ما توقعنا</p>
+<p>ولو فيه واحد مجنون كان بيشتغل على الكود، و عمل تغير على الفانكشن الاصلية بتاعنا و خلاها كدا مثلا</p>
+<pre class="giallo" style="color: #F8F8F2; background-color: #282A36;"><code data-lang="swift"><span class="giallo-l"><span style="color: #FF79C6;">func</span><span style="color: #50FA7B;"> insertDot</span><span>(</span><span style="color: #50FA7B;">to</span><span style="color: #FFB86C;font-style: italic;"> sentance</span><span>: </span><span style="color: #8BE9FD;font-style: italic;">String</span><span>)</span><span style="color: #FF79C6;"> -&gt;</span><span style="color: #8BE9FD;font-style: italic;"> String</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6272A4;">    //if the last character in sentance is &quot;.&quot; will return it with any modification</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    guard</span><span> sentance.</span><span style="color: #BD93F9;">last</span><span style="color: #FF79C6;"> !=</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">.</span><span style="color: #E9F284;">&quot;</span><span style="color: #FF79C6;"> else</span><span> {</span><span style="color: #FF79C6;"> return</span><span> sentance }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6272A4;">    //return the senance with a dot added at the end</span></span>
+<span class="giallo-l"><span style="color: #FF79C6;">    return</span><span> sentance </span><span style="color: #FF79C6;">+</span><span style="color: #E9F284;"> &quot;</span><span style="color: #F1FA8C;">💕</span><span style="color: #E9F284;">&quot;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>لما نيجي نشغل التيست، هنلاقي النتيجة كدا</p>
+<p>ودا متوقع، بيقولنا انه المفروض لما الجملة تكون Essam الناتج يكون .Essam مش يكون 💕Essam، فأحنا نروح نبص على الفانكشن و نشوف غيرنا فيها إيه علشان الtest ينجح تاني</p>
+<p>ولو كل حاجة مظبوطة، دي الصورة النهائية اللي المفروض نحصل عليها</p>
+<p>و بكدا نكون وصلنا نهاية المقالة النهاردة، احنا هنا اتكلمنا عن مقدمة عن الtesting، مع مثال بسيط جدا جدا جدا، بيوضح ازاي بنفكر في التيستنج، و المفروض نعمل إيه علشان نعمل تيست</p>
+<p>فيه حاجات ناقصة، زي مثلا الكود بتاعت التيست بيتكتب فين بالظبط في البروجكت، و ازاي نعمل تيست لحاجة معقدة اكتر من كدا، كل النقاط دي ممكن نتكلم عنها في جزء تاني بيشرح الموضوع تفصيلا،</p>
+<p>و نعمل tests لل API layer بتاعنا، بشكل متقدم اكتر.</p>
+
+    </div>
+
+    
+    <footer class="post-tags">
+        
+        <a href="https:&#x2F;&#x2F;imostfa.github.io&#x2F;Blog/ar/tags/unit-testing/" class="tag">#unit-testing</a>
+        
+    </footer>
+    
+
+    
+    <br>
+    <script src="https://giscus.app/client.js"
+            data-repo="imostfa&#x2F;blog"
+            data-repo-id="R_kgDOGXqJnA"
+            data-category="Announcements"
+            data-category-id="DIC_kwDOGXqJnM4C4a0o"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="preferred_color_scheme"
+            data-lang="ar"
+            crossorigin="anonymous"
+            async>
+    </script>
+    
+</article>
+
+        </main>
+
+        <footer>
+            <hr>
+<div id="footer-container">
+    <p>Made using <a target="_blank" rel="noopener noreferrer" href="https://github.com/Speyll/anemone">anemone</a> Zola theme</p>
+</div>
+
+        </footer>
+
+        <!-- Move JS to end of body and add defer -->
+        <script src="https://imostfa.github.io/Blog/js/script.js" defer></script>
+        
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            document.querySelectorAll('time, .date, .content-meta').forEach(function(el) {
+                el.textContent = el.textContent.replace(/[0-9]/g, function(d) { return ar[d]; });
+            });
+        });
+        </script>
+        
+    </body>
+</html>
