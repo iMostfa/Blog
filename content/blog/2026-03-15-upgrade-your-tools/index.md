@@ -62,7 +62,7 @@ Notice:
 - It's mentally easier to break down your work since you can already see the description of what you are doing
 - You can always do `jj describe -m` if you find that you are going to do more things, or `jj split` to split your changes into smaller ones
 
-<script src="https://asciinema.org/a/Ge366jSGE4jhndLK.js" id="asciicast-Ge366jSGE4jhndLK" async="true"></script>
+<script src="https://asciinema.org/a/cBjymthUiJo4zNlU.js" id="asciicast-cBjymthUiJo4zNlU" async="true"></script>
 
 2. You don't need a branch name until you need to push your work upstream (GitHub PR)
 
