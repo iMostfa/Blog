@@ -69,7 +69,7 @@
     {% if page.taxonomies.tags %}
     <footer class="post-tags">
         {% for tag in page.taxonomies.tags %}
-        <a href="{{ get_taxonomy_url(kind="tags", name=tag, lang=page.lang) }}" class="tag">#{{ tag }}</a>
+        <a href="{{ config.base_url }}{% if page.lang != config.default_language %}/{{ page.lang }}{% endif %}/tags/{{ tag }}/" class="tag">#{{ tag }}</a>
         {% endfor %}
     </footer>
     {% endif %}
