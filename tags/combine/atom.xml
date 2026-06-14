@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Mostafa - combine</title>
+    <subtitle>Thoughts, learnings, and experiences from a computer engineer chasing the fundamentals.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/tags/combine/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2022-07-28T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/tags/combine/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Managing Combine Subscriptions</title>
+        <published>2022-07-28T00:00:00+00:00</published>
+        <updated>2022-07-28T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/blog/combine-subscriptions/"/>
+        <id>https://imostfa.github.io/Blog/blog/combine-subscriptions/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/blog/combine-subscriptions/">&lt;p&gt;When you use Combine inside a &lt;code&gt;ViewController&lt;&#x2F;code&gt; or &lt;code&gt;ViewModel&lt;&#x2F;code&gt;, you’re responsible for managing and retaining your subscriptions (a.k.a. disposals).&lt;&#x2F;p&gt;
+&lt;p&gt;Take this example of a publisher updating the UI:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;class&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; ViewController&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; UIViewController&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;var&lt;&#x2F;span&gt;&lt;span&gt; disposeBag:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Set&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;AnyCancellable&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; =&lt;&#x2F;span&gt;&lt;span&gt; []&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; animated&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span&gt;) {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;  super&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(animated)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  publisher.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;sink&lt;&#x2F;span&gt;&lt;span&gt; { newValue &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;in&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;    self&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;updateUI&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;with&lt;&#x2F;span&gt;&lt;span&gt;: newValue)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;store&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; &amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;disposeBag)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;What’s happening here: when we subscribe, we store the &lt;code&gt;AnyCancellable&lt;&#x2F;code&gt; in a &lt;code&gt;Set&lt;&#x2F;code&gt; that acts as our dispose bag.&lt;&#x2F;p&gt;
+&lt;p&gt;Why? Because if you don’t hold a reference to the &lt;code&gt;AnyCancellable&lt;&#x2F;code&gt; in an Array, variable, or Set - ARC will immediately deallocate it. In Combine, you must keep the subscription alive to keep receiving values.&lt;&#x2F;p&gt;
+&lt;p&gt;Think of it as having to hold onto the wire connecting you to the publisher sending data.&lt;&#x2F;p&gt;
+&lt;p&gt;Now - say you’ve received what you needed, and the user is about to leave this screen. How do you cancel the subscription and stop receiving values? Does it happen automatically? What if you leave the &lt;code&gt;AnyCancellable&lt;&#x2F;code&gt; stored and never remove it?&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;option-1-cancel-on-disappear&quot;&gt;Option 1: Cancel on disappear&lt;&#x2F;h3&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;class&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; ViewController&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; UIViewController&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;  deinit&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;    print&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;i&amp;#39;m leaving the memory&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;  var&lt;&#x2F;span&gt;&lt;span&gt; disposeBag:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Set&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;AnyCancellable&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; =&lt;&#x2F;span&gt;&lt;span&gt; []&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;  func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; viewDidDisappear&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; animated&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span&gt;) {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;    super&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;viewDidDisappear&lt;&#x2F;span&gt;&lt;span&gt;(animated)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    disposeBag.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;removeAll&lt;&#x2F;span&gt;&lt;span&gt;()&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;  func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; animated&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span&gt;) {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;    super&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(animated)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    publisher.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;sink&lt;&#x2F;span&gt;&lt;span&gt; { newValue &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;in&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;      self&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;updateUI&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;with&lt;&#x2F;span&gt;&lt;span&gt;: newValue)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;store&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; &amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;disposeBag)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;When the view controller disappears (which usually means the user is done with it, though not always), you empty the dispose bag. All stored subscriptions get cancelled, and the view controller can be freed from memory.&lt;&#x2F;p&gt;
+&lt;p&gt;You can confirm this by checking that &lt;code&gt;deinit&lt;&#x2F;code&gt; gets called when you close the screen.&lt;&#x2F;p&gt;
+&lt;p&gt;The downside: this puts the burden on you to call &lt;code&gt;removeAll()&lt;&#x2F;code&gt; in every &lt;code&gt;viewDidDisappear&lt;&#x2F;code&gt;. And sometimes you don’t actually want to cancel subscriptions when the view disappears.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;option-2-let-arc-handle-it&quot;&gt;Option 2: Let ARC handle it&lt;&#x2F;h3&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;class&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; ViewController&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; UIViewController&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;  deinit&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;    print&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;i&amp;#39;m leaving the memory&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;  var&lt;&#x2F;span&gt;&lt;span&gt; disposeBag:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Set&lt;&#x2F;span&gt;&lt;span&gt;&amp;lt;AnyCancellable&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; =&lt;&#x2F;span&gt;&lt;span&gt; []&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;  func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; animated&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span&gt;) {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;    super&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(animated)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    publisher.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;sink&lt;&#x2F;span&gt;&lt;span&gt; { [&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;weak&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt; self&lt;&#x2F;span&gt;&lt;span&gt;] newValue &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;in&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;      self&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;?&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;updateUI&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;with&lt;&#x2F;span&gt;&lt;span&gt;: newValue)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;store&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; &amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;disposeBag)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This actually solves two problems at once. The &lt;code&gt;sink&lt;&#x2F;code&gt; closure captures &lt;code&gt;self&lt;&#x2F;code&gt; strongly by default - which can cause a memory leak if you never empty the dispose bag. But when you capture &lt;code&gt;self&lt;&#x2F;code&gt; weakly, ARC can release the view controller, which releases the &lt;code&gt;disposeBag&lt;&#x2F;code&gt; with it, which cancels all the subscriptions.&lt;&#x2F;p&gt;
+&lt;p&gt;So the best approach when you’re inside a &lt;code&gt;ViewController&lt;&#x2F;code&gt; or &lt;code&gt;ViewModel&lt;&#x2F;code&gt;: &lt;strong&gt;don’t strongly capture &lt;code&gt;self&lt;&#x2F;code&gt; in closures&lt;&#x2F;strong&gt;. Actually, as a general rule, avoid strong captures in closures altogether 😂&lt;&#x2F;p&gt;
+&lt;p&gt;This applies to any reactive framework - RxSwift, ReactiveSwift, you name it.&lt;&#x2F;p&gt;
+&lt;p&gt;This post is an expanded version of &lt;a rel=&quot;noopener external&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;a&#x2F;62964220&#x2F;5253913&quot;&gt;my answer on Stack Overflow&lt;&#x2F;a&gt; on the same question.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

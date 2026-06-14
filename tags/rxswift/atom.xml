@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Mostafa - rxswift</title>
+    <subtitle>Thoughts, learnings, and experiences from a computer engineer chasing the fundamentals.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/tags/rxswift/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2022-07-27T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/tags/rxswift/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Why is it Called BehaviorSubject?</title>
+        <published>2022-07-27T00:00:00+00:00</published>
+        <updated>2022-07-27T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/blog/rxswift-behaviorsubject/"/>
+        <id>https://imostfa.github.io/Blog/blog/rxswift-behaviorsubject/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/blog/rxswift-behaviorsubject/">&lt;h3 id=&quot;intro&quot;&gt;Intro&lt;&#x2F;h3&gt;
+&lt;p&gt;I’m a fan of the ideas and concepts that reactive programming brings - it often makes code easier to reason about and eliminates certain categories of bugs. Lately I started reading about RxSwift, even though my main reactive framework is Combine.&lt;&#x2F;p&gt;
+&lt;p&gt;I came across a &lt;code&gt;Subject&lt;&#x2F;code&gt; called &lt;code&gt;BehaviorSubject&lt;&#x2F;code&gt; - it’s a subject that emits the last value it received to any new subscriber, and then continues to emit any future values.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;why-the-name&quot;&gt;Why the name?&lt;&#x2F;h3&gt;
+&lt;p&gt;I found myself asking: where’s the “behavior” in this? Why is the word “behavior” in the name at all? Especially since the equivalent in Combine has a much more self-explanatory name: &lt;code&gt;CurrentValueSubject&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;That name is obvious - it’s a subject that holds and emits the current value. So why isn’t the naming in RxSwift as clear? The answer I found:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In the world of functional reactive programming, a behavior is a value that changes over time. This is exactly what a &lt;code&gt;BehaviorSubject&lt;&#x2F;code&gt; represents: when you subscribe you get the current value, and then you can continue to observe the changes.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;So the word “behavior” in the reactive programming world means &lt;em&gt;a value being observed as it changes over time&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;A small thing I learned and wanted to share. I’ll probably write more about RxSwift as I dig deeper into the differences between it and Combine.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Mostafa - interviews</title>
+    <subtitle>Thoughts, learnings, and experiences from a computer engineer chasing the fundamentals.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/tags/interviews/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2022-07-28T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/tags/interviews/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Technical Interviews - Instabug</title>
+        <published>2022-07-28T00:00:00+00:00</published>
+        <updated>2022-07-28T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/blog/interview-instabug/"/>
+        <id>https://imostfa.github.io/Blog/blog/interview-instabug/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/blog/interview-instabug/">&lt;p&gt;This one’s short. It’s not particularly informative since I didn’t make it far in the process - but I’m sharing it anyway, because some details might still be useful.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;when-i-applied-to-instabug&quot;&gt;When I applied to Instabug&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;I applied by reaching out directly to engineer Hisham at Instabug (whose code I deeply respect - it’s seriously impressive). He had posted a tweet that they were looking for people. I sent him my CV via Twitter DM, waited for a reply, and he later sent me a link to schedule a call with him.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-meeting&quot;&gt;The meeting&lt;&#x2F;h3&gt;
+&lt;p&gt;The meeting was in Arabic. It started with him asking me to introduce myself, then we talked through my past and current experience, what I was working on at my current company, and whether I’d used any Instabug products before. He also told me about the products and goals they were working on.&lt;&#x2F;p&gt;
+&lt;p&gt;At the end, he told me the position required significantly more years of experience than I had.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;important-details-and-my-mistakes&quot;&gt;Important details and my mistakes&lt;&#x2F;h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;My CV wasn’t well organized - this caused confusion because he couldn’t clearly follow the timeline. My LinkedIn also had different dates than my CV. I’m sure this kind of inconsistency affects decisions, so I fixed it afterward.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;A company like Instabug wants people who’ve worked on products and apps with a very large user base. I had some small contributions to Firefox and Apple, which is good, but more would have been more convincing.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;At a company like Instabug, what matters most is a deep understanding of internals and compilers at some level - because iOS work there isn’t primarily about UI like at most companies.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Had I made it further, the take-home task they give involves building a Logger with testing and mocking - I know because I later saw that same task during an internship.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;After this, I saw a Facebook post confirming they needed 4–5 years of experience, which I obviously didn’t have yet. Instabug is genuinely one of those companies you dream of working at someday, alongside a really sharp team.&lt;&#x2F;p&gt;
+&lt;p&gt;Sharing this because I want to help anyone who needs to understand how things work - because I didn’t, and I always wished someone would talk about it openly.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Technical Interviews - SWVL</title>
+        <published>2022-06-12T00:00:00+00:00</published>
+        <updated>2022-06-12T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/blog/interview-swvl/"/>
+        <id>https://imostfa.github.io/Blog/blog/interview-swvl/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/blog/interview-swvl/">&lt;h3 id=&quot;when-i-applied-to-swvl&quot;&gt;When I applied to SWVL&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;I applied to SWVL at the end of 2021, and the interview process started in January&#x2F;February. The timing matters for two reasons:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;A lot happened at SWVL after that - they went public on Nasdaq, and then laid off 35% of their workforce.&lt;&#x2F;li&gt;
+&lt;li&gt;I’m writing this in June, about 5 months after applying. I’m working from notes I kept, but I may have forgotten some details.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;how-i-applied&quot;&gt;How I applied&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;I applied through their website after seeing a tweet from engineer &lt;a rel=&quot;noopener external&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;twitter.com&#x2F;muhammadhani89&quot;&gt;Mohamed Hany&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;I genuinely respect him a lot, and I’m grateful to him - that’ll be clear throughout the post.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;who-is-swvl&quot;&gt;Who is SWVL&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;SWVL is a mass-transit company that started in Egypt, then moved to Dubai. There used to be complaints about the work environment at SWVL, but from what I heard things had improved.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;interview-process-overview&quot;&gt;Interview process overview&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;The iOS interview process at SWVL was:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;HR assessment&lt;&#x2F;li&gt;
+&lt;li&gt;Technical 1: Multiple Choice Questions + Simple Problem Solving&lt;&#x2F;li&gt;
+&lt;li&gt;Meeting with Engineering Manager&lt;&#x2F;li&gt;
+&lt;li&gt;Technical 2: With iOS Team, Swift&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;the-hr-call&quot;&gt;The HR call&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;On February 2nd I got an email from HR to schedule the interview - it was on a Friday afternoon.&lt;&#x2F;p&gt;
+&lt;p&gt;The HR person was Ali Imam. Since he was from Pakistan, the interview was in English.&lt;&#x2F;p&gt;
+&lt;p&gt;Questions included:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;How do you learn new things?&lt;&#x2F;li&gt;
+&lt;li&gt;How do you deal with conflicts?&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;Overall it was a pleasant call - no video because the internet on both ends was a bit shaky. Afterward he walked me through the interview stages and sent me a link to the assessment shortly after.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-swift-ios-assessment&quot;&gt;The Swift&#x2F;iOS Assessment&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;The second stage was a link to a Swift&#x2F;iOS exam.&lt;&#x2F;p&gt;
+&lt;p&gt;The questions covered most Swift and programming fundamentals.&lt;&#x2F;p&gt;
+&lt;p&gt;The multiple choice questions covered:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Dynamic Dispatching vs Static Dispatching&lt;&#x2F;li&gt;
+&lt;li&gt;Synchronous execution vs Asynchronous execution&lt;&#x2F;li&gt;
+&lt;li&gt;SOLID Principles&lt;&#x2F;li&gt;
+&lt;li&gt;How to detect keyboard appearance&#x2F;disappearance&lt;&#x2F;li&gt;
+&lt;li&gt;How to store an object in UserDefaults&lt;&#x2F;li&gt;
+&lt;li&gt;Memory leak in Classes &#x2F; Deinit call&lt;&#x2F;li&gt;
+&lt;li&gt;Set data structure&lt;&#x2F;li&gt;
+&lt;li&gt;Passing values to functions by &lt;code&gt;inout&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Value capturing&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;the-technical-challenge&quot;&gt;The Technical Challenge&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Have the function &lt;code&gt;StarRating(str)&lt;&#x2F;code&gt; take the &lt;code&gt;str&lt;&#x2F;code&gt; parameter being passed which will be an average rating between 0.00 and 5.00, and convert this rating into a list of 5 image names to be displayed in a user interface to represent the rating as a list of stars and half stars. Ratings should be rounded up to the nearest half. There are 3 image file names available: “full.jpg”, “half.jpg”, “empty.jpg”. The output will be the name of the 5 images (without the extension), from left to right, separated by spaces. For example: if str is “2.36” then your program should return the string “full full half empty empty”.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;h3 id=&quot;result-of-the-first-assessment&quot;&gt;Result of the first assessment&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;I passed, and the next step was a meeting with the Engineering Manager - Mohamed Hany himself. He’s genuinely a great person. I learned a lot from him.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;meeting-with-the-em-at-swvl&quot;&gt;Meeting with the EM at SWVL&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;The meeting was really enjoyable and relaxed - more of a conversation than a formal interview. It included questions like:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;How do you deal with conflicts?&lt;&#x2F;li&gt;
+&lt;li&gt;What do you know about AGILE?&lt;&#x2F;li&gt;
+&lt;li&gt;What do you love about SWVL B2B?&lt;&#x2F;li&gt;
+&lt;li&gt;Tell me about something hard you’ve worked on solving.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;He also listened to my questions. Overall I felt the feedback was very positive from how we connected - but the final result was a rejection. Why?&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;why-i-was-rejected&quot;&gt;Why I was rejected&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;I won’t pretend it didn’t sting. Especially since the call felt like it went well. I reached out to Mohamed Hany and asked for feedback - because I knew it would help me in future interviews. He called me and shared his perspective:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;In most of my answers, I kept talking about one specific domain (Computer Graphics applications) or one specific branch of programming. This gave the impression that I didn’t have breadth across iOS in general. From my perspective, I was bringing it up because it’s a complex and hard area - so if I could handle that, I should be fine elsewhere. But from his perspective, it was better to showcase a wider variety of things I’d worked on to demonstrate range. This was something I started doing in every interview after.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;I needed to work on projects that impacted more people and had real users. The startup I was at hadn’t released their app publicly, and the projects I’d worked on before didn’t have thousands of users. For a company the size of SWVL, they wanted someone experienced working on apps with large user bases. He also suggested I start looking at other companies - this was honestly the first time someone had directly told me I should be exploring other opportunities. I’d been at my company for a year and two months. Good advice that I’m grateful for.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;My years of experience were less than what they needed.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;He did mention that he felt if I’d made it to the technical interview, I probably would have passed.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;what-i-took-away&quot;&gt;What I took away&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;A lot. The feedback from Mohamed clarified things I wasn’t thinking about. It was also my first time doing a multiple-choice iOS interview - and I think I got everything right, but my problem-solving wasn’t optimized. And I realized more clearly what an EM thinks about when interviewing someone.&lt;&#x2F;p&gt;
+&lt;p&gt;All of this genuinely helped me in the interview I did after this - with Google.&lt;&#x2F;p&gt;
+&lt;p&gt;Sharing this experience is my way of helping anyone who needs to understand how things actually work - because I didn’t know, and I always wished someone would talk about it openly.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Technical Interviews - Introduction</title>
+        <published>2022-06-12T00:00:00+00:00</published>
+        <updated>2022-06-12T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/blog/interviews-introduction/"/>
+        <id>https://imostfa.github.io/Blog/blog/interviews-introduction/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/blog/interviews-introduction/">&lt;p&gt;In this series, I’ll talk about my experience interviewing at several well-known companies - Google, SWVL, Instabug, and companies in Europe 🇪🇸🇩🇪.&lt;&#x2F;p&gt;
+&lt;p&gt;The reason I’m writing this series is to share my experience so we can learn from each other. At the start of my interviewing journey - and even now - there were a lot of things I didn’t know: how to answer well, how to present myself, what’s the right approach. I’m still learning. I used to wish there were people writing about or sharing what the interview process actually looks like at each company.&lt;&#x2F;p&gt;
+&lt;p&gt;Not all of these interviews went well - but I took something away from every single one.&lt;&#x2F;p&gt;
+&lt;p&gt;What I’ll try to do is write down all the steps and the questions I was asked. The exact dates aren’t pinned for technical reasons, but all of these happened in 2022.&lt;&#x2F;p&gt;
+&lt;p&gt;Each company will get its own post, covering the full process from start to wherever I made it. Some companies I got through multiple rounds - like SWVL, Google, and Robusta. Others fewer. In every one I learned something and met really sharp people who gave me confidence and taught me a lot.&lt;&#x2F;p&gt;
+&lt;p&gt;Everything I write is purely my personal experience. As of 2022, I had just graduated in June 2021 - so I was pretty fresh 😂. If anything’s wrong, I’d genuinely appreciate being told.&lt;&#x2F;p&gt;
+&lt;p&gt;The kinds of things I’ll share in these posts:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;HR questions 🧗🏻‍♂️&lt;&#x2F;li&gt;
+&lt;li&gt;Technical questions - mobile, especially iOS 📱&lt;&#x2F;li&gt;
+&lt;li&gt;Behavioral questions 🤝&lt;&#x2F;li&gt;
+&lt;li&gt;How I worked on take-home tasks 🏎&lt;&#x2F;li&gt;
+&lt;li&gt;My attempts at studying data structures and algorithms 🏗&lt;&#x2F;li&gt;
+&lt;li&gt;Anything else that comes to mind&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+</content>
+        
+    </entry>
+</feed>

@@ -1,0 +1,636 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Mostafa - ios</title>
+    <subtitle>Thoughts, learnings, and experiences from a computer engineer chasing the fundamentals.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/tags/ios/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2026-06-12T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/tags/ios/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Clang Modules and Bazel, From First Principles</title>
+        <published>2026-06-12T00:00:00+00:00</published>
+        <updated>2026-06-12T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ai-learnings/clang-modules-bazel/"/>
+        <id>https://imostfa.github.io/Blog/ai-learnings/clang-modules-bazel/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ai-learnings/clang-modules-bazel/">&lt;p&gt;This write-up was distilled from a real migration session: enabling explicit Clang modules
+(&lt;code&gt;swift.use_c_modules&lt;&#x2F;code&gt;) in a large iOS monorepo, debugged end-to-end with an AI agent. One build flag
+flipped; nine builds failed; none of the failing code had changed. The document below builds every
+concept needed to understand why — header resolution, module maps, PCMs, Bazel’s action model, aspects —
+and then walks through each failure as a case study. Prerequisites: you can read Swift&#x2F;Objective-C and
+know Bazel has “rules”. Nothing more is assumed.&lt;&#x2F;p&gt;
+&lt;style&gt;
+.xmod { --xpos:#1a7f37; --xneg:#b3261e; --xwarn:#9a6700; }
+[data-theme=&quot;dark&quot;] .xmod { --xpos:#7ee787; --xneg:#ff7b72; --xwarn:#e3b341; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=&quot;light&quot;]) .xmod { --xpos:#7ee787; --xneg:#ff7b72; --xwarn:#e3b341; } }
+.xmod .toc-grid { display:grid; grid-template-columns:1fr 1fr; gap:.25rem 2rem; list-style:none; padding:0; margin:.5rem 0 0; }
+.xmod .toc-grid a { display:block; padding:.15rem 0; }
+.xmod .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:.75rem; margin:1rem 0; }
+.xmod .card { background:var(--bg-light); border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:1rem; }
+.xmod .card h4 { margin:.1rem 0 .5rem; font-size:1rem; }
+.xmod .card p, .xmod .card li { font-size:.9rem; margin:.5rem 0; }
+.xmod .card ul { margin:.25rem 0; padding-left:1.25rem; }
+.xmod pre { font-size:.8rem; line-height:1.5; overflow-x:auto; }
+.xmod .err { color:var(--xneg); font-weight:700; }
+.xmod .ok { color:var(--xpos); }
+.xmod .dim { color:var(--text-light); }
+.xmod .mode-toggle { display:inline-flex; gap:.25rem; border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:.25rem; margin:1rem 0 .75rem; background:var(--bg-light); }
+.xmod .mode-toggle button { font-family:var(--mono-font); font-size:.9rem; border:none; border-radius:.25rem; padding:.4rem 1rem; cursor:pointer; background:transparent; color:var(--text-light); }
+.xmod .mode-toggle button.active { background:var(--accent); color:var(--accent-text); }
+.xmod .mode-panel { display:none; }
+.xmod .mode-panel.active { display:block; }
+.xmod .diagram { border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:1.25rem; background:var(--bg-light); }
+.xmod .dgrid { display:flex; flex-wrap:wrap; gap:.6rem; }
+.xmod .dbox { border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:.7rem .8rem; background:var(--bg); font-size:.78rem; line-height:1.5; flex:1; min-width:200px; }
+.xmod .dbox .dtitle { font-weight:700; font-size:.84rem; margin-bottom:.4rem; display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+.xmod .dbox.big { flex-basis:100%; }
+.xmod .dbox.fail { border-color:var(--xneg); }
+.xmod .dbox.pass { border-color:var(--xpos); }
+.xmod .pill { display:inline-block; border-radius:999px; padding:0 .55rem; font-size:.68rem; font-weight:700; }
+.xmod .pill.red { color:var(--xneg); border:1px solid var(--xneg); }
+.xmod .pill.green { color:var(--xpos); border:1px solid var(--xpos); }
+.xmod .pill.blue { color:var(--link); border:1px solid var(--link); }
+.xmod .arrow-down { text-align:center; color:var(--text-light); width:100%; margin:.2rem 0; }
+.xmod .dcaption { font-size:.85rem; color:var(--text-light); margin-top:.8rem; line-height:1.6; }
+.xmod .callout { border:1px solid var(--accent); border-left:4px solid var(--accent); border-radius:var(--standard-border-radius); padding:1.25rem; margin:1rem 0; background:var(--bg-light); }
+.xmod .callout .rule { font-weight:700; font-size:1.05rem; line-height:1.55; margin:.25rem 0; }
+.xmod .callout .corollary { color:var(--text-light); font-size:.92rem; margin:.75rem 0 0; }
+.xmod details.issue { border:1px solid var(--border); border-radius:var(--standard-border-radius); margin-bottom:.6rem; }
+.xmod details.issue summary { display:flex; align-items:baseline; gap:.7rem; cursor:pointer; }
+.xmod details.issue .num { color:var(--accent); font-weight:700; flex-shrink:0; }
+.xmod details.issue .t { font-weight:700; }
+.xmod details.issue .s { display:block; font-size:.8rem; color:var(--text-light); font-weight:400; }
+.xmod .ibody { padding:.25rem .5rem .5rem; }
+.xmod .q { font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:1rem 0 .25rem; }
+.xmod .ibody p { font-size:.92rem; margin:.25rem 0; }
+.xmod .lesson { border-left:3px solid var(--xwarn); padding:.5rem .8rem; margin-top:1rem; font-size:.88rem; background:var(--bg); border-radius:0 .25rem .25rem 0; }
+.xmod .lesson strong { color:var(--xwarn); }
+.xmod .chart-wrap { position:relative; height:320px; margin:1rem 0; }
+.xmod .legend { list-style:none; padding:0; font-size:.88rem; }
+.xmod .legend li { display:flex; gap:.6rem; padding:.4rem 0; border-bottom:1px solid var(--border); align-items:baseline; }
+.xmod .legend li:last-child { border-bottom:none; }
+.xmod .legend .ldot { width:.7rem; height:.7rem; border-radius:.2rem; flex-shrink:0; transform:translateY(.05rem); }
+.xmod .legend .ld { color:var(--text-light); display:block; font-size:.82rem; }
+.xmod .gloss dt { font-weight:700; color:var(--accent); margin-top:.9rem; }
+.xmod .gloss dd { margin:0.15rem 0 0 0; font-size:.9rem; }
+.xmod table td, .xmod table th { font-size:.88rem; vertical-align:top; }
+.xmod figure { margin:1rem 0; }
+.xmod .fig svg { width:100%; height:auto; display:block; }
+.xmod .svg-cap { font-size:.82rem; color:var(--text-light); text-align:center; margin-top:.5rem; line-height:1.55; }
+.xmod .donut-wrap { display:flex; flex-wrap:wrap; gap:1.25rem 2rem; align-items:center; }
+.xmod .donut-wrap svg { width:200px; height:200px; flex-shrink:0; margin:0 auto; }
+.xmod .donut-wrap .legend { flex:1; min-width:250px; }
+.xmod .legend .ldot { display:inline-block; }
+@media (max-width:600px) { .xmod .toc-grid { grid-template-columns:1fr; } }
+&lt;&#x2F;style&gt;
+&lt;div class=&quot;xmod&quot;&gt;
+&lt;nav aria-label=&quot;Contents&quot;&gt;
+&lt;h2 id=&quot;contents&quot;&gt;Contents&lt;&#x2F;h2&gt;
+&lt;ol class=&quot;toc-grid&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#part1&quot;&gt;Header imports and search paths&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part2&quot;&gt;Module maps and PCMs&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part3&quot;&gt;Bazel: the minimum working model&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part4&quot;&gt;Implicit vs. explicit compilation&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part5&quot;&gt;The governing invariant&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part6&quot;&gt;Case studies: nine failures&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part7&quot;&gt;Root-cause classification&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part8&quot;&gt;Diagnostic reference&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part9&quot;&gt;FAQ&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part10&quot;&gt;Glossary&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;&#x2F;nav&gt;
+&lt;h2 id=&quot;part1&quot;&gt;Part 1 — How a header import is resolved&lt;&#x2F;h2&gt;
+&lt;p&gt;Everything in this document reduces to one question: given an &lt;code&gt;#import&lt;&#x2F;code&gt; line, where does the compiler look for the file? There are two import forms and three search mechanisms.&lt;&#x2F;p&gt;
+&lt;div class=&quot;cards&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Textual inclusion&lt;&#x2F;h4&gt;
+&lt;p&gt;&lt;code&gt;#import &quot;X.h&quot;&lt;&#x2F;code&gt; and &lt;code&gt;#import &amp;lt;Y&#x2F;Y.h&amp;gt;&lt;&#x2F;code&gt; are preprocessor directives. By default the preprocessor replaces the line with the full text of the file, recursively. A translation unit (one &lt;code&gt;.m&lt;&#x2F;code&gt; file) expands to itself plus every header it transitively includes — frequently 100k+ lines — re-parsed for every translation unit.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Quote include: &lt;code&gt;#import &quot;X.h&quot;&lt;&#x2F;code&gt;&lt;&#x2F;h4&gt;
+&lt;p&gt;Resolution order:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;The directory of the &lt;em&gt;including file&lt;&#x2F;em&gt; (&quot;includer-relative&quot;). &lt;code&gt;&quot;..&#x2F;Shared&#x2F;X.h&quot;&lt;&#x2F;code&gt; resolves here without any flags.&lt;&#x2F;li&gt;
+&lt;li&gt;Then each directory passed with &lt;code&gt;-I&lt;&#x2F;code&gt;, in order.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;A quote include naming a file in a &lt;em&gt;different&lt;&#x2F;em&gt; directory only works if some &lt;code&gt;-I&lt;&#x2F;code&gt; flag points there. This is the root cause of case 6.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Angle include: &lt;code&gt;#import &amp;lt;Y&#x2F;Z.h&amp;gt;&lt;&#x2F;code&gt;&lt;&#x2F;h4&gt;
+&lt;p&gt;Resolution order:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Each &lt;code&gt;-I&lt;&#x2F;code&gt; directory: looks for &lt;code&gt;&amp;lt;dir&amp;gt;&#x2F;Y&#x2F;Z.h&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;Each &lt;code&gt;-F&lt;&#x2F;code&gt; directory (framework search path): looks for &lt;code&gt;&amp;lt;dir&amp;gt;&#x2F;Y.framework&#x2F;Headers&#x2F;Z.h&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;System&#x2F;SDK paths.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;&lt;code&gt;#import &amp;lt;FBSDKCoreKit_Basics&#x2F;FBSDKCoreKit_Basics.h&amp;gt;&lt;&#x2F;code&gt; requires a &lt;code&gt;-F&lt;&#x2F;code&gt; flag pointing at the directory containing &lt;code&gt;FBSDKCoreKit_Basics.framework&lt;&#x2F;code&gt;. Root cause of case 1.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Framework layout&lt;&#x2F;h4&gt;
+&lt;p&gt;A built framework is a directory with fixed structure:&lt;&#x2F;p&gt;
+&lt;pre&gt;FBSDKCoreKit.framework&#x2F;
+├── FBSDKCoreKit          (binary)
+├── Headers&#x2F;              (public headers)
+│   └── FBSDKCoreKit.h
+└── Modules&#x2F;
+    └── module.modulemap  (Part 2)&lt;&#x2F;pre&gt;
+&lt;p&gt;An &lt;strong&gt;xcframework&lt;&#x2F;strong&gt; is a wrapper directory holding one such framework per platform slice (device, simulator, …).&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;figure class=&quot;fig&quot;&gt;
+&lt;svg viewBox=&quot;0 0 640 372&quot; role=&quot;img&quot; aria-label=&quot;Two side-by-side search-order flowcharts for resolving an import. The quote include &amp;quot;X.h&amp;quot; tries the including file&#x27;s own directory first, then each -I directory, otherwise file not found. The angle include &amp;lt;Y&#x2F;Z.h&amp;gt; tries each -I directory, then each -F framework directory, then system and SDK paths, otherwise file not found. The first step of the quote path and the framework step of the angle path are highlighted as the steps that explain cases 6 and 1 respectively.&quot;&gt;
+  &lt;defs&gt;
+    &lt;marker id=&quot;xmDown&quot; markerWidth=&quot;9&quot; markerHeight=&quot;9&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;path d=&quot;M0,0 L7,3 L0,6 Z&quot; fill=&quot;var(--text-light)&quot;&#x2F;&gt;&lt;&#x2F;marker&gt;
+  &lt;&#x2F;defs&gt;
+  &lt;!-- QUOTE lane --&gt;
+  &lt;rect x=&quot;35&quot; y=&quot;14&quot; width=&quot;255&quot; height=&quot;42&quot; rx=&quot;6&quot; fill=&quot;var(--bg-light)&quot; stroke=&quot;var(--accent)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;162&quot; y=&quot;33&quot; font-size=&quot;13&quot; font-weight=&quot;700&quot; fill=&quot;var(--accent)&quot; text-anchor=&quot;middle&quot; font-family=&quot;var(--mono-font)&quot;&gt;#import &quot;X.h&quot;&lt;&#x2F;text&gt;
+  &lt;text x=&quot;162&quot; y=&quot;48&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;quote include&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;162&quot; y1=&quot;58&quot; x2=&quot;162&quot; y2=&quot;75&quot; stroke=&quot;var(--text-light)&quot; stroke-width=&quot;1.4&quot; marker-end=&quot;url(#xmDown)&quot;&#x2F;&gt;
+  &lt;rect x=&quot;35&quot; y=&quot;78&quot; width=&quot;255&quot; height=&quot;52&quot; rx=&quot;6&quot; fill=&quot;var(--bg)&quot; stroke=&quot;var(--xpos)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;48&quot; y=&quot;100&quot; font-size=&quot;12&quot; font-weight=&quot;700&quot; fill=&quot;var(--fg-color)&quot;&gt;1 · Includer&#x27;s own directory&lt;&#x2F;text&gt;
+  &lt;text x=&quot;48&quot; y=&quot;118&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;&quot;..&#x2F;Shared&#x2F;X.h&quot; resolves here — no flags&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;162&quot; y1=&quot;132&quot; x2=&quot;162&quot; y2=&quot;151&quot; stroke=&quot;var(--text-light)&quot; stroke-width=&quot;1.4&quot; marker-end=&quot;url(#xmDown)&quot;&#x2F;&gt;
+  &lt;text x=&quot;172&quot; y=&quot;145&quot; font-size=&quot;10&quot; fill=&quot;var(--text-light)&quot;&gt;not found ↓&lt;&#x2F;text&gt;
+  &lt;rect x=&quot;35&quot; y=&quot;154&quot; width=&quot;255&quot; height=&quot;52&quot; rx=&quot;6&quot; fill=&quot;var(--bg)&quot; stroke=&quot;var(--border)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;48&quot; y=&quot;176&quot; font-size=&quot;12&quot; font-weight=&quot;700&quot; fill=&quot;var(--fg-color)&quot;&gt;2 · each -I dir, in order&lt;&#x2F;text&gt;
+  &lt;text x=&quot;48&quot; y=&quot;194&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;supplied by flags only&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;162&quot; y1=&quot;208&quot; x2=&quot;162&quot; y2=&quot;227&quot; stroke=&quot;var(--text-light)&quot; stroke-width=&quot;1.4&quot; marker-end=&quot;url(#xmDown)&quot;&#x2F;&gt;
+  &lt;text x=&quot;172&quot; y=&quot;221&quot; font-size=&quot;10&quot; fill=&quot;var(--text-light)&quot;&gt;not found ↓&lt;&#x2F;text&gt;
+  &lt;rect x=&quot;35&quot; y=&quot;230&quot; width=&quot;255&quot; height=&quot;42&quot; rx=&quot;6&quot; fill=&quot;var(--bg)&quot; stroke=&quot;var(--xneg)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;162&quot; y=&quot;256&quot; font-size=&quot;12&quot; font-weight=&quot;700&quot; fill=&quot;var(--xneg)&quot; text-anchor=&quot;middle&quot;&gt;else → file not found&lt;&#x2F;text&gt;
+  &lt;!-- ANGLE lane --&gt;
+  &lt;rect x=&quot;350&quot; y=&quot;14&quot; width=&quot;255&quot; height=&quot;42&quot; rx=&quot;6&quot; fill=&quot;var(--bg-light)&quot; stroke=&quot;var(--accent)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;477&quot; y=&quot;33&quot; font-size=&quot;13&quot; font-weight=&quot;700&quot; fill=&quot;var(--accent)&quot; text-anchor=&quot;middle&quot; font-family=&quot;var(--mono-font)&quot;&gt;#import &amp;lt;Y&#x2F;Z.h&amp;gt;&lt;&#x2F;text&gt;
+  &lt;text x=&quot;477&quot; y=&quot;48&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;angle include&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;477&quot; y1=&quot;58&quot; x2=&quot;477&quot; y2=&quot;75&quot; stroke=&quot;var(--text-light)&quot; stroke-width=&quot;1.4&quot; marker-end=&quot;url(#xmDown)&quot;&#x2F;&gt;
+  &lt;rect x=&quot;350&quot; y=&quot;78&quot; width=&quot;255&quot; height=&quot;52&quot; rx=&quot;6&quot; fill=&quot;var(--bg)&quot; stroke=&quot;var(--border)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;363&quot; y=&quot;100&quot; font-size=&quot;12&quot; font-weight=&quot;700&quot; fill=&quot;var(--fg-color)&quot;&gt;1 · each -I dir&lt;&#x2F;text&gt;
+  &lt;text x=&quot;363&quot; y=&quot;118&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;looks for &amp;lt;dir&amp;gt;&#x2F;Y&#x2F;Z.h&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;477&quot; y1=&quot;132&quot; x2=&quot;477&quot; y2=&quot;151&quot; stroke=&quot;var(--text-light)&quot; stroke-width=&quot;1.4&quot; marker-end=&quot;url(#xmDown)&quot;&#x2F;&gt;
+  &lt;text x=&quot;487&quot; y=&quot;145&quot; font-size=&quot;10&quot; fill=&quot;var(--text-light)&quot;&gt;not found ↓&lt;&#x2F;text&gt;
+  &lt;rect x=&quot;350&quot; y=&quot;154&quot; width=&quot;255&quot; height=&quot;52&quot; rx=&quot;6&quot; fill=&quot;var(--bg)&quot; stroke=&quot;var(--xpos)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;363&quot; y=&quot;176&quot; font-size=&quot;12&quot; font-weight=&quot;700&quot; fill=&quot;var(--fg-color)&quot;&gt;2 · each -F framework dir&lt;&#x2F;text&gt;
+  &lt;text x=&quot;363&quot; y=&quot;194&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;&amp;lt;dir&amp;gt;&#x2F;Y.framework&#x2F;Headers&#x2F;Z.h — case 1&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;477&quot; y1=&quot;208&quot; x2=&quot;477&quot; y2=&quot;227&quot; stroke=&quot;var(--text-light)&quot; stroke-width=&quot;1.4&quot; marker-end=&quot;url(#xmDown)&quot;&#x2F;&gt;
+  &lt;text x=&quot;487&quot; y=&quot;221&quot; font-size=&quot;10&quot; fill=&quot;var(--text-light)&quot;&gt;not found ↓&lt;&#x2F;text&gt;
+  &lt;rect x=&quot;350&quot; y=&quot;230&quot; width=&quot;255&quot; height=&quot;52&quot; rx=&quot;6&quot; fill=&quot;var(--bg)&quot; stroke=&quot;var(--border)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;363&quot; y=&quot;252&quot; font-size=&quot;12&quot; font-weight=&quot;700&quot; fill=&quot;var(--fg-color)&quot;&gt;3 · System &#x2F; SDK paths&lt;&#x2F;text&gt;
+  &lt;text x=&quot;363&quot; y=&quot;270&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;toolchain defaults&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;477&quot; y1=&quot;284&quot; x2=&quot;477&quot; y2=&quot;303&quot; stroke=&quot;var(--text-light)&quot; stroke-width=&quot;1.4&quot; marker-end=&quot;url(#xmDown)&quot;&#x2F;&gt;
+  &lt;rect x=&quot;350&quot; y=&quot;306&quot; width=&quot;255&quot; height=&quot;42&quot; rx=&quot;6&quot; fill=&quot;var(--bg)&quot; stroke=&quot;var(--xneg)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;477&quot; y=&quot;332&quot; font-size=&quot;12&quot; font-weight=&quot;700&quot; fill=&quot;var(--xneg)&quot; text-anchor=&quot;middle&quot;&gt;else → file not found&lt;&#x2F;text&gt;
+&lt;&#x2F;svg&gt;
+&lt;&#x2F;figure&gt;
+&lt;p class=&quot;svg-cap&quot;&gt;Resolution is just this walk down a list of locations. The &lt;span style=&quot;color:var(--xpos);font-weight:700&quot;&gt;green&lt;&#x2F;span&gt; steps need no target-private flags; every other step depends on a &lt;code&gt;-I&lt;&#x2F;code&gt; or &lt;code&gt;-F&lt;&#x2F;code&gt; that must be present &lt;em&gt;in the running compilation&lt;&#x2F;em&gt; — which is exactly what changes when a module is compiled in isolation (Parts 4–5).&lt;&#x2F;p&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;The consequence that matters&lt;&#x2F;h4&gt;
+&lt;p&gt;Header resolution is governed entirely by &lt;strong&gt;which flags are on the command line of the compilation currently running&lt;&#x2F;strong&gt;. The same header can resolve in one compilation and fail in another with no change to any file — only the flag set differs. The entire migration is about &lt;em&gt;which compilation&lt;&#x2F;em&gt; parses each header, and therefore which flags are in effect.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part2&quot;&gt;Part 2 — Module maps and PCMs&lt;&#x2F;h2&gt;
+&lt;p&gt;Textual inclusion has two structural problems: cost (every consumer re-parses every header) and fragility (a header&#x27;s meaning depends on whatever macros and flags the consumer happens to have). Clang modules address both.&lt;&#x2F;p&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;The module map&lt;&#x2F;h4&gt;
+&lt;p&gt;A &lt;code&gt;module.modulemap&lt;&#x2F;code&gt; file declares that a set of headers forms a named unit:&lt;&#x2F;p&gt;
+&lt;pre&gt;framework module FBSDKCoreKit {
+  umbrella header &quot;FBSDKCoreKit.h&quot;   &lt;span class=&quot;dim&quot;&gt;&#x2F;&#x2F; this header (and its includes) define the module&#x27;s contents&lt;&#x2F;span&gt;
+  export *                            &lt;span class=&quot;dim&quot;&gt;&#x2F;&#x2F; importers also see what this module&#x27;s headers import&lt;&#x2F;span&gt;
+  module * { export * }              &lt;span class=&quot;dim&quot;&gt;&#x2F;&#x2F; one submodule per header under the umbrella&lt;&#x2F;span&gt;
+}&lt;&#x2F;pre&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;umbrella header&lt;&#x2F;strong&gt; — a header that includes all other public headers; the module&#x27;s contents are whatever it declares.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;framework module&lt;&#x2F;strong&gt; — header paths resolve inside the framework&#x27;s &lt;code&gt;Headers&#x2F;&lt;&#x2F;code&gt; directory.&lt;&#x2F;li&gt;
+&lt;li&gt;Non-framework module maps list headers explicitly: &lt;code&gt;module LookinServer { header &quot;A.h&quot; header &quot;B.h&quot; }&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;cards&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;The PCM (precompiled module)&lt;&#x2F;h4&gt;
+&lt;p&gt;To &quot;build a module,&quot; the compiler parses the headers named by the module map — in a compilation of its own, with its own flag set — and serializes the resulting AST to a binary &lt;code&gt;.pcm&lt;&#x2F;code&gt; file. Importers deserialize the PCM instead of re-parsing headers. Analogous to &lt;code&gt;.c → .o&lt;&#x2F;code&gt;: parse once, reuse many times.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;How imports change&lt;&#x2F;h4&gt;
+&lt;p&gt;&lt;code&gt;@import FBSDKCoreKit;&lt;&#x2F;code&gt; (ObjC) and &lt;code&gt;import FBSDKCoreKit&lt;&#x2F;code&gt; (Swift) load the module by name. With modules enabled, even a textual-looking &lt;code&gt;#import &amp;lt;FBSDKCoreKit&#x2F;FBSDKCoreKit.h&amp;gt;&lt;&#x2F;code&gt; is remapped to a module import when a module map claims that header. Swift has no headers at all — &lt;strong&gt;every&lt;&#x2F;strong&gt; ObjC dependency reaches Swift through a module, which is why module correctness is non-negotiable in a mixed codebase.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Module-level dependencies&lt;&#x2F;h4&gt;
+&lt;p&gt;Building module A&#x27;s PCM may itself encounter &lt;code&gt;#import &amp;lt;B&#x2F;B.h&amp;gt;&lt;&#x2F;code&gt;. If B is covered by a module map, A&#x27;s PCM records a dependency on module B, and B&#x27;s PCM must be available. Modules therefore form a dependency graph of their own, parallel to the build system&#x27;s target graph. The migration&#x27;s central problem: these two graphs &lt;strong&gt;must agree&lt;&#x2F;strong&gt;, and under the old mode nothing checked that they did.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;The two open questions&lt;&#x2F;h4&gt;
+&lt;p&gt;The module map says nothing about &lt;em&gt;when&lt;&#x2F;em&gt; the PCM is built or &lt;em&gt;which flags&lt;&#x2F;em&gt; that build sees. Two strategies exist:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Implicit&lt;&#x2F;strong&gt; — the compiler builds PCMs on demand, mid-compilation (Part 4, left panel).&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Explicit&lt;&#x2F;strong&gt; — the build system builds every PCM as a scheduled step (Part 4, right panel).&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The migration is the switch from the first to the second.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;figure class=&quot;fig&quot;&gt;
+&lt;svg viewBox=&quot;0 0 640 274&quot; role=&quot;img&quot; aria-label=&quot;Two graphs side by side over the same two nodes, FBSDKCoreKit and FBSDKCoreKit_Basics. On the left, the module graph, an arrow runs from FBSDKCoreKit down to FBSDKCoreKit_Basics, labelled by the umbrella header&#x27;s angle import. On the right, the Bazel target graph, the same two nodes have no connecting edge because the SPM binary target was generated with deps equal to an empty list; the missing edge is drawn as a red dashed arrow with a cross. The caption states the two graphs must agree under explicit compilation.&quot;&gt;
+  &lt;defs&gt;
+    &lt;marker id=&quot;xmMA&quot; markerWidth=&quot;9&quot; markerHeight=&quot;9&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;path d=&quot;M0,0 L7,3 L0,6 Z&quot; fill=&quot;var(--accent)&quot;&#x2F;&gt;&lt;&#x2F;marker&gt;
+    &lt;marker id=&quot;xmMR&quot; markerWidth=&quot;9&quot; markerHeight=&quot;9&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;path d=&quot;M0,0 L7,3 L0,6 Z&quot; fill=&quot;var(--xneg)&quot;&#x2F;&gt;&lt;&#x2F;marker&gt;
+  &lt;&#x2F;defs&gt;
+  &lt;text x=&quot;170&quot; y=&quot;26&quot; font-size=&quot;12.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--accent)&quot; text-anchor=&quot;middle&quot;&gt;Module graph — header imports&lt;&#x2F;text&gt;
+  &lt;text x=&quot;475&quot; y=&quot;26&quot; font-size=&quot;12.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--accent)&quot; text-anchor=&quot;middle&quot;&gt;Bazel target graph — deps&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;320&quot; y1=&quot;42&quot; x2=&quot;320&quot; y2=&quot;258&quot; stroke=&quot;var(--border)&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;3 4&quot;&#x2F;&gt;
+  &lt;!-- LEFT: module graph --&gt;
+  &lt;rect x=&quot;80&quot; y=&quot;50&quot; width=&quot;180&quot; height=&quot;46&quot; rx=&quot;6&quot; fill=&quot;var(--bg-light)&quot; stroke=&quot;var(--border)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;170&quot; y=&quot;78&quot; font-size=&quot;12.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--fg-color)&quot; text-anchor=&quot;middle&quot; font-family=&quot;var(--mono-font)&quot;&gt;FBSDKCoreKit&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;170&quot; y1=&quot;96&quot; x2=&quot;170&quot; y2=&quot;182&quot; stroke=&quot;var(--accent)&quot; stroke-width=&quot;2&quot; marker-end=&quot;url(#xmMA)&quot;&#x2F;&gt;
+  &lt;text x=&quot;180&quot; y=&quot;134&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;#import&lt;&#x2F;text&gt;
+  &lt;text x=&quot;180&quot; y=&quot;148&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;&amp;lt;…_Basics&#x2F;…&amp;gt;&lt;&#x2F;text&gt;
+  &lt;rect x=&quot;80&quot; y=&quot;186&quot; width=&quot;180&quot; height=&quot;46&quot; rx=&quot;6&quot; fill=&quot;var(--bg-light)&quot; stroke=&quot;var(--border)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;170&quot; y=&quot;214&quot; font-size=&quot;11.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--fg-color)&quot; text-anchor=&quot;middle&quot; font-family=&quot;var(--mono-font)&quot;&gt;FBSDKCoreKit_Basics&lt;&#x2F;text&gt;
+  &lt;!-- RIGHT: target graph --&gt;
+  &lt;rect x=&quot;385&quot; y=&quot;50&quot; width=&quot;180&quot; height=&quot;46&quot; rx=&quot;6&quot; fill=&quot;var(--bg-light)&quot; stroke=&quot;var(--border)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;475&quot; y=&quot;73&quot; font-size=&quot;12.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--fg-color)&quot; text-anchor=&quot;middle&quot; font-family=&quot;var(--mono-font)&quot;&gt;FBSDKCoreKit&lt;&#x2F;text&gt;
+  &lt;text x=&quot;475&quot; y=&quot;88&quot; font-size=&quot;10&quot; fill=&quot;var(--xneg)&quot; text-anchor=&quot;middle&quot; font-family=&quot;var(--mono-font)&quot;&gt;deps = [ ]&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;475&quot; y1=&quot;96&quot; x2=&quot;475&quot; y2=&quot;182&quot; stroke=&quot;var(--xneg)&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;5 4&quot; marker-end=&quot;url(#xmMR)&quot;&#x2F;&gt;
+  &lt;circle cx=&quot;475&quot; cy=&quot;139&quot; r=&quot;11&quot; fill=&quot;var(--bg)&quot; stroke=&quot;var(--xneg)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;475&quot; y=&quot;143&quot; font-size=&quot;13&quot; font-weight=&quot;700&quot; fill=&quot;var(--xneg)&quot; text-anchor=&quot;middle&quot;&gt;✗&lt;&#x2F;text&gt;
+  &lt;text x=&quot;492&quot; y=&quot;135&quot; font-size=&quot;10.5&quot; fill=&quot;var(--xneg)&quot;&gt;edge&lt;&#x2F;text&gt;
+  &lt;text x=&quot;492&quot; y=&quot;149&quot; font-size=&quot;10.5&quot; fill=&quot;var(--xneg)&quot;&gt;absent&lt;&#x2F;text&gt;
+  &lt;rect x=&quot;385&quot; y=&quot;186&quot; width=&quot;180&quot; height=&quot;46&quot; rx=&quot;6&quot; fill=&quot;var(--bg-light)&quot; stroke=&quot;var(--border)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;475&quot; y=&quot;214&quot; font-size=&quot;11.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--fg-color)&quot; text-anchor=&quot;middle&quot; font-family=&quot;var(--mono-font)&quot;&gt;FBSDKCoreKit_Basics&lt;&#x2F;text&gt;
+&lt;&#x2F;svg&gt;
+&lt;&#x2F;figure&gt;
+&lt;p class=&quot;svg-cap&quot;&gt;The umbrella header creates a &lt;span style=&quot;color:var(--accent);font-weight:700&quot;&gt;module-graph edge&lt;&#x2F;span&gt;, but RSPM generated the binary target with &lt;code&gt;deps = []&lt;&#x2F;code&gt;, so the matching &lt;span style=&quot;color:var(--xneg);font-weight:700&quot;&gt;target-graph edge is missing&lt;&#x2F;span&gt;. Implicit mode never compared the two; explicit mode compiles each module in isolation and the gap becomes case 1&#x27;s &lt;code&gt;file not found&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part3&quot;&gt;Part 3 — Bazel: the minimum working model&lt;&#x2F;h2&gt;
+&lt;p&gt;Six concepts are sufficient to read everything that follows.&lt;&#x2F;p&gt;
+&lt;div class=&quot;cards&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;1 · Targets and labels&lt;&#x2F;h4&gt;
+&lt;p&gt;A &lt;strong&gt;target&lt;&#x2F;strong&gt; is a named buildable unit declared in a &lt;code&gt;BUILD&lt;&#x2F;code&gt; file, addressed by a &lt;strong&gt;label&lt;&#x2F;strong&gt;: &lt;code&gt;&#x2F;&#x2F;Modules&#x2F;Networking:Networking&lt;&#x2F;code&gt; means &quot;target &lt;code&gt;Networking&lt;&#x2F;code&gt; in package &lt;code&gt;Modules&#x2F;Networking&lt;&#x2F;code&gt;&quot;. Labels starting with &lt;code&gt;@&lt;&#x2F;code&gt; address targets in &lt;strong&gt;external repositories&lt;&#x2F;strong&gt; — downloaded dependencies, e.g. &lt;code&gt;@swiftpkg_facebook_ios_sdk&#x2F;&#x2F;:FacebookCore&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;2 · Rules and attributes&lt;&#x2F;h4&gt;
+&lt;p&gt;Each target is an instance of a &lt;strong&gt;rule&lt;&#x2F;strong&gt; (&lt;code&gt;swift_library&lt;&#x2F;code&gt;, &lt;code&gt;objc_library&lt;&#x2F;code&gt;, &lt;code&gt;apple_dynamic_xcframework_import&lt;&#x2F;code&gt;) with &lt;strong&gt;attributes&lt;&#x2F;strong&gt;:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;srcs&lt;&#x2F;code&gt;, &lt;code&gt;hdrs&lt;&#x2F;code&gt; — source and header files.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;deps&lt;&#x2F;code&gt; — labels of targets this target depends on. &lt;strong&gt;This is the build graph.&lt;&#x2F;strong&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;copts&lt;&#x2F;code&gt; — extra compiler flags, private to this target&#x27;s own compilations.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;includes&lt;&#x2F;code&gt; — header search dirs that &lt;em&gt;propagate&lt;&#x2F;em&gt;: dependents get them automatically.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;features&lt;&#x2F;code&gt; — named toolchain behaviors; &lt;code&gt;&quot;x&quot;&lt;&#x2F;code&gt; enables, &lt;code&gt;&quot;-x&quot;&lt;&#x2F;code&gt; disables, per target or globally.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;3 · Actions and sandboxing&lt;&#x2F;h4&gt;
+&lt;p&gt;Building a target produces &lt;strong&gt;actions&lt;&#x2F;strong&gt;: concrete command lines (one compiler invocation each) with &lt;strong&gt;declared inputs and outputs&lt;&#x2F;strong&gt;. Actions run sandboxed — the command can only read files declared as inputs. An undeclared file is absent, not merely discouraged. Actions are cacheable (locally and remotely) and reproducible precisely because their inputs are closed.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;4 · Providers&lt;&#x2F;h4&gt;
+&lt;p&gt;Targets pass structured data to dependents through &lt;strong&gt;providers&lt;&#x2F;strong&gt;. Two matter here:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;CcInfo&lt;&#x2F;code&gt; — C-family compilation context: headers, defines, &lt;code&gt;-I&lt;&#x2F;code&gt;&#x2F;&lt;code&gt;-F&lt;&#x2F;code&gt; search paths. A target&#x27;s &lt;code&gt;copts&lt;&#x2F;code&gt; are &lt;em&gt;not&lt;&#x2F;em&gt; in CcInfo; &lt;code&gt;includes&lt;&#x2F;code&gt; are.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;SwiftInfo&lt;&#x2F;code&gt; — Swift modules and, under explicit compilation, the Clang modules (module map + PCM) a target exposes.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;&quot;X propagates to dependents&quot; always means &quot;X travels in a provider along &lt;code&gt;deps&lt;&#x2F;code&gt; edges.&quot;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;5 · Aspects&lt;&#x2F;h4&gt;
+&lt;p&gt;An &lt;strong&gt;aspect&lt;&#x2F;strong&gt; walks the dependency graph and attaches &lt;em&gt;additional&lt;&#x2F;em&gt; actions and providers to existing targets without editing their BUILD files. The relevant one is rules_swift&#x27;s &lt;code&gt;swift_clang_module_aspect&lt;&#x2F;code&gt;: it visits every target reachable through &lt;code&gt;deps&lt;&#x2F;code&gt;, and for each target that owns a module map, registers a &lt;code&gt;SwiftPrecompileCModule&lt;&#x2F;code&gt; action that builds the PCM. Error messages name it explicitly: &lt;em&gt;&quot;from aspects [swift_clang_module_aspect] on objc_library rule target …&quot;&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;6 · Generated external repos (RSPM)&lt;&#x2F;h4&gt;
+&lt;p&gt;Swift Package Manager dependencies are integrated by &lt;strong&gt;rules_swift_package_manager (RSPM)&lt;&#x2F;strong&gt;: it downloads each package, reads its manifest, and &lt;em&gt;generates&lt;&#x2F;em&gt; a BUILD file — one target per SPM target. A binary SPM target (&lt;code&gt;binaryTarget&lt;&#x2F;code&gt;, a prebuilt xcframework) becomes an &lt;code&gt;apple_*_xcframework_import&lt;&#x2F;code&gt; target. Critical limitation: SPM&#x27;s manifest format gives binary targets &lt;strong&gt;no dependency list&lt;&#x2F;strong&gt;, so RSPM generates them with &lt;code&gt;deps = []&lt;&#x2F;code&gt;. RSPM ≥ 1.17 adds &lt;code&gt;configure_package(target_deps = {...})&lt;&#x2F;code&gt; to inject edges into the generated BUILD by hand.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part4&quot;&gt;Part 4 — Implicit vs. explicit compilation&lt;&#x2F;h2&gt;
+&lt;p&gt;Same sources, same module maps. The difference is who schedules PCM compilation and which flags it sees. The migration enables two features in &lt;code&gt;.bazelrc&lt;&#x2F;code&gt;: &lt;code&gt;swift.emit_c_module&lt;&#x2F;code&gt; and &lt;code&gt;swift.use_c_modules&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;div class=&quot;mode-toggle&quot; role=&quot;tablist&quot; aria-label=&quot;Module mode toggle&quot;&gt;
+&lt;button id=&quot;btnImplicit&quot; class=&quot;active&quot; onclick=&quot;xmodShowMode(&#x27;implicit&#x27;)&quot; role=&quot;tab&quot; aria-selected=&quot;true&quot;&gt;Implicit (before)&lt;&#x2F;button&gt;
+&lt;button id=&quot;btnExplicit&quot; onclick=&quot;xmodShowMode(&#x27;explicit&#x27;)&quot; role=&quot;tab&quot; aria-selected=&quot;false&quot;&gt;Explicit (after)&lt;&#x2F;button&gt;
+&lt;&#x2F;div&gt;
+&lt;div id=&quot;panelImplicit&quot; class=&quot;mode-panel active diagram&quot; role=&quot;tabpanel&quot;&gt;
+&lt;div class=&quot;dgrid&quot;&gt;
+&lt;div class=&quot;dbox big pass&quot;&gt;
+&lt;div class=&quot;dtitle&quot;&gt;Step 1 — Bazel schedules ONE action: the consumer&#x27;s Swift compile &lt;span class=&quot;pill green&quot;&gt;all search paths merged&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;span class=&quot;dim&quot;&gt;swiftc compiles&lt;&#x2F;span&gt; RudderManager.swift&lt;span class=&quot;dim&quot;&gt;. Its target&#x27;s deps are many, so the merged CcInfo yields:&lt;&#x2F;span&gt;&lt;br&gt;
+-F facebook&amp;nbsp; -F braze&amp;nbsp; -F zendesk&amp;nbsp; -F sentry&amp;nbsp; -F firebase&amp;nbsp; -I lookin&#x2F;Shared&amp;nbsp; &lt;span class=&quot;dim&quot;&gt;… one command line, everything visible&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow-down&quot;&gt;↓ during that compile, swiftc encounters &lt;code&gt;import FBSDKCoreKit&lt;&#x2F;code&gt; and no PCM exists yet&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox big&quot;&gt;
+&lt;div class=&quot;dtitle&quot;&gt;Step 2 — the compiler builds the PCM itself, mid-compilation&lt;&#x2F;div&gt;
+&lt;span class=&quot;dim&quot;&gt;It finds the module map via the -F paths, then parses FBSDKCoreKit.h. That parse hits&lt;&#x2F;span&gt; #import &amp;lt;FBSDKCoreKit_Basics&#x2F;…&amp;gt;&lt;br&gt;
+&lt;span class=&quot;ok&quot;&gt;resolves&lt;&#x2F;span&gt; &lt;span class=&quot;dim&quot;&gt;— this parse runs INSIDE the consumer&#x27;s compilation and inherits its full flag set (Part 1: resolution = current flags).&lt;&#x2F;span&gt;&lt;br&gt;
+&lt;span class=&quot;dim&quot;&gt;The PCM lands in a compiler-private cache, outside Bazel: ~&#x2F;…&#x2F;ModuleCache&#x2F;&amp;lt;hash&amp;gt;&#x2F;FBSDKCoreKit-&amp;lt;hash&amp;gt;.pcm&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;&lt;strong&gt;Properties of implicit compilation.&lt;&#x2F;strong&gt; (1) PCM builds are not Bazel actions: invisible to the action graph, excluded from remote caching, re-done per machine and per flag-hash. (2) The flag set used to build a PCM is whatever the &lt;em&gt;first importer&lt;&#x2F;em&gt; had — module content can vary by import order and configuration. (3) Header resolution inside a module build borrows the consumer&#x27;s search paths, so a module&#x27;s undeclared dependency on a sibling resolves successfully whenever any consumer&#x27;s flags cover it. No mechanism verifies that the module graph matches the target graph.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div id=&quot;panelExplicit&quot; class=&quot;mode-panel diagram&quot; role=&quot;tabpanel&quot;&gt;
+&lt;div class=&quot;dgrid&quot;&gt;
+&lt;div class=&quot;dbox big&quot;&gt;
+&lt;div class=&quot;dtitle&quot;&gt;Step 0 — swift_clang_module_aspect walks the deps graph and schedules one PCM action per module map&lt;&#x2F;div&gt;
+&lt;span class=&quot;dim&quot;&gt;Each SwiftPrecompileCModule action&#x27;s inputs = the owning target&#x27;s files + its declared deps&#x27; CcInfo&#x2F;SwiftInfo. Nothing else exists inside the sandbox.&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox pass&quot;&gt;
+&lt;div class=&quot;dtitle&quot;&gt;PCM: FBSDKCoreKit_Basics &lt;span class=&quot;pill green&quot;&gt;OK&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;span class=&quot;dim&quot;&gt;Needs no other module → compiles from its own framework files alone.&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox fail&quot;&gt;
+&lt;div class=&quot;dtitle&quot;&gt;PCM: FBSDKCoreKit &lt;span class=&quot;pill red&quot;&gt;FAILS&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;span class=&quot;dim&quot;&gt;deps = &lt;&#x2F;span&gt;&lt;span class=&quot;err&quot;&gt;[]&lt;&#x2F;span&gt; &lt;span class=&quot;dim&quot;&gt;(SPM binary target, Part 3 §6)&lt;&#x2F;span&gt;&lt;br&gt;
+&lt;span class=&quot;dim&quot;&gt;→ no -F path to the sibling in this sandbox&lt;&#x2F;span&gt;&lt;br&gt;
+#import &amp;lt;FBSDKCoreKit_Basics&#x2F;…&amp;gt; → &lt;span class=&quot;err&quot;&gt;file not found&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox&quot;&gt;
+&lt;div class=&quot;dtitle&quot;&gt;PCM: BrazeKit &lt;span class=&quot;pill blue&quot;&gt;independent&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;span class=&quot;dim&quot;&gt;Own action, own sandbox, runs in parallel.&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow-down&quot;&gt;↓ Swift compiles are scheduled only after the PCMs they need exist&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox big&quot;&gt;
+&lt;div class=&quot;dtitle&quot;&gt;Consumer compile receives finished artifacts — it never parses dependency headers&lt;&#x2F;div&gt;
+-fmodule-map-file=…&#x2F;module.modulemap&amp;nbsp;&amp;nbsp;-fmodule-file=FBSDKCoreKit=bazel-out&#x2F;…&#x2F;FBSDKCoreKit.pcm&lt;br&gt;
+&lt;span class=&quot;dim&quot;&gt;Each PCM is an ordinary Bazel action: sandboxed, deterministic per configuration, remote-cacheable, shared across machines.&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;&lt;strong&gt;Properties of explicit compilation.&lt;&#x2F;strong&gt; (1) Every module map reachable through &lt;code&gt;deps&lt;&#x2F;code&gt; is precompiled — &lt;em&gt;whether or not any source imports it&lt;&#x2F;em&gt; (relevant in case 2). (2) Each PCM build sees only declared inputs; an undeclared dependency is a hard error rather than a silent borrow. (3) PCM actions are cached and shared org-wide, and run in parallel ahead of Swift compiles. The cost: every assumption the implicit mode silently absorbed must now hold explicitly. The nine case studies are exactly those assumptions.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part5&quot;&gt;Part 5 — The governing invariant&lt;&#x2F;h2&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;Under explicit compilation, each module map is compiled in an isolated, sandboxed action whose visible inputs are the owning target&#x27;s files plus its declared dependencies&#x27; providers. Consumer search paths do not exist inside that sandbox.&lt;&#x2F;p&gt;
+&lt;p class=&quot;corollary&quot;&gt;&lt;strong&gt;Corollary (root cause of cases 6 and 8):&lt;&#x2F;strong&gt; when the aspect constructs a PCM action for a target, it takes the compilation context from &lt;code&gt;CcInfo&lt;&#x2F;code&gt; — and forwards only &lt;code&gt;-D&lt;&#x2F;code&gt; defines from the target&#x27;s &lt;code&gt;copts&lt;&#x2F;code&gt;. Since &lt;code&gt;copts&lt;&#x2F;code&gt; never enter CcInfo (Part 3 §4), any &lt;code&gt;-I&lt;&#x2F;code&gt; search path supplied via copts is &lt;strong&gt;absent&lt;&#x2F;strong&gt; from the PCM compile. Search paths reach a PCM action only through the &lt;code&gt;includes&lt;&#x2F;code&gt; attribute or a dependency&#x27;s CcInfo.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;figure class=&quot;fig&quot;&gt;
+&lt;svg viewBox=&quot;0 0 640 296&quot; role=&quot;img&quot; aria-label=&quot;Two boxes contrasting the same module import in two compilations. The left box, the consumer Swift compile, lists framework search paths merged from all dependencies — dash F facebook, braze, zendesk, sentry, and dash I lookin slash Shared — and the import of the sibling header resolves with a green check because the PCM is built inside this compilation and inherits its full flag set. The right box, the isolated PCM action sandbox, contains only FBSDKCoreKit&#x27;s own framework files because deps is empty, so the same sibling import fails with a red file-not-found, since the consumer search paths do not exist inside the sandbox.&quot;&gt;
+  &lt;!-- LEFT: consumer compile --&gt;
+  &lt;rect x=&quot;22&quot; y=&quot;40&quot; width=&quot;292&quot; height=&quot;240&quot; rx=&quot;8&quot; fill=&quot;var(--bg)&quot; stroke=&quot;var(--xpos)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;168&quot; y=&quot;26&quot; font-size=&quot;12.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--fg-color)&quot; text-anchor=&quot;middle&quot;&gt;Consumer Swift compile&lt;&#x2F;text&gt;
+  &lt;text x=&quot;40&quot; y=&quot;68&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;search paths merged from all deps&#x27; CcInfo:&lt;&#x2F;text&gt;
+  &lt;text x=&quot;40&quot; y=&quot;92&quot; font-size=&quot;11.5&quot; fill=&quot;var(--fg-color)&quot; font-family=&quot;var(--mono-font)&quot;&gt;-F facebook&amp;#160;&amp;#160;-F braze&lt;&#x2F;text&gt;
+  &lt;text x=&quot;40&quot; y=&quot;112&quot; font-size=&quot;11.5&quot; fill=&quot;var(--fg-color)&quot; font-family=&quot;var(--mono-font)&quot;&gt;-F zendesk&amp;#160;&amp;#160;&amp;#160;-F sentry&lt;&#x2F;text&gt;
+  &lt;text x=&quot;40&quot; y=&quot;132&quot; font-size=&quot;11.5&quot; fill=&quot;var(--fg-color)&quot; font-family=&quot;var(--mono-font)&quot;&gt;-I lookin&#x2F;Shared&amp;#160;&amp;#160;…&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;40&quot; y1=&quot;150&quot; x2=&quot;296&quot; y2=&quot;150&quot; stroke=&quot;var(--border)&quot; stroke-width=&quot;1&quot;&#x2F;&gt;
+  &lt;text x=&quot;40&quot; y=&quot;178&quot; font-size=&quot;11.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--fg-color)&quot;&gt;PCM built inside this compile&lt;&#x2F;text&gt;
+  &lt;text x=&quot;40&quot; y=&quot;206&quot; font-size=&quot;11.5&quot; fill=&quot;var(--xpos)&quot; font-family=&quot;var(--mono-font)&quot;&gt;#import &amp;lt;…_Basics&#x2F;…&amp;gt;&lt;&#x2F;text&gt;
+  &lt;text x=&quot;40&quot; y=&quot;226&quot; font-size=&quot;12.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--xpos)&quot;&gt;✓ resolves&lt;&#x2F;text&gt;
+  &lt;text x=&quot;40&quot; y=&quot;252&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;inherits the full flag set&lt;&#x2F;text&gt;
+  &lt;!-- RIGHT: isolated PCM sandbox --&gt;
+  &lt;rect x=&quot;326&quot; y=&quot;40&quot; width=&quot;292&quot; height=&quot;240&quot; rx=&quot;8&quot; fill=&quot;var(--bg)&quot; stroke=&quot;var(--xneg)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;472&quot; y=&quot;26&quot; font-size=&quot;12.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--fg-color)&quot; text-anchor=&quot;middle&quot;&gt;Isolated PCM action — sandbox&lt;&#x2F;text&gt;
+  &lt;text x=&quot;344&quot; y=&quot;68&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;visible inputs (deps = [ ]):&lt;&#x2F;text&gt;
+  &lt;text x=&quot;344&quot; y=&quot;92&quot; font-size=&quot;11.5&quot; fill=&quot;var(--fg-color)&quot; font-family=&quot;var(--mono-font)&quot;&gt;FBSDKCoreKit&#x2F; own files&lt;&#x2F;text&gt;
+  &lt;text x=&quot;344&quot; y=&quot;116&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;— nothing else exists here —&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;344&quot; y1=&quot;150&quot; x2=&quot;600&quot; y2=&quot;150&quot; stroke=&quot;var(--border)&quot; stroke-width=&quot;1&quot;&#x2F;&gt;
+  &lt;text x=&quot;344&quot; y=&quot;178&quot; font-size=&quot;11.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--fg-color)&quot;&gt;PCM built as its own action&lt;&#x2F;text&gt;
+  &lt;text x=&quot;344&quot; y=&quot;206&quot; font-size=&quot;11.5&quot; fill=&quot;var(--xneg)&quot; font-family=&quot;var(--mono-font)&quot;&gt;#import &amp;lt;…_Basics&#x2F;…&amp;gt;&lt;&#x2F;text&gt;
+  &lt;text x=&quot;344&quot; y=&quot;226&quot; font-size=&quot;12.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--xneg)&quot;&gt;✗ file not found&lt;&#x2F;text&gt;
+  &lt;text x=&quot;344&quot; y=&quot;252&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;consumer -F paths absent here&lt;&#x2F;text&gt;
+&lt;&#x2F;svg&gt;
+&lt;&#x2F;figure&gt;
+&lt;p class=&quot;svg-cap&quot;&gt;Same import, two worlds. The consumer compile sees every dependency&#x27;s search paths merged together, so a sibling resolves incidentally; the isolated PCM action sees only declared inputs, so the identical line fails. That difference is the entire migration.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part6&quot;&gt;Part 6 — Case studies: nine failures, in build order&lt;&#x2F;h2&gt;
+&lt;p&gt;Each entry names the failing action, explains why the same code compiled under implicit mode, derives the root cause from Parts 1–5, and documents the fix.&lt;&#x2F;p&gt;
+&lt;details class=&quot;issue&quot; open&gt;
+&lt;summary&gt;&lt;span class=&quot;num&quot;&gt;01&lt;&#x2F;span&gt;&lt;span&gt;&lt;span class=&quot;t&quot;&gt;Facebook SDK — &lt;code&gt;&#x27;FBSDKCoreKit_Basics.h&#x27; file not found&lt;&#x2F;code&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;s&quot;&gt;Undeclared edges between sibling binary frameworks · fixed via RSPM target_deps&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;summary&gt;
+&lt;div class=&quot;ibody&quot;&gt;
+&lt;p class=&quot;q&quot;&gt;Failing action&lt;&#x2F;p&gt;
+&lt;p&gt;PCM precompile of &lt;code&gt;FBSDKCoreKit&lt;&#x2F;code&gt;. Its umbrella header contains an angle include of a sibling framework, &lt;code&gt;#import &amp;lt;FBSDKCoreKit_Basics&#x2F;FBSDKCoreKit_Basics.h&amp;gt;&lt;&#x2F;code&gt;, which requires a &lt;code&gt;-F&lt;&#x2F;code&gt; path to the directory containing &lt;code&gt;FBSDKCoreKit_Basics.framework&lt;&#x2F;code&gt; (Part 1).&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Why it compiled under implicit mode&lt;&#x2F;p&gt;
+&lt;p&gt;The PCM was built inside a consumer&#x27;s compilation, which had every Facebook framework&#x27;s &lt;code&gt;-F&lt;&#x2F;code&gt; path merged from its many deps (Part 4, implicit panel, step 2).&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Root cause&lt;&#x2F;p&gt;
+&lt;p&gt;SPM binary targets carry no dependency list, so RSPM generated &lt;code&gt;deps = []&lt;&#x2F;code&gt; (Part 3 §6). The isolated PCM action&#x27;s sandbox contains only FBSDKCoreKit&#x27;s own files — the sibling framework is not an input, so its headers do not exist there (Part 3 §3).&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Fix&lt;&#x2F;p&gt;
+&lt;p&gt;Upgraded RSPM 1.13.0 → 1.19.0 (the &lt;code&gt;target_deps&lt;&#x2F;code&gt; API landed in 1.17.0) and declared the SDK&#x27;s internal layering in &lt;code&gt;MODULE.bazel&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre&gt;swift_deps.configure_package(
+    name = &quot;facebook-ios-sdk&quot;,
+    target_deps = {
+        &quot;FBSDKCoreKit&quot;:           [&quot;FBAEMKit&quot;, &quot;FBSDKCoreKit_Basics&quot;],
+        &quot;FBAEMKit&quot;:               [&quot;FBSDKCoreKit_Basics&quot;],
+        &quot;FBSDKLoginKit&quot;:          [&quot;FBSDKCoreKit&quot;],
+        &quot;FBSDKShareKit&quot;:          [&quot;FBSDKCoreKit&quot;],
+        &quot;FBSDKGamingServicesKit&quot;: [&quot;FBSDKCoreKit&quot;, &quot;FBSDKShareKit&quot;],
+    },
+)&lt;&#x2F;pre&gt;
+&lt;p&gt;With the edges declared, the sibling&#x27;s framework directory becomes a sandbox input and its CcInfo supplies the &lt;code&gt;-F&lt;&#x2F;code&gt; path; the dependency PCM is also built first, in topological order.&lt;&#x2F;p&gt;
+&lt;div class=&quot;lesson&quot;&gt;&lt;strong&gt;General rule:&lt;&#x2F;strong&gt; the module graph (who imports whom at the header level) must be mirrored by the target graph (&lt;code&gt;deps&lt;&#x2F;code&gt;). Implicit mode never checked this; explicit mode enforces it.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;issue&quot;&gt;
+&lt;summary&gt;&lt;span class=&quot;num&quot;&gt;02&lt;&#x2F;span&gt;&lt;span&gt;&lt;span class=&quot;t&quot;&gt;GoogleAppMeasurement — &lt;code&gt;umbrella header not found&lt;&#x2F;code&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;s&quot;&gt;Module map present, headers absent · fixed via rules_apple patch&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;summary&gt;
+&lt;div class=&quot;ibody&quot;&gt;
+&lt;p class=&quot;q&quot;&gt;Failing action&lt;&#x2F;p&gt;
+&lt;p&gt;PCM precompile of GoogleAppMeasurement. The framework ships a module map whose &lt;code&gt;umbrella header&lt;&#x2F;code&gt; directive names &lt;code&gt;GoogleAppMeasurement-umbrella.h&lt;&#x2F;code&gt; — but the framework contains no &lt;code&gt;Headers&#x2F;&lt;&#x2F;code&gt; directory at all. The referenced file does not exist in the vendor&#x27;s artifact.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Why it compiled under implicit mode&lt;&#x2F;p&gt;
+&lt;p&gt;It never compiled — and never needed to. No source imports this module; the framework is link-only. Implicit PCM builds are triggered by imports (Part 4), so an unimported module map is never parsed. The defect was inert.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Root cause&lt;&#x2F;p&gt;
+&lt;p&gt;Explicit-mode property (1): the aspect precompiles every module map reachable in the graph, imported or not. Invalid metadata that implicit mode never evaluated now fails a scheduled action.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Fix&lt;&#x2F;p&gt;
+&lt;p&gt;A patch to rules_apple&#x27;s xcframework import rules: when the imported framework ships no headers, do not create the Swift interop provider, so the aspect schedules no PCM action for it. Correct because a headerless framework has no importable surface; linking information is unaffected.&lt;&#x2F;p&gt;
+&lt;div class=&quot;lesson&quot;&gt;&lt;strong&gt;General rule:&lt;&#x2F;strong&gt; eager precompilation validates all module metadata in the dependency graph, including metadata for modules that no source imports.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;issue&quot;&gt;
+&lt;summary&gt;&lt;span class=&quot;num&quot;&gt;03&lt;&#x2F;span&gt;&lt;span&gt;&lt;span class=&quot;t&quot;&gt;Zendesk &#x2F; LiveRamp &#x2F; Braze — &lt;code&gt;module &#x27;SDKConfigurations&#x27; not found&lt;&#x2F;code&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;s&quot;&gt;Cross-package edges; imports hidden in -Swift.h and .swiftinterface · fixed via target_deps with public labels&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;summary&gt;
+&lt;div class=&quot;ibody&quot;&gt;
+&lt;p class=&quot;q&quot;&gt;Failing actions&lt;&#x2F;p&gt;
+&lt;p&gt;Two kinds. (a) PCM precompile of MessagingSDK: binary frameworks containing Swift code ship a generated ObjC header (&lt;code&gt;MessagingSDK-Swift.h&lt;&#x2F;code&gt;) that re-exposes their Swift API to ObjC; it is part of the umbrella, and it contains &lt;code&gt;@import SDKConfigurations;&lt;&#x2F;code&gt; — a module import of a module from a &lt;em&gt;different SPM package&lt;&#x2F;em&gt;. (b) Compilation of MessagingAPI&#x27;s &lt;code&gt;.swiftinterface&lt;&#x2F;code&gt;: frameworks with Swift API ship a textual interface file that rules_apple compiles into a binary swiftmodule, and that compilation must resolve every &lt;code&gt;import&lt;&#x2F;code&gt; statement in the file.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Root cause&lt;&#x2F;p&gt;
+&lt;p&gt;Identical to case 1 — binary targets, no declared edges — extended across package boundaries. The required modules live in other generated external repositories (Part 3 §6).&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Implementation notes&lt;&#x2F;p&gt;
+&lt;p&gt;① A binary framework&#x27;s true dependency set spans three file types: ObjC headers, the generated &lt;code&gt;-Swift.h&lt;&#x2F;code&gt;, and &lt;code&gt;.swiftinterface&lt;&#x2F;code&gt; files. The initial header-only audit missed the latter two; the complete audit found MessagingSDK → SDKConfigurations + CommonUISDK + MessagingAPI, SupportSDK → five Zendesk modules, BrazeLocation → BrazeKit, LRAtsSDKMediationAdapter → LRAtsSDK + GoogleMobileAds. ② Generated &lt;code&gt;.rspm&lt;&#x2F;code&gt; targets have package-private visibility; cross-package &lt;code&gt;target_deps&lt;&#x2F;code&gt; values must use each repo&#x27;s &lt;em&gt;public product&lt;&#x2F;em&gt; labels, e.g. &lt;code&gt;@swiftpkg_core_sdk_ios&#x2F;&#x2F;:ZendeskCoreSDK&lt;&#x2F;code&gt; — referencing the &lt;code&gt;.rspm&lt;&#x2F;code&gt; targets directly fails Bazel&#x27;s visibility check.&lt;&#x2F;p&gt;
+&lt;div class=&quot;lesson&quot;&gt;&lt;strong&gt;General rule:&lt;&#x2F;strong&gt; audit ObjC headers, &lt;code&gt;-Swift.h&lt;&#x2F;code&gt;, and &lt;code&gt;.swiftinterface&lt;&#x2F;code&gt; imports to determine a binary framework&#x27;s dependency set. Any one alone is incomplete.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;issue&quot;&gt;
+&lt;summary&gt;&lt;span class=&quot;num&quot;&gt;04&lt;&#x2F;span&gt;&lt;span&gt;&lt;span class=&quot;t&quot;&gt;Firebase umbrella — &lt;code&gt;&#x27;FirebaseCore&#x2F;FirebaseCore.h&#x27; file not found&lt;&#x2F;code&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;s&quot;&gt;The required edge would create a cycle · fixed via __has_include source patch&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;summary&gt;
+&lt;div class=&quot;ibody&quot;&gt;
+&lt;p class=&quot;q&quot;&gt;Failing action&lt;&#x2F;p&gt;
+&lt;p&gt;PCM precompile of the &lt;code&gt;Firebase&lt;&#x2F;code&gt; umbrella module — a source target whose only purpose is letting app code write &lt;code&gt;import Firebase&lt;&#x2F;code&gt;. Its header unconditionally angle-includes FirebaseCore&#x27;s umbrella.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Why target_deps does not apply&lt;&#x2F;p&gt;
+&lt;p&gt;The build graph already contains the reverse edge: &lt;code&gt;FirebaseCore&lt;&#x2F;code&gt; depends on &lt;code&gt;Firebase&lt;&#x2F;code&gt; (it consumes the &lt;code&gt;Firebase_VERSION&lt;&#x2F;code&gt; define from it). Bazel&#x27;s target graph must be acyclic — adding Firebase → FirebaseCore is rejected at analysis time. This is the one failure where &quot;declare the edge&quot; is structurally impossible.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Fix&lt;&#x2F;p&gt;
+&lt;p&gt;A source patch (RSPM &lt;code&gt;configure_package(patches)&lt;&#x2F;code&gt; applies patches to package sources after download, before BUILD generation) making the include conditional:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;span class=&quot;err&quot;&gt;-#import &amp;lt;FirebaseCore&#x2F;FirebaseCore.h&amp;gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;ok&quot;&gt;+#if __has_include(&amp;lt;FirebaseCore&#x2F;FirebaseCore.h&amp;gt;)&lt;&#x2F;span&gt;
+&lt;span class=&quot;ok&quot;&gt;+  #import &amp;lt;FirebaseCore&#x2F;FirebaseCore.h&amp;gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;ok&quot;&gt;+#endif&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;__has_include&lt;&#x2F;code&gt; evaluates against the current compilation&#x27;s search paths (Part 1): true in every consumer compile (unchanged behavior), false in the isolated PCM action (import skipped, module compiles near-empty). Acceptable because no source in the repository imports &lt;code&gt;Firebase&lt;&#x2F;code&gt;; the rest of that header already uses the same guard pattern.&lt;&#x2F;p&gt;
+&lt;div class=&quot;lesson&quot;&gt;&lt;strong&gt;General rule:&lt;&#x2F;strong&gt; when a required module edge would create a target-graph cycle, make the header conditional with &lt;code&gt;__has_include&lt;&#x2F;code&gt; instead of modifying the graph.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;issue&quot;&gt;
+&lt;summary&gt;&lt;span class=&quot;num&quot;&gt;05&lt;&#x2F;span&gt;&lt;span&gt;&lt;span class=&quot;t&quot;&gt;Sentry — &lt;code&gt;type argument &#x27;SentrySpan&#x27; must be a pointer&lt;&#x2F;code&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;s&quot;&gt;A never-compiled fallback branch is invalid ObjC · fixed via target_deps on the clang child target&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;summary&gt;
+&lt;div class=&quot;ibody&quot;&gt;
+&lt;p class=&quot;q&quot;&gt;Failing action&lt;&#x2F;p&gt;
+&lt;p&gt;PCM precompile of &lt;code&gt;SentryInternal&lt;&#x2F;code&gt;, a source target in sentry-cocoa. The header:&lt;&#x2F;p&gt;
+&lt;pre&gt;#if __has_include(&amp;lt;Sentry&#x2F;Sentry.h&amp;gt;)
+#  import &amp;lt;Sentry&#x2F;Sentry.h&amp;gt;        &lt;span class=&quot;dim&quot;&gt;&#x2F;&#x2F; declares: @protocol SentrySpan&lt;&#x2F;span&gt;
+#endif
+&lt;span class=&quot;dim&quot;&gt;…&lt;&#x2F;span&gt;
+@class SentrySpan;                    &lt;span class=&quot;dim&quot;&gt;&#x2F;&#x2F; fallback: forward-declares a CLASS of the same name&lt;&#x2F;span&gt;
+@interface SentryTracer : NSObject &amp;lt;SentrySpan&amp;gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;ObjC keeps class and protocol names in separate namespaces. When the protocol exists, &lt;code&gt;&amp;lt;SentrySpan&amp;gt;&lt;&#x2F;code&gt; in that position resolves to it — valid. When only the forward-declared &lt;em&gt;class&lt;&#x2F;em&gt; exists, Clang parses &lt;code&gt;NSObject&amp;lt;SentrySpan&amp;gt;&lt;&#x2F;code&gt; as a generic specialization with a non-pointer type argument — the reported diagnostics. The fallback branch is invalid code that no compilation had ever selected.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Root cause&lt;&#x2F;p&gt;
+&lt;p&gt;The isolated PCM action has no path to &lt;code&gt;&amp;lt;Sentry&#x2F;Sentry.h&amp;gt;&lt;&#x2F;code&gt; (no declared edge to the Sentry framework), so &lt;code&gt;__has_include&lt;&#x2F;code&gt; evaluates false for the first time in this codebase&#x27;s history, selecting the broken branch.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Fix&lt;&#x2F;p&gt;
+&lt;p&gt;Declare the edge so the primary branch is selected. One subtlety: RSPM splits a mixed target into a parent plus per-language child targets; the failing action belongs to the generated clang child &lt;code&gt;SentryInternal.rspm_objc&lt;&#x2F;code&gt;. &lt;code&gt;target_deps&lt;&#x2F;code&gt; keys containing &lt;code&gt;.rspm&lt;&#x2F;code&gt; are matched against generated target names verbatim, allowing the edge to be attached exactly where the action runs: &lt;code&gt;&quot;SentryInternal.rspm_objc&quot;: [&quot;Sentry&quot;]&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;div class=&quot;lesson&quot;&gt;&lt;strong&gt;General rule:&lt;&#x2F;strong&gt; &lt;code&gt;__has_include&lt;&#x2F;code&gt; fallback branches are unexercised code paths. The isolated PCM compile is often the first compilation ever to execute them; expect latent invalidity.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;issue&quot;&gt;
+&lt;summary&gt;&lt;span class=&quot;num&quot;&gt;06&lt;&#x2F;span&gt;&lt;span&gt;&lt;span class=&quot;t&quot;&gt;LookinServer — &lt;code&gt;&#x27;LookinDefines.h&#x27; file not found&lt;&#x2F;code&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;s&quot;&gt;Headers depend on copts -I, which never reaches the PCM action · fixed via include-path rewrite&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;summary&gt;
+&lt;div class=&quot;ibody&quot;&gt;
+&lt;p class=&quot;q&quot;&gt;Failing action&lt;&#x2F;p&gt;
+&lt;p&gt;PCM precompile of LookinServer (a debug-tooling package; the module is imported from Swift, so it cannot be suppressed). Its public headers use quote includes such as &lt;code&gt;#import &quot;LookinDefines.h&quot;&lt;&#x2F;code&gt; for files located in &lt;em&gt;other directories&lt;&#x2F;em&gt; of the package (&lt;code&gt;Src&#x2F;Main&#x2F;Shared&#x2F;&lt;&#x2F;code&gt;).&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Why it compiled under implicit mode&lt;&#x2F;p&gt;
+&lt;p&gt;RSPM emits the package&#x27;s internal header search dirs as &lt;code&gt;-I&lt;&#x2F;code&gt; flags in &lt;code&gt;copts&lt;&#x2F;code&gt;. Object-file compilations receive copts, and implicit PCM builds ran inside compilations that had them. Quote includes that fail includer-relative lookup (Part 1) fell through to those &lt;code&gt;-I&lt;&#x2F;code&gt; dirs and resolved.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Root cause&lt;&#x2F;p&gt;
+&lt;p&gt;The corollary from Part 5, verbatim: the PCM action takes its search paths from CcInfo, and copts &lt;code&gt;-I&lt;&#x2F;code&gt; flags are not in CcInfo. The PCM compile therefore has includer-relative lookup only, and &lt;code&gt;&quot;LookinDefines.h&quot;&lt;&#x2F;code&gt; is not in the includer&#x27;s directory.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Fix&lt;&#x2F;p&gt;
+&lt;p&gt;A package patch rewriting the 24 cross-directory quote includes (15 headers) to includer-relative paths, e.g. &lt;code&gt;#import &quot;..&#x2F;..&#x2F;Shared&#x2F;LookinDefines.h&quot;&lt;&#x2F;code&gt;. Includer-relative resolution needs no flags at all (Part 1), so both the PCM action and ordinary object compilations resolve identically.&lt;&#x2F;p&gt;
+&lt;div class=&quot;lesson&quot;&gt;&lt;strong&gt;General rule:&lt;&#x2F;strong&gt; module headers must be self-contained — resolvable without target-private flags. A header needing copts &lt;code&gt;-I&lt;&#x2F;code&gt; to find its own module&#x27;s files will fail explicit compilation.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;issue&quot;&gt;
+&lt;summary&gt;&lt;span class=&quot;num&quot;&gt;07&lt;&#x2F;span&gt;&lt;span&gt;&lt;span class=&quot;t&quot;&gt;RudderFirebase — &lt;code&gt;no module named &#x27;RudderFirebase&#x27; declared in module map&lt;&#x2F;code&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;s&quot;&gt;Declared module name diverges from framework name · fixed by renaming the module&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;summary&gt;
+&lt;div class=&quot;ibody&quot;&gt;
+&lt;p class=&quot;q&quot;&gt;Failing action&lt;&#x2F;p&gt;
+&lt;p&gt;PCM precompile of a first-party vendored xcframework. Under explicit mode the build system must name the module it is building: rules_apple derives that name from the xcframework&#x27;s library name (&lt;code&gt;RudderFirebase&lt;&#x2F;code&gt;) and instructs Clang to build &lt;em&gt;that&lt;&#x2F;em&gt; module from the map. The map declares &lt;code&gt;module Rudder_Firebase&lt;&#x2F;code&gt; — the requested module is not defined in it.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Why it compiled under implicit mode&lt;&#x2F;p&gt;
+&lt;p&gt;Implicit lookup works in the opposite direction: the compiler scans available module maps for one declaring the name used at the import site (&lt;code&gt;import Rudder_Firebase&lt;&#x2F;code&gt;) and finds it. No component ever compared the declared name against the framework name.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Fix&lt;&#x2F;p&gt;
+&lt;p&gt;First-party files, so no patch machinery: renamed the module to &lt;code&gt;RudderFirebase&lt;&#x2F;code&gt; in both platform slices&#x27; module maps and updated the single &lt;code&gt;import&lt;&#x2F;code&gt; statement. A sweep of all other vendored xcframeworks found no further mismatches.&lt;&#x2F;p&gt;
+&lt;div class=&quot;lesson&quot;&gt;&lt;strong&gt;General rule:&lt;&#x2F;strong&gt; for imported frameworks, declared module name must equal the framework&#x2F;library name. Implicit mode treats this as a convention; explicit mode treats it as a contract.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;issue&quot;&gt;
+&lt;summary&gt;&lt;span class=&quot;num&quot;&gt;08&lt;&#x2F;span&gt;&lt;span&gt;&lt;span class=&quot;t&quot;&gt;Mixed-language module — &lt;code&gt;cannot find &#x27;RudderBrazeFactory&#x27; in scope&lt;&#x2F;code&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;s&quot;&gt;-import-underlying-module is invisible to the aspect · fixed via per-target opt-out&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;summary&gt;
+&lt;div class=&quot;ibody&quot;&gt;
+&lt;p class=&quot;q&quot;&gt;Failing action&lt;&#x2F;p&gt;
+&lt;p&gt;The Swift compile of a tracking module&#x27;s Swift half. The target is one half of a &lt;em&gt;mixed-language module&lt;&#x2F;em&gt;: ObjC and Swift halves sharing one module name. The Swift half sees the ObjC half via two hand-written copts: &lt;code&gt;-import-underlying-module&lt;&#x2F;code&gt; (&quot;load the Clang module with my own name&quot;) and &lt;code&gt;-Xcc -fmodule-map-file=…&lt;&#x2F;code&gt; (pointing at a hand-maintained module map).&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Root cause&lt;&#x2F;p&gt;
+&lt;p&gt;That module map is referenced only from copts — it is not owned by any target the aspect visits, so no PCM action is scheduled for it (Part 3 §5: the aspect attaches actions to &lt;em&gt;targets&lt;&#x2F;em&gt;). Under implicit mode the compiler would simply build it on the fly; under explicit mode on-the-fly compilation is disabled, the underlying module fails to load, and every ObjC declaration is absent from the Swift compilation. The error is a symptom two layers removed from the cause.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Fix&lt;&#x2F;p&gt;
+&lt;p&gt;This was the only target in the repository using the pattern. Applied a per-target feature opt-out (Part 3 §2):&lt;&#x2F;p&gt;
+&lt;pre&gt;features = [&quot;-swift.use_c_modules&quot;]   &lt;span class=&quot;dim&quot;&gt;# this target compiles with implicit modules&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The rest of the graph remains explicit. Long-term resolution: extract the ObjC half into its own named module and replace &lt;code&gt;-import-underlying-module&lt;&#x2F;code&gt; with an ordinary import.&lt;&#x2F;p&gt;
+&lt;div class=&quot;lesson&quot;&gt;&lt;strong&gt;General rule:&lt;&#x2F;strong&gt; compilation inputs that exist only as flags (not as targets) are invisible to aspects. Per-target &lt;code&gt;-feature&lt;&#x2F;code&gt; disabling scopes exceptions without blocking a migration.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;issue&quot;&gt;
+&lt;summary&gt;&lt;span class=&quot;num&quot;&gt;09&lt;&#x2F;span&gt;&lt;span&gt;&lt;span class=&quot;t&quot;&gt;Legacy app targets — &lt;code&gt;duplicate input file &#x27;Support&#x27;&#x27;&lt;&#x2F;code&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;s&quot;&gt;Whitespace in include paths splits params-file arguments · fixed by renaming directories&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;summary&gt;
+&lt;div class=&quot;ibody&quot;&gt;
+&lt;p class=&quot;q&quot;&gt;Failing actions&lt;&#x2F;p&gt;
+&lt;p&gt;PCM precompiles of two first-party legacy targets whose include paths contain directories with spaces (&lt;code&gt;Archive Support&lt;&#x2F;code&gt;, &lt;code&gt;Report User&lt;&#x2F;code&gt;, &lt;code&gt;Mark as sold process&lt;&#x2F;code&gt;, &lt;code&gt;Seller review&lt;&#x2F;code&gt; — names inherited from Xcode group structure). Long command lines are passed via a &lt;em&gt;params file&lt;&#x2F;em&gt; (a file of arguments referenced as &lt;code&gt;@file.params&lt;&#x2F;code&gt;); the new precompile code path splits these entries on whitespace, turning &lt;code&gt;-I…&#x2F;Archive Support&lt;&#x2F;code&gt; into two invalid tokens, reported as duplicate &#x2F; unopenable input files.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Why it compiled under implicit mode&lt;&#x2F;p&gt;
+&lt;p&gt;The pre-existing compile actions quoted these arguments correctly. The failure is specific to argument handling in the SwiftPrecompileCModule path — the paths themselves were always hazardous, but no prior code path mishandled them.&lt;&#x2F;p&gt;
+&lt;p class=&quot;q&quot;&gt;Fix&lt;&#x2F;p&gt;
+&lt;p&gt;Renamed the four directories to CamelCase and updated the references in the build macro that declares these targets. Renaming removes the failure class; quoting workarounds would leave the hazard for the next tool.&lt;&#x2F;p&gt;
+&lt;div class=&quot;lesson&quot;&gt;&lt;strong&gt;General rule:&lt;&#x2F;strong&gt; whitespace in source paths survives only as long as every tool in the chain quotes correctly. A migration that introduces new action types will exercise the hazard.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;details&gt;
+&lt;h2 id=&quot;part7&quot;&gt;Part 7 — Root-cause classification&lt;&#x2F;h2&gt;
+&lt;p&gt;The nine failures reduce to four categories, each with a distinct diagnostic signature and fix mechanism.&lt;&#x2F;p&gt;
+&lt;div class=&quot;diagram&quot;&gt;
+&lt;div class=&quot;donut-wrap&quot;&gt;
+&lt;svg viewBox=&quot;0 0 220 220&quot; role=&quot;img&quot; aria-label=&quot;Doughnut chart grouping the nine migration failures into four root-cause categories: missing dependency edges, 3 of 9; invalid vendor metadata, 3 of 9; toolchain coverage gaps, 2 of 9; and path hygiene, 1 of 9.&quot;&gt;
+  &lt;g stroke=&quot;var(--bg-light)&quot; stroke-width=&quot;3&quot;&gt;
+    &lt;path d=&quot;M110,20 A90 90 0 0 1 187.94,155 L156.77,137 A54 54 0 0 0 110,56 Z&quot; fill=&quot;var(--accent)&quot;&gt;&lt;title&gt;Missing dependency edges — 3 of 9&lt;&#x2F;title&gt;&lt;&#x2F;path&gt;
+    &lt;path d=&quot;M187.94,155 A90 90 0 0 1 32.06,155 L63.23,137 A54 54 0 0 0 156.77,137 Z&quot; fill=&quot;var(--link)&quot;&gt;&lt;title&gt;Invalid vendor metadata — 3 of 9&lt;&#x2F;title&gt;&lt;&#x2F;path&gt;
+    &lt;path d=&quot;M32.06,155 A90 90 0 0 1 52.15,41.06 L75.29,68.64 A54 54 0 0 0 63.23,137 Z&quot; fill=&quot;var(--accent-light)&quot;&gt;&lt;title&gt;Toolchain coverage gaps — 2 of 9&lt;&#x2F;title&gt;&lt;&#x2F;path&gt;
+    &lt;path d=&quot;M52.15,41.06 A90 90 0 0 1 110,20 L110,56 A54 54 0 0 0 75.29,68.64 Z&quot; fill=&quot;var(--text-light)&quot;&gt;&lt;title&gt;Path hygiene — 1 of 9&lt;&#x2F;title&gt;&lt;&#x2F;path&gt;
+  &lt;&#x2F;g&gt;
+  &lt;text x=&quot;110&quot; y=&quot;105&quot; font-size=&quot;34&quot; font-weight=&quot;800&quot; fill=&quot;var(--fg-color)&quot; text-anchor=&quot;middle&quot;&gt;9&lt;&#x2F;text&gt;
+  &lt;text x=&quot;110&quot; y=&quot;128&quot; font-size=&quot;12&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;failures&lt;&#x2F;text&gt;
+&lt;&#x2F;svg&gt;
+&lt;ul class=&quot;legend&quot; id=&quot;xmodLegend&quot;&gt;
+&lt;li&gt;&lt;span class=&quot;ldot&quot; style=&quot;background:var(--accent)&quot;&gt;&lt;&#x2F;span&gt;&lt;span&gt;&lt;strong&gt;Missing dependency edges — 3&lt;&#x2F;strong&gt;&lt;span class=&quot;ld&quot;&gt;Cases 1, 3, 5. Header-level imports with no corresponding deps edge. Fix: target_deps.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;span class=&quot;ldot&quot; style=&quot;background:var(--link)&quot;&gt;&lt;&#x2F;span&gt;&lt;span&gt;&lt;strong&gt;Invalid vendor metadata — 3&lt;&#x2F;strong&gt;&lt;span class=&quot;ld&quot;&gt;Cases 2, 4, 7. Module maps and headers that were wrong but never compiled. Fix: rules patch, source patch, rename.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;span class=&quot;ldot&quot; style=&quot;background:var(--accent-light)&quot;&gt;&lt;&#x2F;span&gt;&lt;span&gt;&lt;strong&gt;Toolchain coverage gaps — 2&lt;&#x2F;strong&gt;&lt;span class=&quot;ld&quot;&gt;Cases 6, 8. Inputs carried in copts or flags that the aspect cannot see. Fix: include rewrite, per-target opt-out.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;span class=&quot;ldot&quot; style=&quot;background:var(--text-light)&quot;&gt;&lt;&#x2F;span&gt;&lt;span&gt;&lt;strong&gt;Path hygiene — 1&lt;&#x2F;strong&gt;&lt;span class=&quot;ld&quot;&gt;Case 9. Whitespace in paths mishandled by the new action&#x27;s params files. Fix: rename.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part8&quot;&gt;Part 8 — Diagnostic reference&lt;&#x2F;h2&gt;
+&lt;p&gt;Lookup table for future &lt;code&gt;SwiftPrecompileCModule&lt;&#x2F;code&gt; failures.&lt;&#x2F;p&gt;
+&lt;table&gt;
+&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Diagnostic&lt;&#x2F;th&gt;&lt;th&gt;Fix mechanism&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;Binary framework header cannot resolve a sibling framework&#x27;s header&lt;&#x2F;td&gt;&lt;td&gt;&lt;code&gt;swift_deps.configure_package(target_deps = {…})&lt;&#x2F;code&gt;. Bare names for same-package targets; public product labels for cross-package.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;Module map references nonexistent headers (headerless framework)&lt;&#x2F;td&gt;&lt;td&gt;rules_apple patch: skip SwiftInteropInfo when the imported framework ships no headers.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;Required dep edge would create a cycle&lt;&#x2F;td&gt;&lt;td&gt;Source patch: guard the import with &lt;code&gt;__has_include&lt;&#x2F;code&gt;.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;Quote includes resolvable only via copts &lt;code&gt;-I&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;Rewrite to includer-relative paths, or move the dirs to the &lt;code&gt;includes&lt;&#x2F;code&gt; attribute. copts &lt;code&gt;-I&lt;&#x2F;code&gt; does not reach the PCM action.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;Mixed module using &lt;code&gt;-import-underlying-module&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;Per-target &lt;code&gt;features = [&quot;-swift.use_c_modules&quot;]&lt;&#x2F;code&gt;; restructure into separate modules later.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;no module named X declared in module map&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;Align the declared module name with the framework&#x2F;library name; update import statements.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;Malformed argument errors (e.g. &lt;code&gt;duplicate input file &#x27;Support&#x27;&#x27;&lt;&#x2F;code&gt;)&lt;&#x2F;td&gt;&lt;td&gt;A path containing whitespace is being split in the params file. Rename the directory.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;Determining a binary framework&#x27;s full dependency set&lt;&#x2F;td&gt;&lt;td&gt;Audit three sources: ObjC headers, generated &lt;code&gt;-Swift.h&lt;&#x2F;code&gt;, and &lt;code&gt;.swiftinterface&lt;&#x2F;code&gt; imports.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;
+&lt;&#x2F;table&gt;
+&lt;p class=&quot;dim&quot; style=&quot;font-size:.88rem;&quot;&gt;Constraint on patches: &lt;code&gt;configure_package(patches)&lt;&#x2F;code&gt; are applied to package &lt;em&gt;sources&lt;&#x2F;em&gt; after clone but &lt;strong&gt;before&lt;&#x2F;strong&gt; binary artifacts are downloaded. They can modify source files (case 4) but can never modify xcframework contents — which is why case 2 required a rules-level patch instead.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part9&quot;&gt;Part 9 — FAQ&lt;&#x2F;h2&gt;
+&lt;details&gt;
+&lt;summary&gt;A PCM precompile fails with &quot;file not found&quot;, but the same import compiles inside the app target. What does this indicate?&lt;&#x2F;summary&gt;
+&lt;p&gt;A missing dependency edge. The app compile succeeds because its merged search paths (all deps&#x27; CcInfo) cover the header; the isolated PCM action sees only the owning target&#x27;s declared deps. Identify which target owns the missing header and declare the edge — for SPM binary targets, via &lt;code&gt;target_deps&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;details&gt;
+&lt;summary&gt;Does adding &lt;code&gt;-IPath&#x2F;To&#x2F;Headers&lt;&#x2F;code&gt; to a target&#x27;s copts fix a precompile resolution error?&lt;&#x2F;summary&gt;
+&lt;p&gt;No. copts never enter CcInfo, and the aspect builds the PCM action&#x27;s command from CcInfo — forwarding only &lt;code&gt;-D&lt;&#x2F;code&gt; defines from copts. Use the &lt;code&gt;includes&lt;&#x2F;code&gt; attribute, a dependency whose CcInfo carries the path, or includer-relative includes in the headers.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;details&gt;
+&lt;summary&gt;A vendor header produces diagnostics inconsistent with code that demonstrably works elsewhere. What is the likely cause?&lt;&#x2F;summary&gt;
+&lt;p&gt;An &lt;code&gt;__has_include&lt;&#x2F;code&gt; fallback branch is being compiled for the first time. The isolated PCM action cannot see a header that all prior compilations could, so the preprocessor selects a branch never previously compiled — which may be invalid. Make the primary branch&#x27;s header reachable in the PCM action (declare the edge).&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;details&gt;
+&lt;summary&gt;Why is the error attributed to an &quot;aspect&quot; rather than to my target?&lt;&#x2F;summary&gt;
+&lt;p&gt;PCM actions are not declared by the failing target&#x27;s rule; they are attached by &lt;code&gt;swift_clang_module_aspect&lt;&#x2F;code&gt; as it walks the deps graph. The message &lt;em&gt;&quot;from aspects […] on objc_library rule target X&quot;&lt;&#x2F;em&gt; means: the aspect, visiting target X, registered this precompile action, and the action failed. The target to fix is X (or its missing dependency), not the top-level target you asked Bazel to build.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;details&gt;
+&lt;summary&gt;What does explicit module compilation provide over implicit?&lt;&#x2F;summary&gt;
+&lt;p&gt;PCM compilations become declared Bazel actions: remote-cacheable (one compilation per module per configuration, shared across all machines and CI), deterministic (independent of import order and consumer flags), schedulable in parallel ahead of Swift compiles, and validating (undeclared dependencies fail instead of resolving incidentally). Every failure in Part 6 corresponds to a defect that implicit compilation masked.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;h2 id=&quot;part10&quot;&gt;Part 10 — Glossary&lt;&#x2F;h2&gt;
+&lt;dl class=&quot;gloss&quot;&gt;
+&lt;dt&gt;module map&lt;&#x2F;dt&gt;&lt;dd&gt;File (&lt;code&gt;module.modulemap&lt;&#x2F;code&gt;) declaring that a set of headers forms a named Clang module. Framework modules resolve headers in &lt;code&gt;Headers&#x2F;&lt;&#x2F;code&gt;; an &lt;em&gt;umbrella header&lt;&#x2F;em&gt; defines contents by transitive inclusion.&lt;&#x2F;dd&gt;
+&lt;dt&gt;PCM&lt;&#x2F;dt&gt;&lt;dd&gt;Precompiled module — serialized binary AST produced by compiling a module map&#x27;s headers once. Importers deserialize it instead of re-parsing headers.&lt;&#x2F;dd&gt;
+&lt;dt&gt;implicit modules&lt;&#x2F;dt&gt;&lt;dd&gt;Compilation mode in which the compiler builds needed PCMs on demand, inside whichever compilation first imports them, inheriting that compilation&#x27;s flags. PCMs live in a compiler-private cache outside the build system.&lt;&#x2F;dd&gt;
+&lt;dt&gt;explicit modules&lt;&#x2F;dt&gt;&lt;dd&gt;Compilation mode in which the build system schedules a dedicated, sandboxed action per module map (&lt;code&gt;SwiftPrecompileCModule&lt;&#x2F;code&gt;) and passes finished PCMs to consumers via &lt;code&gt;-fmodule-file=&lt;&#x2F;code&gt;. Enabled in rules_swift by &lt;code&gt;swift.emit_c_module&lt;&#x2F;code&gt; + &lt;code&gt;swift.use_c_modules&lt;&#x2F;code&gt;.&lt;&#x2F;dd&gt;
+&lt;dt&gt;-I &#x2F; -F&lt;&#x2F;dt&gt;&lt;dd&gt;Header search path flags: &lt;code&gt;-I dir&lt;&#x2F;code&gt; for plain includes, &lt;code&gt;-F dir&lt;&#x2F;code&gt; for framework-style includes (&lt;code&gt;&amp;lt;Name&#x2F;Header.h&amp;gt;&lt;&#x2F;code&gt; → &lt;code&gt;dir&#x2F;Name.framework&#x2F;Headers&#x2F;Header.h&lt;&#x2F;code&gt;).&lt;&#x2F;dd&gt;
+&lt;dt&gt;quote vs. angle include&lt;&#x2F;dt&gt;&lt;dd&gt;&lt;code&gt;&quot;X.h&quot;&lt;&#x2F;code&gt; searches the includer&#x27;s directory first, then &lt;code&gt;-I&lt;&#x2F;code&gt; dirs. &lt;code&gt;&amp;lt;Y&#x2F;Z.h&amp;gt;&lt;&#x2F;code&gt; searches &lt;code&gt;-I&lt;&#x2F;code&gt;, then &lt;code&gt;-F&lt;&#x2F;code&gt;, then system paths.&lt;&#x2F;dd&gt;
+&lt;dt&gt;__has_include&lt;&#x2F;dt&gt;&lt;dd&gt;Preprocessor operator testing whether a header is resolvable under the current compilation&#x27;s search paths. Evaluates differently per compilation; guards become first-compiled code paths under explicit modules.&lt;&#x2F;dd&gt;
+&lt;dt&gt;target &#x2F; label &#x2F; deps&lt;&#x2F;dt&gt;&lt;dd&gt;Bazel&#x27;s unit of build, its address (&lt;code&gt;&#x2F;&#x2F;pkg:name&lt;&#x2F;code&gt;, external: &lt;code&gt;@repo&#x2F;&#x2F;pkg:name&lt;&#x2F;code&gt;), and the attribute forming the dependency graph.&lt;&#x2F;dd&gt;
+&lt;dt&gt;action&lt;&#x2F;dt&gt;&lt;dd&gt;A concrete command with declared inputs&#x2F;outputs, run in a sandbox containing only declared inputs. Unit of caching and parallelism.&lt;&#x2F;dd&gt;
+&lt;dt&gt;CcInfo &#x2F; SwiftInfo&lt;&#x2F;dt&gt;&lt;dd&gt;Providers carrying compilation context along deps edges. CcInfo: headers, defines, search paths (from &lt;code&gt;includes&lt;&#x2F;code&gt;, not &lt;code&gt;copts&lt;&#x2F;code&gt;). SwiftInfo: Swift modules and, under explicit mode, Clang module artifacts.&lt;&#x2F;dd&gt;
+&lt;dt&gt;aspect&lt;&#x2F;dt&gt;&lt;dd&gt;A graph traversal attaching extra actions&#x2F;providers to existing targets. &lt;code&gt;swift_clang_module_aspect&lt;&#x2F;code&gt; attaches PCM precompile actions to every module-map-owning target reachable through deps.&lt;&#x2F;dd&gt;
+&lt;dt&gt;copts vs. includes&lt;&#x2F;dt&gt;&lt;dd&gt;&lt;code&gt;copts&lt;&#x2F;code&gt;: private flags for the target&#x27;s own object compilations; not propagated, not visible to PCM actions (except &lt;code&gt;-D&lt;&#x2F;code&gt;). &lt;code&gt;includes&lt;&#x2F;code&gt;: search dirs entering CcInfo, visible to dependents and PCM actions.&lt;&#x2F;dd&gt;
+&lt;dt&gt;xcframework&lt;&#x2F;dt&gt;&lt;dd&gt;Distribution bundle containing one prebuilt framework per platform slice. Imported into Bazel by &lt;code&gt;apple_static_xcframework_import&lt;&#x2F;code&gt; &#x2F; &lt;code&gt;apple_dynamic_xcframework_import&lt;&#x2F;code&gt;.&lt;&#x2F;dd&gt;
+&lt;dt&gt;RSPM &#x2F; target_deps&lt;&#x2F;dt&gt;&lt;dd&gt;rules_swift_package_manager: generates Bazel BUILD files for SPM packages. &lt;code&gt;configure_package(target_deps)&lt;&#x2F;code&gt; (≥1.17) injects dependency edges into generated targets — required for binary targets, which SPM manifests cannot give deps.&lt;&#x2F;dd&gt;
+&lt;dt&gt;-Swift.h&lt;&#x2F;dt&gt;&lt;dd&gt;Generated ObjC header exposing a framework&#x27;s Swift API to ObjC. Part of the umbrella; may contain &lt;code&gt;@import&lt;&#x2F;code&gt; of other modules, contributing to the module dependency set.&lt;&#x2F;dd&gt;
+&lt;dt&gt;.swiftinterface&lt;&#x2F;dt&gt;&lt;dd&gt;Textual Swift module interface shipped in binary frameworks; compiled by the build into a binary swiftmodule. Its &lt;code&gt;import&lt;&#x2F;code&gt; statements must all be resolvable, contributing to the dependency set.&lt;&#x2F;dd&gt;
+&lt;dt&gt;-import-underlying-module&lt;&#x2F;dt&gt;&lt;dd&gt;Swift flag loading the Clang module with the same name as the module being compiled — the mixed-language module pattern. The module map involved is supplied by flags, not owned by a target, making it invisible to aspects.&lt;&#x2F;dd&gt;
+&lt;dt&gt;params file&lt;&#x2F;dt&gt;&lt;dd&gt;File holding a long argument list, passed to a tool as &lt;code&gt;@file.params&lt;&#x2F;code&gt; to avoid OS command-length limits. Argument splitting bugs in params handling surface as malformed-path errors.&lt;&#x2F;dd&gt;
+&lt;&#x2F;dl&gt;
+&lt;h2 id=&quot;summary&quot;&gt;Summary&lt;&#x2F;h2&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;Header resolution is a function of the running compilation&#x27;s flags. Implicit mode builds modules inside consumer compilations, so undeclared dependencies resolve through borrowed flags. Explicit mode builds each module in a sandboxed action with only declared inputs, so the module graph and the target graph must agree. Each of the nine failures was a point of disagreement: an undeclared edge, invalid metadata never previously evaluated, an input invisible to the aspect, or a path hazard exercised by the new action type.&lt;&#x2F;p&gt;
+&lt;p class=&quot;corollary&quot;&gt;App target green with &lt;code&gt;swift.use_c_modules&lt;&#x2F;code&gt; · June 2026&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;script&gt;
+function xmodShowMode(mode) {
+  var isImplicit = mode === &#x27;implicit&#x27;;
+  document.getElementById(&#x27;panelImplicit&#x27;).classList.toggle(&#x27;active&#x27;, isImplicit);
+  document.getElementById(&#x27;panelExplicit&#x27;).classList.toggle(&#x27;active&#x27;, !isImplicit);
+  document.getElementById(&#x27;btnImplicit&#x27;).classList.toggle(&#x27;active&#x27;, isImplicit);
+  document.getElementById(&#x27;btnExplicit&#x27;).classList.toggle(&#x27;active&#x27;, !isImplicit);
+  document.getElementById(&#x27;btnImplicit&#x27;).setAttribute(&#x27;aria-selected&#x27;, isImplicit);
+  document.getElementById(&#x27;btnExplicit&#x27;).setAttribute(&#x27;aria-selected&#x27;, !isImplicit);
+}
+&lt;&#x2F;script&gt;
+</content>
+        
+    </entry>
+</feed>

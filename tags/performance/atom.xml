@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Mostafa - performance</title>
+    <subtitle>Thoughts, learnings, and experiences from a computer engineer chasing the fundamentals.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/tags/performance/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2026-06-14T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/tags/performance/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Mean, Median, and Percentiles, From First Principles</title>
+        <published>2026-06-14T00:00:00+00:00</published>
+        <updated>2026-06-14T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ai-learnings/mean-median-percentiles/"/>
+        <id>https://imostfa.github.io/Blog/ai-learnings/mean-median-percentiles/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ai-learnings/mean-median-percentiles/">&lt;p&gt;This write-up was distilled from a real session reading a build dashboard: three numbers —
+mean &lt;strong&gt;11.2 min&lt;&#x2F;strong&gt;, P50 &lt;strong&gt;8.35 min&lt;&#x2F;strong&gt;, P90 &lt;strong&gt;19.8 min&lt;&#x2F;strong&gt; — and one question, &lt;em&gt;do these even make sense?&lt;&#x2F;em&gt;
+The document below builds every concept needed to answer it from the ground up: what a mean and a
+median actually measure, why latency is always uneven, what percentiles add, and how to sanity-check
+a set of summary numbers in seconds. Prerequisites: you can add and divide. Nothing more is assumed.&lt;&#x2F;p&gt;
+&lt;style&gt;
+.xstat { --xpos:#1a7f37; --xneg:#b3261e; --xwarn:#9a6700; --xmean:#9a6700; --xp50:#0969da; --xp90:#b3261e; }
+[data-theme=&quot;dark&quot;] .xstat { --xpos:#7ee787; --xneg:#ff7b72; --xwarn:#e3b341; --xmean:#e3b341; --xp50:#79c0ff; --xp90:#ff7b72; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=&quot;light&quot;]) .xstat { --xpos:#7ee787; --xneg:#ff7b72; --xwarn:#e3b341; --xmean:#e3b341; --xp50:#79c0ff; --xp90:#ff7b72; } }
+.xstat .toc-grid { display:grid; grid-template-columns:1fr 1fr; gap:.25rem 2rem; list-style:none; padding:0; margin:.5rem 0 0; }
+.xstat .toc-grid a { display:block; padding:.15rem 0; }
+.xstat .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:.75rem; margin:1rem 0; }
+.xstat .card { background:var(--bg-light); border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:1rem; }
+.xstat .card h4 { margin:.1rem 0 .5rem; font-size:1rem; }
+.xstat .card p, .xstat .card li { font-size:.9rem; margin:.5rem 0; }
+.xstat .card ul { margin:.25rem 0; padding-left:1.25rem; }
+.xstat pre { font-size:.8rem; line-height:1.5; overflow-x:auto; }
+.xstat .err { color:var(--xneg); font-weight:700; }
+.xstat .ok { color:var(--xpos); }
+.xstat .dim { color:var(--text-light); }
+.xstat .mono { font-family:var(--mono-font); }
+.xstat .stat-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.75rem; margin:1rem 0; }
+.xstat .stat-box { border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:1rem; background:var(--bg-light); border-top:3px solid var(--accent); }
+.xstat .stat-box.b-p50 { border-top-color:var(--xp50); }
+.xstat .stat-box.b-mean { border-top-color:var(--xmean); }
+.xstat .stat-box.b-p90 { border-top-color:var(--xp90); }
+.xstat .stat-box .label { font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text-light); }
+.xstat .stat-box .value { font-size:1.9rem; font-weight:800; line-height:1.1; margin:.2rem 0; }
+.xstat .stat-box .value .u { font-size:.9rem; font-weight:500; color:var(--text-light); }
+.xstat .stat-box.b-p50 .value { color:var(--xp50); }
+.xstat .stat-box.b-mean .value { color:var(--xmean); }
+.xstat .stat-box.b-p90 .value { color:var(--xp90); }
+.xstat .stat-box .sub { font-size:.82rem; color:var(--text-light); }
+.xstat .mode-toggle { display:inline-flex; gap:.25rem; border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:.25rem; margin:1rem 0 .75rem; background:var(--bg-light); }
+.xstat .mode-toggle button { font-family:var(--mono-font); font-size:.9rem; border:none; border-radius:.25rem; padding:.4rem 1rem; cursor:pointer; background:transparent; color:var(--text-light); }
+.xstat .mode-toggle button.active { background:var(--accent); color:var(--accent-text); }
+.xstat .diagram { border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:1.25rem; background:var(--bg-light); }
+.xstat .chart-wrap { position:relative; height:340px; margin:.5rem 0 1rem; }
+.xstat .dcaption { font-size:.85rem; color:var(--text-light); margin-top:.4rem; line-height:1.6; }
+.xstat .callout { border:1px solid var(--accent); border-left:4px solid var(--accent); border-radius:var(--standard-border-radius); padding:1.25rem; margin:1rem 0; background:var(--bg-light); }
+.xstat .callout .rule { font-weight:700; font-size:1.05rem; line-height:1.55; margin:.25rem 0; }
+.xstat .callout .corollary { color:var(--text-light); font-size:.92rem; margin:.75rem 0 0; }
+.xstat .check { border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:1rem 1.1rem; margin:.6rem 0; }
+.xstat .check.pass { border-left:4px solid var(--xpos); }
+.xstat .check.watch { border-left:4px solid var(--xwarn); }
+.xstat .check h4 { margin:.1rem 0 .35rem; }
+.xstat .check h4 .badge { font-size:.7rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:.05rem .5rem; border-radius:999px; margin-left:.5rem; }
+.xstat .check.pass .badge { color:var(--xpos); border:1px solid var(--xpos); }
+.xstat .check.watch .badge { color:var(--xwarn); border:1px solid var(--xwarn); }
+.xstat .check p { font-size:.92rem; margin:.3rem 0; }
+.xstat .pill-formula { display:inline-block; font-family:var(--mono-font); font-size:.82rem; background:var(--bg); border:1px solid var(--border); border-radius:.3rem; padding:.05rem .45rem; }
+.xstat .lesson { border-left:3px solid var(--xwarn); padding:.5rem .8rem; margin-top:1rem; font-size:.88rem; background:var(--bg); border-radius:0 .25rem .25rem 0; }
+.xstat .lesson strong { color:var(--xwarn); }
+.xstat .q { font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin:1rem 0 .25rem; }
+.xstat .gloss dt { font-weight:700; color:var(--accent); margin-top:.9rem; }
+.xstat .gloss dd { margin:0.15rem 0 0 0; font-size:.9rem; }
+.xstat table td, .xstat table th { font-size:.88rem; vertical-align:top; }
+.xstat details { margin-bottom:.6rem; }
+.xstat details summary { cursor:pointer; font-weight:700; }
+.xstat details p { font-size:.92rem; }
+&#x2F;* ===== static HTML&#x2F;CSS math (no KaTeX, no JS, themes via currentColor) ===== *&#x2F;
+.xstat .m { font-family:Georgia,&#x27;Times New Roman&#x27;,serif; font-style:italic; white-space:nowrap; }
+.xstat .m sub, .xstat .m sup { font-style:normal; }
+.xstat .rm { font-style:normal; font-family:Georgia,&#x27;Times New Roman&#x27;,serif; }
+.xstat .eq { margin:1.1rem 0; text-align:center; font-family:Georgia,&#x27;Times New Roman&#x27;,serif; font-size:1.15rem; overflow-x:auto; overflow-y:hidden; }
+.xstat .frac { display:inline-block; vertical-align:-0.55em; text-align:center; margin:0 .15em; }
+.xstat .frac &gt; .n { display:block; padding:0 .35em; }
+.xstat .frac &gt; .d { display:block; padding:0 .35em; border-top:1px solid currentColor; }
+.xstat .cases { display:inline-flex; align-items:center; vertical-align:middle; }
+.xstat .cases .brace { font-size:2.6em; line-height:.9; font-weight:300; }
+.xstat .cases .rows { display:inline-flex; flex-direction:column; gap:.3em; margin-left:.25em; text-align:left; font-size:.92rem; }
+.xstat .cases .row { white-space:nowrap; }
+.xstat .under { display:inline-flex; flex-direction:column; align-items:center; margin:0 .35em; vertical-align:middle; }
+.xstat .under .ulbl { font-style:normal; font-family:var(--mono-font); font-size:.68rem; letter-spacing:.04em; text-transform:uppercase; color:var(--text-light); margin-top:.25em; }
+.xstat figure { margin:0; }
+.xstat .xsfig svg, .xstat .skewfig svg { width:100%; height:auto; display:block; }
+.xstat [hidden] { display:none !important; }
+.xstat .svg-cap { font-size:.82rem; color:var(--text-light); text-align:center; margin-top:.4rem; }
+@media (max-width:600px) { .xstat .toc-grid { grid-template-columns:1fr; } .xstat .eq { font-size:1rem; } }
+&lt;&#x2F;style&gt;
+&lt;div class=&quot;xstat&quot;&gt;
+&lt;nav aria-label=&quot;Contents&quot;&gt;
+&lt;h2 id=&quot;contents&quot;&gt;Contents&lt;&#x2F;h2&gt;
+&lt;ol class=&quot;toc-grid&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#part1&quot;&gt;Two ways to summarize a list&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part2&quot;&gt;Why latency is uneven&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part3&quot;&gt;Percentiles: P50, P90, P99&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part4&quot;&gt;The shape, drawn&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part5&quot;&gt;Sanity-checking a set of numbers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part6&quot;&gt;Which number to use when&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part7&quot;&gt;Things people get wrong&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part8&quot;&gt;Glossary&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;&#x2F;nav&gt;
+&lt;h2 id=&quot;part1&quot;&gt;Part 1 — Two ways to summarize a list of numbers&lt;&#x2F;h2&gt;
+&lt;p&gt;You have many measurements — build durations, request latencies, page loads — and you want one number that says &quot;this is what&#x27;s typical&quot;. There are two common choices, and they answer subtly different questions.&lt;&#x2F;p&gt;
+&lt;div class=&quot;cards&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Mean (the average)&lt;&#x2F;h4&gt;
+&lt;p&gt;The arithmetic mean of &lt;span class=&quot;m&quot;&gt;n&lt;&#x2F;span&gt; values is&lt;&#x2F;p&gt;
+&lt;div class=&quot;eq&quot;&gt;&lt;span class=&quot;m&quot;&gt;x&amp;#772; = &lt;span class=&quot;frac&quot;&gt;&lt;span class=&quot;n&quot;&gt;1&lt;&#x2F;span&gt;&lt;span class=&quot;d&quot;&gt;n&lt;&#x2F;span&gt;&lt;&#x2F;span&gt; Σ&lt;sub&gt;i=1&lt;&#x2F;sub&gt;&lt;sup&gt;n&lt;&#x2F;sup&gt; x&lt;sub&gt;i&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;p&gt;Every point enters the sum, which is its weakness: a single large &lt;span class=&quot;m&quot;&gt;x&lt;sub&gt;i&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt; shifts &lt;span class=&quot;m&quot;&gt;x&amp;#772;&lt;&#x2F;span&gt; by &lt;span class=&quot;m&quot;&gt;Δx&lt;sub&gt;i&lt;&#x2F;sub&gt; &#x2F; n&lt;&#x2F;span&gt;. The mean is the distribution&#x27;s &lt;strong&gt;center of mass&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Median (the middle, a.k.a. P50)&lt;&#x2F;h4&gt;
+&lt;p&gt;Sort the values &lt;span class=&quot;m&quot;&gt;x&lt;sub&gt;(1)&lt;&#x2F;sub&gt; ≤ x&lt;sub&gt;(2)&lt;&#x2F;sub&gt; ≤ … ≤ x&lt;sub&gt;(n)&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt;; the median is the middle order statistic:&lt;&#x2F;p&gt;
+&lt;div class=&quot;eq&quot;&gt;&lt;span class=&quot;m&quot;&gt;x&amp;#771; =&lt;&#x2F;span&gt;&lt;span class=&quot;cases&quot;&gt;&lt;span class=&quot;brace&quot;&gt;{&lt;&#x2F;span&gt;&lt;span class=&quot;rows&quot;&gt;&lt;span class=&quot;row&quot;&gt;&lt;span class=&quot;m&quot;&gt;x&lt;sub&gt;((n+1)&#x2F;2)&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;rm&quot;&gt;,&amp;nbsp; n odd&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;row&quot;&gt;&lt;span class=&quot;m&quot;&gt;½(x&lt;sub&gt;(n&#x2F;2)&lt;&#x2F;sub&gt; + x&lt;sub&gt;(n&#x2F;2+1)&lt;&#x2F;sub&gt;)&lt;&#x2F;span&gt;&lt;span class=&quot;rm&quot;&gt;,&amp;nbsp; n even&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;p&gt;It depends only on &lt;em&gt;position&lt;&#x2F;em&gt;, not magnitude — so a single huge value barely moves it.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;The example that shows the difference&lt;&#x2F;h4&gt;
+&lt;p&gt;Five builds finish in &lt;span class=&quot;m&quot;&gt;x = (6, 7, 8, 9, 40)&lt;&#x2F;span&gt; minutes (one was a cold-cache straggler):&lt;&#x2F;p&gt;
+&lt;div class=&quot;eq&quot;&gt;&lt;span class=&quot;m&quot;&gt;x&amp;#772; = &lt;span class=&quot;frac&quot;&gt;&lt;span class=&quot;n&quot;&gt;6+7+8+9+40&lt;&#x2F;span&gt;&lt;span class=&quot;d&quot;&gt;5&lt;&#x2F;span&gt;&lt;&#x2F;span&gt; = &lt;span class=&quot;frac&quot;&gt;&lt;span class=&quot;n&quot;&gt;70&lt;&#x2F;span&gt;&lt;span class=&quot;d&quot;&gt;5&lt;&#x2F;span&gt;&lt;&#x2F;span&gt; = &lt;strong style=&quot;color:var(--xneg)&quot;&gt;14&lt;&#x2F;strong&gt;,&amp;nbsp;&amp;nbsp;&amp;nbsp; x&amp;#771; = x&lt;sub&gt;(3)&lt;&#x2F;sub&gt; = &lt;strong style=&quot;color:var(--xpos)&quot;&gt;8&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;p&gt;Four of five builds finished under 10 minutes, yet &lt;span class=&quot;m&quot;&gt;x&amp;#772; = 14&lt;&#x2F;span&gt; — the lone 40 dragged it up, while &lt;span class=&quot;m&quot;&gt;x&amp;#771; = 8&lt;&#x2F;span&gt; stayed put. &lt;strong&gt;The mean is sensitive to outliers; the median is robust to them.&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot; style=&quot;text-align:center;font-family:Georgia,serif;&quot;&gt;&lt;span class=&quot;m&quot;&gt;x&amp;#772; &amp;gt; x&amp;#771;&lt;&#x2F;span&gt; &amp;nbsp;⟺&amp;nbsp; &lt;span class=&quot;rm&quot;&gt;long tail on the high side (right skew)&lt;&#x2F;span&gt;&lt;&#x2F;p&gt;
+&lt;p class=&quot;corollary&quot;&gt;The gap measures the pull. Our build numbers give &lt;span class=&quot;m&quot;&gt;x&amp;#772; − x&amp;#771; = 11.2 − 8.35 = 2.85&lt;&#x2F;span&gt; min, a ratio of &lt;span class=&quot;m&quot;&gt;x&amp;#772; &#x2F; x&amp;#771; = 11.2 &#x2F; 8.35 ≈ 1.34&lt;&#x2F;span&gt; — a slow minority pulling the mean ~34% above the median. The normal signature of timing data (Part 2).&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part2&quot;&gt;Part 2 — Why latency is (almost) always uneven&lt;&#x2F;h2&gt;
+&lt;p&gt;Build times, request times, any &quot;how long did it take&quot; metric share a structural property: they are &lt;strong&gt;right-skewed&lt;&#x2F;strong&gt; — a tall cluster of fast results with a long tail trailing off to the right.&lt;&#x2F;p&gt;
+&lt;div class=&quot;cards&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;There is a floor, but no ceiling&lt;&#x2F;h4&gt;
+&lt;p&gt;A build can&#x27;t take less than zero time, and in practice not less than some minimum (compile the world, link, etc.). But it &lt;em&gt;can&lt;&#x2F;em&gt; take arbitrarily long: a cold cache, a busy machine, a flaky network download, a retry. The fast side is bounded; the slow side is open-ended. That asymmetry &lt;em&gt;is&lt;&#x2F;em&gt; the skew.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Consequence: &lt;span class=&quot;m&quot;&gt;x&amp;#772; ≥ x&amp;#771;&lt;&#x2F;span&gt;, by default&lt;&#x2F;h4&gt;
+&lt;p&gt;The high-side tail pulls the center-of-mass while the middle position holds, so for healthy latency you should &lt;em&gt;expect&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;div class=&quot;eq&quot;&gt;&lt;span class=&quot;m&quot;&gt;x&amp;#772; &amp;ge; x&amp;#771;&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;p&gt;It is not a defect to fix — it is the shape of the phenomenon.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;figure class=&quot;skewfig&quot;&gt;
+&lt;svg viewBox=&quot;0 0 640 270&quot; role=&quot;img&quot; aria-label=&quot;A right-skewed density curve. A red wall on the left marks a hard floor — builds cannot be faster than a minimum. To the right the curve trails off into a long tail labelled &#x27;no ceiling: cold cache, contention, retries make it arbitrarily slow&#x27;. The median marker sits near the peak and the mean marker sits to its right, with the gap between them labelled as the skew.&quot;&gt;
+  &lt;defs&gt;
+    &lt;marker id=&quot;xsArrow&quot; markerWidth=&quot;9&quot; markerHeight=&quot;9&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;path d=&quot;M0,0 L7,3 L0,6 Z&quot; fill=&quot;var(--text-light)&quot;&#x2F;&gt;&lt;&#x2F;marker&gt;
+  &lt;&#x2F;defs&gt;
+  &lt;path d=&quot;M70,215 C95,215 150,60 185,58 C235,55 270,150 350,180 C440,206 520,212 610,213 L610,215 L70,215 Z&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.16&quot;&#x2F;&gt;
+  &lt;path d=&quot;M70,215 C95,215 150,60 185,58 C235,55 270,150 350,180 C440,206 520,212 610,213&quot; fill=&quot;none&quot; stroke=&quot;var(--accent)&quot; stroke-width=&quot;2.5&quot;&#x2F;&gt;
+  &lt;line x1=&quot;70&quot; y1=&quot;215&quot; x2=&quot;620&quot; y2=&quot;215&quot; stroke=&quot;var(--border)&quot; stroke-width=&quot;1&quot;&#x2F;&gt;
+  &lt;line x1=&quot;70&quot; y1=&quot;215&quot; x2=&quot;70&quot; y2=&quot;40&quot; stroke=&quot;var(--xneg)&quot; stroke-width=&quot;2.5&quot;&#x2F;&gt;
+  &lt;line x1=&quot;58&quot; y1=&quot;62&quot; x2=&quot;70&quot; y2=&quot;74&quot; stroke=&quot;var(--xneg)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;line x1=&quot;58&quot; y1=&quot;92&quot; x2=&quot;70&quot; y2=&quot;104&quot; stroke=&quot;var(--xneg)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;line x1=&quot;58&quot; y1=&quot;122&quot; x2=&quot;70&quot; y2=&quot;134&quot; stroke=&quot;var(--xneg)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;line x1=&quot;58&quot; y1=&quot;152&quot; x2=&quot;70&quot; y2=&quot;164&quot; stroke=&quot;var(--xneg)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;line x1=&quot;58&quot; y1=&quot;182&quot; x2=&quot;70&quot; y2=&quot;194&quot; stroke=&quot;var(--xneg)&quot; stroke-width=&quot;1.5&quot;&#x2F;&gt;
+  &lt;text x=&quot;78&quot; y=&quot;52&quot; font-size=&quot;12&quot; font-weight=&quot;700&quot; fill=&quot;var(--xneg)&quot;&gt;hard floor&lt;&#x2F;text&gt;
+  &lt;text x=&quot;78&quot; y=&quot;67&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;can&#x27;t be faster&lt;&#x2F;text&gt;
+  &lt;text x=&quot;78&quot; y=&quot;80&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;than the minimum&lt;&#x2F;text&gt;
+  &lt;text x=&quot;185&quot; y=&quot;40&quot; font-size=&quot;12&quot; font-weight=&quot;700&quot; fill=&quot;var(--accent)&quot; text-anchor=&quot;middle&quot;&gt;most builds cluster here&lt;&#x2F;text&gt;
+  &lt;text x=&quot;500&quot; y=&quot;150&quot; font-size=&quot;12&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;long tail&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;360&quot; y1=&quot;240&quot; x2=&quot;625&quot; y2=&quot;240&quot; stroke=&quot;var(--text-light)&quot; stroke-width=&quot;1.5&quot; marker-end=&quot;url(#xsArrow)&quot;&#x2F;&gt;
+  &lt;text x=&quot;358&quot; y=&quot;256&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot;&gt;no ceiling: cold cache, contention, retries &amp;#8594; arbitrarily slow&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;212&quot; y1=&quot;215&quot; x2=&quot;212&quot; y2=&quot;95&quot; stroke=&quot;var(--xp50)&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;4 3&quot;&#x2F;&gt;
+  &lt;text x=&quot;212&quot; y=&quot;88&quot; font-size=&quot;11&quot; font-weight=&quot;700&quot; fill=&quot;var(--xp50)&quot; text-anchor=&quot;middle&quot;&gt;median&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;268&quot; y1=&quot;215&quot; x2=&quot;268&quot; y2=&quot;95&quot; stroke=&quot;var(--xmean)&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;4 3&quot;&#x2F;&gt;
+  &lt;text x=&quot;268&quot; y=&quot;88&quot; font-size=&quot;11&quot; font-weight=&quot;700&quot; fill=&quot;var(--xmean)&quot; text-anchor=&quot;middle&quot;&gt;mean&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;212&quot; y1=&quot;201&quot; x2=&quot;268&quot; y2=&quot;201&quot; stroke=&quot;var(--text-light)&quot; stroke-width=&quot;1.2&quot;&#x2F;&gt;
+  &lt;line x1=&quot;212&quot; y1=&quot;197&quot; x2=&quot;212&quot; y2=&quot;205&quot; stroke=&quot;var(--text-light)&quot; stroke-width=&quot;1.2&quot;&#x2F;&gt;
+  &lt;line x1=&quot;268&quot; y1=&quot;197&quot; x2=&quot;268&quot; y2=&quot;205&quot; stroke=&quot;var(--text-light)&quot; stroke-width=&quot;1.2&quot;&#x2F;&gt;
+  &lt;text x=&quot;276&quot; y=&quot;205&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot;&gt;&amp;#8592; gap = skew&lt;&#x2F;text&gt;
+&lt;&#x2F;svg&gt;
+&lt;&#x2F;figure&gt;
+&lt;p class=&quot;svg-cap&quot;&gt;A hard floor on the left, an open-ended tail on the right: that asymmetry &lt;em&gt;is&lt;&#x2F;em&gt; the right-skew, and it is what pushes the mean to the right of the median.&lt;&#x2F;p&gt;
+&lt;div class=&quot;lesson&quot;&gt;&lt;strong&gt;Reframe:&lt;&#x2F;strong&gt; the surprising case is &lt;span class=&quot;m&quot;&gt;x&amp;#772; &amp;lt; x&amp;#771;&lt;&#x2F;span&gt;. For a duration metric that almost never happens naturally — if you see it, suspect the metric is computed wrong, units are mixed, or negative&#x2F;clamped values leaked in.&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part3&quot;&gt;Part 3 — Percentiles: P50, P90, P99&lt;&#x2F;h2&gt;
+&lt;p&gt;A percentile answers one plain question: &lt;strong&gt;compared to everything else, how far up the list is this?&lt;&#x2F;strong&gt; Sort your builds from fastest to slowest — &lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;90&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt; is the point that 90% of builds come in &lt;em&gt;under&lt;&#x2F;em&gt;. Only the slowest 10% take longer.&lt;&#x2F;p&gt;
+&lt;p&gt;Make it concrete. Here are five build times, in the order they finished: &lt;span class=&quot;mono&quot;&gt;8, 5, 19, 6, 9&lt;&#x2F;span&gt; minutes. Line them up fastest&amp;nbsp;&amp;#8594;&amp;nbsp;slowest:&lt;&#x2F;p&gt;
+&lt;div class=&quot;eq&quot;&gt;&lt;span class=&quot;mono&quot;&gt;5&amp;nbsp;&amp;nbsp;&amp;nbsp;6&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;strong style=&quot;color:var(--xp50)&quot;&gt;8&lt;&#x2F;strong&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;9&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;strong style=&quot;color:var(--xp90)&quot;&gt;19&lt;&#x2F;strong&gt;&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;ul&gt;
+&lt;li&gt;The &lt;strong style=&quot;color:var(--xp50)&quot;&gt;middle&lt;&#x2F;strong&gt; value is &lt;strong&gt;8&lt;&#x2F;strong&gt; — that is the &lt;strong&gt;median&lt;&#x2F;strong&gt;, also called &lt;strong&gt;P50&lt;&#x2F;strong&gt;. Half the builds are faster, half are slower. The &quot;typical&quot; build.&lt;&#x2F;li&gt;
+&lt;li&gt;The &lt;strong&gt;average&lt;&#x2F;strong&gt; is (5+6+8+9+19) ÷ 5 = &lt;strong&gt;9.4&lt;&#x2F;strong&gt; — bigger than the median, because the one slow &lt;strong style=&quot;color:var(--xp90)&quot;&gt;19&lt;&#x2F;strong&gt; drags it up. That gap between 9.4 and 8 is exactly the problem with averages from Part&amp;nbsp;1.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;P90&lt;&#x2F;strong&gt; is the same move, but at 90% instead of 50%: walk up the sorted list until you have passed 90% of the builds. With lots of data it is &quot;the line that 9 out of 10 builds beat&quot; — it lives out in the slow tail.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Now imagine doing this for hundreds of builds. Walk left&amp;nbsp;&amp;#8594;&amp;nbsp;right through every build time, and each time you pass one build, step up a little. The height at any point is just &lt;em&gt;&quot;what fraction of builds have I passed so far?&quot;&lt;&#x2F;em&gt; — that rising staircase is the picture below. To read any percentile, find its height on the left, slide across to the steps, and drop down to the time.&lt;&#x2F;p&gt;
+&lt;figure class=&quot;skewfig&quot;&gt;
+&lt;svg viewBox=&quot;0 0 640 290&quot; role=&quot;img&quot; aria-label=&quot;An empirical cumulative distribution function drawn as a rising staircase. The horizontal axis is build time in minutes; the vertical axis is the fraction of samples at or below that time, climbing from 0 to 1 in ten equal steps of one tenth. A dashed blue line at height 0.50 runs across to the staircase and drops down to P50 equals 8 minutes, the median. A dashed red line at height 0.90 runs across and drops to P90 equals 19 minutes, further out in the tail.&quot;&gt;
+  &lt;defs&gt;
+    &lt;marker id=&quot;xsArrow2&quot; markerWidth=&quot;9&quot; markerHeight=&quot;9&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;path d=&quot;M0,0 L7,3 L0,6 Z&quot; fill=&quot;var(--text-light)&quot;&#x2F;&gt;&lt;&#x2F;marker&gt;
+  &lt;&#x2F;defs&gt;
+  &lt;line x1=&quot;70&quot; y1=&quot;250&quot; x2=&quot;620&quot; y2=&quot;250&quot; stroke=&quot;var(--text-light)&quot; stroke-width=&quot;1.5&quot; marker-end=&quot;url(#xsArrow2)&quot;&#x2F;&gt;
+  &lt;line x1=&quot;70&quot; y1=&quot;250&quot; x2=&quot;70&quot; y2=&quot;32&quot; stroke=&quot;var(--text-light)&quot; stroke-width=&quot;1.5&quot; marker-end=&quot;url(#xsArrow2)&quot;&#x2F;&gt;
+  &lt;text x=&quot;78&quot; y=&quot;30&quot; font-size=&quot;11&quot; font-weight=&quot;700&quot; fill=&quot;var(--text-light)&quot;&gt;F(x) = fraction of builds &amp;#8804; x&lt;&#x2F;text&gt;
+  &lt;text x=&quot;64&quot; y=&quot;44&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;end&quot;&gt;1.0&lt;&#x2F;text&gt;
+  &lt;text x=&quot;64&quot; y=&quot;65&quot; font-size=&quot;10.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--xp90)&quot; text-anchor=&quot;end&quot;&gt;0.9&lt;&#x2F;text&gt;
+  &lt;text x=&quot;64&quot; y=&quot;149&quot; font-size=&quot;10.5&quot; font-weight=&quot;700&quot; fill=&quot;var(--xp50)&quot; text-anchor=&quot;end&quot;&gt;0.5&lt;&#x2F;text&gt;
+  &lt;text x=&quot;64&quot; y=&quot;253&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;end&quot;&gt;0&lt;&#x2F;text&gt;
+  &lt;text x=&quot;616&quot; y=&quot;268&quot; font-size=&quot;10.5&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;end&quot;&gt;build time (min) &amp;#8594;&lt;&#x2F;text&gt;
+  &lt;line x1=&quot;70&quot; y1=&quot;61&quot; x2=&quot;437&quot; y2=&quot;61&quot; stroke=&quot;var(--xp90)&quot; stroke-width=&quot;1.6&quot; stroke-dasharray=&quot;4 3&quot;&#x2F;&gt;
+  &lt;line x1=&quot;437&quot; y1=&quot;61&quot; x2=&quot;437&quot; y2=&quot;250&quot; stroke=&quot;var(--xp90)&quot; stroke-width=&quot;1.6&quot; stroke-dasharray=&quot;4 3&quot;&#x2F;&gt;
+  &lt;line x1=&quot;70&quot; y1=&quot;145&quot; x2=&quot;200&quot; y2=&quot;145&quot; stroke=&quot;var(--xp50)&quot; stroke-width=&quot;1.6&quot; stroke-dasharray=&quot;4 3&quot;&#x2F;&gt;
+  &lt;line x1=&quot;200&quot; y1=&quot;145&quot; x2=&quot;200&quot; y2=&quot;250&quot; stroke=&quot;var(--xp50)&quot; stroke-width=&quot;1.6&quot; stroke-dasharray=&quot;4 3&quot;&#x2F;&gt;
+  &lt;path d=&quot;M70,250 L113,250 L113,229 L135,229 L135,208 L156,208 L156,187 L178,187 L178,166 L200,166 L200,145 L221,145 L221,124 L264,124 L264,103 L329,103 L329,82 L437,82 L437,61 L567,61 L567,40 L610,40&quot; fill=&quot;none&quot; stroke=&quot;var(--accent)&quot; stroke-width=&quot;2.5&quot; stroke-linejoin=&quot;round&quot;&#x2F;&gt;
+  &lt;circle cx=&quot;113&quot; cy=&quot;229&quot; r=&quot;3.4&quot; fill=&quot;var(--accent)&quot;&#x2F;&gt;
+  &lt;circle cx=&quot;135&quot; cy=&quot;208&quot; r=&quot;3.4&quot; fill=&quot;var(--accent)&quot;&#x2F;&gt;
+  &lt;circle cx=&quot;156&quot; cy=&quot;187&quot; r=&quot;3.4&quot; fill=&quot;var(--accent)&quot;&#x2F;&gt;
+  &lt;circle cx=&quot;178&quot; cy=&quot;166&quot; r=&quot;3.4&quot; fill=&quot;var(--accent)&quot;&#x2F;&gt;
+  &lt;circle cx=&quot;200&quot; cy=&quot;145&quot; r=&quot;4.4&quot; fill=&quot;var(--xp50)&quot;&#x2F;&gt;
+  &lt;circle cx=&quot;221&quot; cy=&quot;124&quot; r=&quot;3.4&quot; fill=&quot;var(--accent)&quot;&#x2F;&gt;
+  &lt;circle cx=&quot;264&quot; cy=&quot;103&quot; r=&quot;3.4&quot; fill=&quot;var(--accent)&quot;&#x2F;&gt;
+  &lt;circle cx=&quot;329&quot; cy=&quot;82&quot; r=&quot;3.4&quot; fill=&quot;var(--accent)&quot;&#x2F;&gt;
+  &lt;circle cx=&quot;437&quot; cy=&quot;61&quot; r=&quot;4.4&quot; fill=&quot;var(--xp90)&quot;&#x2F;&gt;
+  &lt;circle cx=&quot;567&quot; cy=&quot;40&quot; r=&quot;3.4&quot; fill=&quot;var(--accent)&quot;&#x2F;&gt;
+  &lt;text x=&quot;200&quot; y=&quot;267&quot; font-size=&quot;11&quot; font-weight=&quot;700&quot; fill=&quot;var(--xp50)&quot; text-anchor=&quot;middle&quot;&gt;P50 = 8&lt;&#x2F;text&gt;
+  &lt;text x=&quot;200&quot; y=&quot;280&quot; font-size=&quot;9.5&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;(median)&lt;&#x2F;text&gt;
+  &lt;text x=&quot;437&quot; y=&quot;267&quot; font-size=&quot;11&quot; font-weight=&quot;700&quot; fill=&quot;var(--xp90)&quot; text-anchor=&quot;middle&quot;&gt;P90 = 19&lt;&#x2F;text&gt;
+&lt;&#x2F;svg&gt;
+&lt;&#x2F;figure&gt;
+&lt;p class=&quot;svg-cap&quot;&gt;Each build nudges the line up one step. To find &lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;90&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt;: start at 90% on the left, slide across to the staircase, then drop to the time below it. &lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;50&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt; is the median; &lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;90&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt; and &lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;99&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt; sit further out in the slow tail.&lt;&#x2F;p&gt;
+&lt;details&gt;
+&lt;summary&gt;The same idea, written as a formula&lt;&#x2F;summary&gt;
+&lt;p&gt;Let &lt;span class=&quot;m&quot;&gt;F(x)&lt;&#x2F;span&gt; be the fraction of samples at or below &lt;span class=&quot;m&quot;&gt;x&lt;&#x2F;span&gt; — exactly the height of the staircase above. Then the &lt;span class=&quot;m&quot;&gt;k&lt;&#x2F;span&gt;-th percentile is the smallest &lt;span class=&quot;m&quot;&gt;x&lt;&#x2F;span&gt; whose height has reached &lt;span class=&quot;m&quot;&gt;k&#x2F;100&lt;&#x2F;span&gt;:&lt;&#x2F;p&gt;
+&lt;div class=&quot;eq&quot;&gt;&lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;k&lt;&#x2F;sub&gt; = inf { x : F(x) ≥ &lt;span class=&quot;frac&quot;&gt;&lt;span class=&quot;n&quot;&gt;k&lt;&#x2F;span&gt;&lt;span class=&quot;d&quot;&gt;100&lt;&#x2F;span&gt;&lt;&#x2F;span&gt; }&lt;&#x2F;span&gt;,&amp;nbsp;&amp;nbsp;&amp;nbsp; &lt;span class=&quot;m&quot;&gt;x&amp;#771; = P&lt;sub&gt;50&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;p&gt;&quot;&lt;span class=&quot;m&quot;&gt;inf&lt;&#x2F;span&gt;&quot; just means &quot;the smallest value that qualifies&quot; — it only matters for the flat parts of the staircase, where many &lt;span class=&quot;m&quot;&gt;x&lt;&#x2F;span&gt; share the same height.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;div class=&quot;cards&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;P50 — the typical case&lt;&#x2F;h4&gt;
+&lt;p&gt;Half of builds are faster than this. The everyday experience. Same thing as the median.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;P90 — the &quot;bad day&quot;&lt;&#x2F;h4&gt;
+&lt;p&gt;9 of every 10 builds beat this; the slowest 10% are worse. This is the number that captures &quot;sometimes it just takes forever&quot; without being thrown off by the single worst outlier.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;P99 — the worst-case-ish&lt;&#x2F;h4&gt;
+&lt;p&gt;Only 1 in 100 is slower. Matters when rare slowness is expensive (CI queues, user-facing requests at scale). Not in our three numbers, but worth requesting.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;lesson&quot;&gt;&lt;strong&gt;Key property:&lt;&#x2F;strong&gt; percentiles are &lt;em&gt;positions&lt;&#x2F;em&gt; in the sorted data, so — like the median — they are robust to outliers. A single catastrophic build moves P99 a little and P50 not at all. That robustness is exactly why SLOs are written on percentiles, not on the mean.&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part4&quot;&gt;Part 4 — The shape, drawn&lt;&#x2F;h2&gt;
+&lt;p&gt;Here is the distribution of build durations. Toggle between a hypothetical &lt;em&gt;symmetric&lt;&#x2F;em&gt; dataset and the &lt;em&gt;skewed&lt;&#x2F;em&gt; one our real numbers describe, and watch the three markers move relative to each other.&lt;&#x2F;p&gt;
+&lt;div class=&quot;mode-toggle&quot; role=&quot;tablist&quot; aria-label=&quot;Distribution toggle&quot;&gt;
+&lt;button id=&quot;xsBtnSkew&quot; class=&quot;active&quot; onclick=&quot;xstatShow(&#x27;skew&#x27;)&quot; role=&quot;tab&quot; aria-selected=&quot;true&quot;&gt;Skewed (our build data)&lt;&#x2F;button&gt;
+&lt;button id=&quot;xsBtnSym&quot; onclick=&quot;xstatShow(&#x27;sym&#x27;)&quot; role=&quot;tab&quot; aria-selected=&quot;false&quot;&gt;Symmetric (for contrast)&lt;&#x2F;button&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;diagram&quot;&gt;
+&lt;figure id=&quot;xsFigSkew&quot; class=&quot;xsfig&quot;&gt;
+&lt;svg viewBox=&quot;0 0 640 300&quot; role=&quot;img&quot; aria-label=&quot;Histogram of build durations, right-skewed: most builds fall between 4 and 12 minutes, with a long tail past 25 minutes. The median marker (P50, 8.35) sits left of the mean marker (11.2), and the P90 marker (19.8) sits far out in the tail.&quot;&gt;
+&lt;line x1=&quot;44&quot; y1=&quot;248&quot; x2=&quot;612&quot; y2=&quot;248&quot; stroke=&quot;var(--border)&quot; stroke-width=&quot;1&quot;&#x2F;&gt;
+&lt;rect x=&quot;47.9&quot; y=&quot;228.0&quot; width=&quot;35.8&quot; height=&quot;20.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;91.6&quot; y=&quot;188.0&quot; width=&quot;35.8&quot; height=&quot;60.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;135.3&quot; y=&quot;108.0&quot; width=&quot;35.8&quot; height=&quot;140.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;179.0&quot; y=&quot;28.0&quot; width=&quot;35.8&quot; height=&quot;220.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;222.7&quot; y=&quot;68.0&quot; width=&quot;35.8&quot; height=&quot;180.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;266.4&quot; y=&quot;128.0&quot; width=&quot;35.8&quot; height=&quot;120.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;310.1&quot; y=&quot;168.0&quot; width=&quot;35.8&quot; height=&quot;80.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;353.8&quot; y=&quot;198.0&quot; width=&quot;35.8&quot; height=&quot;50.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;397.5&quot; y=&quot;218.0&quot; width=&quot;35.8&quot; height=&quot;30.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;441.2&quot; y=&quot;208.0&quot; width=&quot;35.8&quot; height=&quot;40.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;484.9&quot; y=&quot;218.0&quot; width=&quot;35.8&quot; height=&quot;30.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;528.5&quot; y=&quot;228.0&quot; width=&quot;35.8&quot; height=&quot;20.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;572.2&quot; y=&quot;238.0&quot; width=&quot;35.8&quot; height=&quot;10.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;text x=&quot;44.0&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;0&lt;&#x2F;text&gt;
+&lt;text x=&quot;131.4&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;4&lt;&#x2F;text&gt;
+&lt;text x=&quot;218.8&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;8&lt;&#x2F;text&gt;
+&lt;text x=&quot;306.2&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;12&lt;&#x2F;text&gt;
+&lt;text x=&quot;393.5&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;16&lt;&#x2F;text&gt;
+&lt;text x=&quot;480.9&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;20&lt;&#x2F;text&gt;
+&lt;text x=&quot;524.6&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;25&lt;&#x2F;text&gt;
+&lt;text x=&quot;568.3&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;30&lt;&#x2F;text&gt;
+&lt;text x=&quot;328&quot; y=&quot;296&quot; font-size=&quot;12&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;build duration (minutes)&lt;&#x2F;text&gt;
+&lt;line x1=&quot;226.4&quot; y1=&quot;28&quot; x2=&quot;226.4&quot; y2=&quot;248&quot; stroke=&quot;var(--xp50)&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;5 4&quot;&#x2F;&gt;
+&lt;rect x=&quot;196.4&quot; y=&quot;21&quot; width=&quot;60&quot; height=&quot;15&quot; rx=&quot;3&quot; fill=&quot;var(--bg-light)&quot;&#x2F;&gt;
+&lt;text x=&quot;226.4&quot; y=&quot;32&quot; font-size=&quot;11&quot; font-weight=&quot;700&quot; fill=&quot;var(--xp50)&quot; text-anchor=&quot;middle&quot;&gt;P50 8.35&lt;&#x2F;text&gt;
+&lt;line x1=&quot;288.7&quot; y1=&quot;28&quot; x2=&quot;288.7&quot; y2=&quot;248&quot; stroke=&quot;var(--xmean)&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;5 4&quot;&#x2F;&gt;
+&lt;rect x=&quot;258.7&quot; y=&quot;51&quot; width=&quot;60&quot; height=&quot;15&quot; rx=&quot;3&quot; fill=&quot;var(--bg-light)&quot;&#x2F;&gt;
+&lt;text x=&quot;288.7&quot; y=&quot;62&quot; font-size=&quot;11&quot; font-weight=&quot;700&quot; fill=&quot;var(--xmean)&quot; text-anchor=&quot;middle&quot;&gt;Mean 11.2&lt;&#x2F;text&gt;
+&lt;line x1=&quot;476.6&quot; y1=&quot;28&quot; x2=&quot;476.6&quot; y2=&quot;248&quot; stroke=&quot;var(--xp90)&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;5 4&quot;&#x2F;&gt;
+&lt;rect x=&quot;446.6&quot; y=&quot;81&quot; width=&quot;60&quot; height=&quot;15&quot; rx=&quot;3&quot; fill=&quot;var(--bg-light)&quot;&#x2F;&gt;
+&lt;text x=&quot;476.6&quot; y=&quot;92&quot; font-size=&quot;11&quot; font-weight=&quot;700&quot; fill=&quot;var(--xp90)&quot; text-anchor=&quot;middle&quot;&gt;P90 19.8&lt;&#x2F;text&gt;
+&lt;&#x2F;svg&gt;
+&lt;&#x2F;figure&gt;
+&lt;figure id=&quot;xsFigSym&quot; class=&quot;xsfig&quot; hidden&gt;
+&lt;svg viewBox=&quot;0 0 640 300&quot; role=&quot;img&quot; aria-label=&quot;Histogram of a symmetric distribution: a bell-shaped cluster with no tail. The median marker (P50, 10.0) and the mean marker (10.0) land on the same line, illustrating that for symmetric data the mean and median coincide.&quot;&gt;
+&lt;line x1=&quot;44&quot; y1=&quot;248&quot; x2=&quot;612&quot; y2=&quot;248&quot; stroke=&quot;var(--border)&quot; stroke-width=&quot;1&quot;&#x2F;&gt;
+&lt;rect x=&quot;47.9&quot; y=&quot;238.0&quot; width=&quot;35.8&quot; height=&quot;10.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;91.6&quot; y=&quot;218.0&quot; width=&quot;35.8&quot; height=&quot;30.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;135.3&quot; y=&quot;168.0&quot; width=&quot;35.8&quot; height=&quot;80.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;179.0&quot; y=&quot;88.0&quot; width=&quot;35.8&quot; height=&quot;160.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;222.7&quot; y=&quot;28.0&quot; width=&quot;35.8&quot; height=&quot;220.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;266.4&quot; y=&quot;28.0&quot; width=&quot;35.8&quot; height=&quot;220.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;310.1&quot; y=&quot;88.0&quot; width=&quot;35.8&quot; height=&quot;160.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;353.8&quot; y=&quot;168.0&quot; width=&quot;35.8&quot; height=&quot;80.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;397.5&quot; y=&quot;218.0&quot; width=&quot;35.8&quot; height=&quot;30.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;rect x=&quot;441.2&quot; y=&quot;238.0&quot; width=&quot;35.8&quot; height=&quot;10.0&quot; rx=&quot;2&quot; fill=&quot;var(--accent)&quot; opacity=&quot;0.38&quot;&#x2F;&gt;
+&lt;text x=&quot;44.0&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;0&lt;&#x2F;text&gt;
+&lt;text x=&quot;131.4&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;4&lt;&#x2F;text&gt;
+&lt;text x=&quot;218.8&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;8&lt;&#x2F;text&gt;
+&lt;text x=&quot;306.2&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;12&lt;&#x2F;text&gt;
+&lt;text x=&quot;393.5&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;16&lt;&#x2F;text&gt;
+&lt;text x=&quot;480.9&quot; y=&quot;264&quot; font-size=&quot;11&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;20&lt;&#x2F;text&gt;
+&lt;text x=&quot;328&quot; y=&quot;296&quot; font-size=&quot;12&quot; fill=&quot;var(--text-light)&quot; text-anchor=&quot;middle&quot;&gt;build duration (minutes)&lt;&#x2F;text&gt;
+&lt;line x1=&quot;262.5&quot; y1=&quot;28&quot; x2=&quot;262.5&quot; y2=&quot;248&quot; stroke=&quot;var(--xp50)&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;5 4&quot;&#x2F;&gt;
+&lt;rect x=&quot;232.5&quot; y=&quot;21&quot; width=&quot;61&quot; height=&quot;15&quot; rx=&quot;3&quot; fill=&quot;var(--bg-light)&quot;&#x2F;&gt;
+&lt;text x=&quot;263&quot; y=&quot;32&quot; font-size=&quot;11&quot; font-weight=&quot;700&quot; fill=&quot;var(--xp50)&quot; text-anchor=&quot;middle&quot;&gt;P50 = Mean = 10&lt;&#x2F;text&gt;
+&lt;line x1=&quot;380.4&quot; y1=&quot;28&quot; x2=&quot;380.4&quot; y2=&quot;248&quot; stroke=&quot;var(--xp90)&quot; stroke-width=&quot;2&quot; stroke-dasharray=&quot;5 4&quot;&#x2F;&gt;
+&lt;rect x=&quot;350.4&quot; y=&quot;81&quot; width=&quot;60&quot; height=&quot;15&quot; rx=&quot;3&quot; fill=&quot;var(--bg-light)&quot;&#x2F;&gt;
+&lt;text x=&quot;380.4&quot; y=&quot;92&quot; font-size=&quot;11&quot; font-weight=&quot;700&quot; fill=&quot;var(--xp90)&quot; text-anchor=&quot;middle&quot;&gt;P90 15.4&lt;&#x2F;text&gt;
+&lt;&#x2F;svg&gt;
+&lt;&#x2F;figure&gt;
+&lt;p class=&quot;dcaption&quot; id=&quot;xstatCaption&quot;&gt;Right-skewed: a tall cluster of fast builds and a long tail. The mean (yellow) is dragged right of the median (blue) by that tail; P90 (red) sits far out in it.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;stat-row&quot;&gt;
+&lt;div class=&quot;stat-box b-p50&quot;&gt;&lt;div class=&quot;label&quot;&gt;P50 · Median&lt;&#x2F;div&gt;&lt;div class=&quot;value&quot;&gt;8.35&lt;span class=&quot;u&quot;&gt; min&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;&lt;div class=&quot;sub&quot;&gt;The typical build. Half finish faster.&lt;&#x2F;div&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;stat-box b-mean&quot;&gt;&lt;div class=&quot;label&quot;&gt;Mean · Average&lt;&#x2F;div&gt;&lt;div class=&quot;value&quot;&gt;11.2&lt;span class=&quot;u&quot;&gt; min&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;&lt;div class=&quot;sub&quot;&gt;Pulled up by the slow tail.&lt;&#x2F;div&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;stat-box b-p90&quot;&gt;&lt;div class=&quot;label&quot;&gt;P90 · Tail&lt;&#x2F;div&gt;&lt;div class=&quot;value&quot;&gt;19.8&lt;span class=&quot;u&quot;&gt; min&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;&lt;div class=&quot;sub&quot;&gt;9 of 10 beat this; slowest 10% are worse.&lt;&#x2F;div&gt;&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part5&quot;&gt;Part 5 — Sanity-checking a set of numbers&lt;&#x2F;h2&gt;
+&lt;p&gt;Back to the original question: &lt;em&gt;do mean 11.2, P50 8.35, P90 19.8 make sense?&lt;&#x2F;em&gt; Two quick checks settle it.&lt;&#x2F;p&gt;
+&lt;div class=&quot;check pass&quot;&gt;
+&lt;h4&gt;Ordering check &lt;span class=&quot;badge&quot;&gt;passes&lt;&#x2F;span&gt;&lt;&#x2F;h4&gt;
+&lt;p&gt;For right-skewed latency the only sensible order is &lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;50&lt;&#x2F;sub&gt; &amp;lt; x&amp;#772; &amp;lt; P&lt;sub&gt;90&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt;. Ours:&lt;&#x2F;p&gt;
+&lt;div class=&quot;eq&quot;&gt;&lt;span class=&quot;m&quot;&gt;8.35 &amp;lt; 11.2 &amp;lt; 19.8&lt;&#x2F;span&gt; &amp;nbsp;&lt;span class=&quot;ok&quot; style=&quot;font-style:normal&quot;&gt;✓&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;p&gt;&lt;span class=&quot;m&quot;&gt;x&amp;#772;&lt;&#x2F;span&gt; above the median is the expected fingerprint of skew (Part 2). Had &lt;span class=&quot;m&quot;&gt;x&amp;#772; &amp;lt; 8.35&lt;&#x2F;span&gt;, that would be the red flag worth chasing.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;check watch&quot;&gt;
+&lt;h4&gt;Tail check &lt;span class=&quot;badge&quot;&gt;worth a look&lt;&#x2F;span&gt;&lt;&#x2F;h4&gt;
+&lt;p&gt;Two dimensionless ratios gauge how uneven the data is:&lt;&#x2F;p&gt;
+&lt;div class=&quot;eq&quot;&gt;&lt;span class=&quot;under&quot;&gt;&lt;span class=&quot;m&quot;&gt;&lt;span class=&quot;frac&quot;&gt;&lt;span class=&quot;n&quot;&gt;P&lt;sub&gt;90&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;d&quot;&gt;P&lt;sub&gt;50&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt; = &lt;span class=&quot;frac&quot;&gt;&lt;span class=&quot;n&quot;&gt;19.8&lt;&#x2F;span&gt;&lt;span class=&quot;d&quot;&gt;8.35&lt;&#x2F;span&gt;&lt;&#x2F;span&gt; ≈ 2.37&lt;&#x2F;span&gt;&lt;span class=&quot;ulbl&quot;&gt;spread&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;span class=&quot;under&quot;&gt;&lt;span class=&quot;m&quot;&gt;&lt;span class=&quot;frac&quot;&gt;&lt;span class=&quot;n&quot;&gt;x&amp;#772;&lt;&#x2F;span&gt;&lt;span class=&quot;d&quot;&gt;P&lt;sub&gt;50&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt; = &lt;span class=&quot;frac&quot;&gt;&lt;span class=&quot;n&quot;&gt;11.2&lt;&#x2F;span&gt;&lt;span class=&quot;d&quot;&gt;8.35&lt;&#x2F;span&gt;&lt;&#x2F;span&gt; ≈ 1.34&lt;&#x2F;span&gt;&lt;span class=&quot;ulbl&quot;&gt;skew&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;p&gt;The slowest 10% take well over double a typical build. Both ratios sit in the normal range (most real systems land 2–4×), but the tail is where time is actually lost.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;Verdict: the numbers are internally consistent and realistic. They describe an ordinary, healthy distribution — most builds near 8 minutes, an average nudged to ~11 by a slow minority, a &quot;bad day&quot; near 20.&lt;&#x2F;p&gt;
+&lt;p class=&quot;corollary&quot;&gt;The one thing to act on is that 8 → 20 minute tail, not the headline average.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part6&quot;&gt;Part 6 — Which number to use when&lt;&#x2F;h2&gt;
+&lt;table&gt;
+&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Number&lt;&#x2F;th&gt;&lt;th&gt;Use it for&lt;&#x2F;th&gt;&lt;th&gt;Why&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;P50&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td&gt;Headline &quot;how fast are builds&quot; &#x2F; daily developer experience&lt;&#x2F;td&gt;&lt;td&gt;Reflects the common case, immune to rare outliers.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;P90 &#x2F; P95&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td&gt;SLOs, alerting thresholds, &quot;worst-case&quot; budgeting&lt;&#x2F;td&gt;&lt;td&gt;Catches tail regressions before they become &quot;builds randomly hang&quot; complaints.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;P99 &#x2F; max&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td&gt;Rare-but-expensive slowness at scale&lt;&#x2F;td&gt;&lt;td&gt;The true worst case lives past P90; request it when the tail is costly.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td class=&quot;dim&quot;&gt;&lt;strong&gt;Mean&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td class=&quot;dim&quot;&gt;Almost nothing, on its own&lt;&#x2F;td&gt;&lt;td class=&quot;dim&quot;&gt;One 60-min build moves it without telling you whether the typical case or the tail changed. Useful only paired with the median as a skew signal.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;
+&lt;&#x2F;table&gt;
+&lt;div class=&quot;lesson&quot;&gt;&lt;strong&gt;General rule:&lt;&#x2F;strong&gt; report a percentile for decisions, keep the mean only as a companion to the median. A dashboard showing the mean alone hides whether your typical build or your tail got worse.&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part7&quot;&gt;Part 7 — Things people get wrong&lt;&#x2F;h2&gt;
+&lt;details open&gt;
+&lt;summary&gt;&quot;I&#x27;ll just average the percentiles to combine two services.&quot;&lt;&#x2F;summary&gt;
+&lt;p&gt;First, what &quot;combine&quot; means here: you have build times measured &lt;em&gt;separately&lt;&#x2F;em&gt; for two things — say a Linux runner pool and a macOS pool, or the &lt;span class=&quot;mono&quot;&gt;app&lt;&#x2F;span&gt; and &lt;span class=&quot;mono&quot;&gt;core&lt;&#x2F;span&gt; targets in a monorepo — and you want one P90 across both. The tempting shortcut is to average the two P90s your dashboard already shows. It doesn&#x27;t work, because a percentile is a &lt;em&gt;position&lt;&#x2F;em&gt; in the sorted data, not a quantity you can add or average.&lt;&#x2F;p&gt;
+&lt;p&gt;Counterexample: pool A is ten builds all at &lt;strong&gt;2&amp;nbsp;min&lt;&#x2F;strong&gt; (so &lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;90&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt; = 2), pool B is ten builds at &lt;strong&gt;10&amp;nbsp;min&lt;&#x2F;strong&gt; (&lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;90&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt; = 10). Averaging the two gives 6&amp;nbsp;min — but dump all 20 builds into one pile and the real combined &lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;90&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt; is &lt;strong style=&quot;color:var(--xp90)&quot;&gt;10&amp;nbsp;min&lt;&#x2F;strong&gt;. Build volume tips it further: if &lt;span class=&quot;mono&quot;&gt;core&lt;&#x2F;span&gt; builds 2,000&amp;times;&#x2F;day and &lt;span class=&quot;mono&quot;&gt;app&lt;&#x2F;span&gt; builds 10&amp;times;&#x2F;day, the combined P90 is essentially &lt;span class=&quot;mono&quot;&gt;core&lt;&#x2F;span&gt;&#x27;s — one pool dominates the pile, so averaging the two numbers as equals is meaningless.&lt;&#x2F;p&gt;
+&lt;div class=&quot;eq&quot;&gt;&lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;90&lt;&#x2F;sub&gt;(A ∪ B) ≠ ½(P&lt;sub&gt;90&lt;&#x2F;sub&gt;(A) + P&lt;sub&gt;90&lt;&#x2F;sub&gt;(B))&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;p&gt;You also can&#x27;t recover the mean &lt;span class=&quot;m&quot;&gt;x&amp;#772;&lt;&#x2F;span&gt; from &lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;50&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt; and &lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;90&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt;: those say nothing about the top 10%, where the mean&#x27;s weight sits. Two pools with the &lt;em&gt;same&lt;&#x2F;em&gt; P50 and P90 can have wildly different averages — one&#x27;s slowest builds might top out at 25&amp;nbsp;min, another&#x27;s drag out to hours.&lt;&#x2F;p&gt;
+&lt;p&gt;Each percentile is its own independent cut of the data. To combine pools or projects, go back to the &lt;strong&gt;raw build durations&lt;&#x2F;strong&gt; (pool them and recompute), or keep a mergeable summary per pool like a &lt;strong&gt;histogram&lt;&#x2F;strong&gt; or &lt;strong&gt;t-digest&lt;&#x2F;strong&gt; and merge those &lt;em&gt;before&lt;&#x2F;em&gt; reading the percentile — never do arithmetic on the finished P90 numbers.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;details&gt;
+&lt;summary&gt;&quot;Mean and median are basically the same thing.&quot;&lt;&#x2F;summary&gt;
+&lt;p&gt;Only for symmetric data (toggle the chart in Part 4 to see them coincide). For anything with a tail — which is all latency — they diverge, and the gap is information: it tells you how skewed the data is.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;details&gt;
+&lt;summary&gt;&quot;A 2.37× P90&#x2F;P50 ratio looks bad.&quot;&lt;&#x2F;summary&gt;
+&lt;p&gt;It&#x27;s typical, not bad. Build and request systems commonly sit between 2× and 4×. A ratio drifting toward 5×+ signals an unstable tail worth investigating; a ratio near 1× would mean unusually consistent timing. 2.37× is normal variability with clear room to tighten.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;details&gt;
+&lt;summary&gt;&quot;These three numbers are enough.&quot;&lt;&#x2F;summary&gt;
+&lt;p&gt;Three things are missing: the &lt;strong&gt;sample count and time window&lt;&#x2F;strong&gt; (11.2 min over 50 builds is far less trustworthy than over 50,000), the &lt;strong&gt;P99 &#x2F; max&lt;&#x2F;strong&gt; (the real worst case lives past P90), and a &lt;strong&gt;trend over time&lt;&#x2F;strong&gt; (a single snapshot can&#x27;t say whether builds are getting faster or slower).&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;h2 id=&quot;part8&quot;&gt;Glossary&lt;&#x2F;h2&gt;
+&lt;dl class=&quot;gloss&quot;&gt;
+&lt;dt&gt;mean (average)&lt;&#x2F;dt&gt;&lt;dd&gt;&lt;span class=&quot;m&quot;&gt;x&amp;#772; = (1&#x2F;n) Σ&lt;sub&gt;i&lt;&#x2F;sub&gt; x&lt;sub&gt;i&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt;. Uses every point; sensitive to outliers. The distribution&#x27;s center of mass.&lt;&#x2F;dd&gt;
+&lt;dt&gt;median (P50)&lt;&#x2F;dt&gt;&lt;dd&gt;&lt;span class=&quot;m&quot;&gt;x&amp;#771; = P&lt;sub&gt;50&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt;, the middle order statistic of the sorted data — half below, half above. Robust to outliers.&lt;&#x2F;dd&gt;
+&lt;dt&gt;percentile (P&lt;em&gt;k&lt;&#x2F;em&gt;)&lt;&#x2F;dt&gt;&lt;dd&gt;&lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;k&lt;&#x2F;sub&gt; = inf{ x : F(x) ≥ k&#x2F;100 }&lt;&#x2F;span&gt;, the value below which &lt;span class=&quot;m&quot;&gt;k&lt;&#x2F;span&gt;% of measurements fall. &lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;50&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt; is the median.&lt;&#x2F;dd&gt;
+&lt;dt&gt;right-skew&lt;&#x2F;dt&gt;&lt;dd&gt;A distribution with a long high-side tail and a low-side bound. Produces &lt;span class=&quot;m&quot;&gt;x&amp;#772; &amp;gt; x&amp;#771;&lt;&#x2F;span&gt;. The natural shape of latency data.&lt;&#x2F;dd&gt;
+&lt;dt&gt;tail&lt;&#x2F;dt&gt;&lt;dd&gt;The slow minority of measurements (e.g. the slowest 10%, captured by &lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;90&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt;). Where most &quot;it&#x27;s sometimes slow&quot; pain lives.&lt;&#x2F;dd&gt;
+&lt;dt&gt;SLO&lt;&#x2F;dt&gt;&lt;dd&gt;Service Level Objective — a target almost always written on a percentile (e.g. &lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;95&lt;&#x2F;sub&gt; &amp;lt; 15&lt;&#x2F;span&gt; min) because percentiles are robust to single outliers.&lt;&#x2F;dd&gt;
+&lt;dt&gt;spread &#x2F; skew ratio&lt;&#x2F;dt&gt;&lt;dd&gt;&lt;span class=&quot;m&quot;&gt;P&lt;sub&gt;90&lt;&#x2F;sub&gt;&#x2F;P&lt;sub&gt;50&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt; measures tail spread; &lt;span class=&quot;m&quot;&gt;x&amp;#772;&#x2F;P&lt;sub&gt;50&lt;&#x2F;sub&gt;&lt;&#x2F;span&gt; measures skew. Quick gauges of how uneven a distribution is.&lt;&#x2F;dd&gt;
+&lt;&#x2F;dl&gt;
+&lt;h2 id=&quot;summary&quot;&gt;Summary&lt;&#x2F;h2&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;The mean is a balance point and moves with every outlier; the median and other percentiles are positions and ignore magnitude. Latency data has a floor but no ceiling, so it is right-skewed, so its mean sits above its median by default. To sanity-check a set of summary numbers, confirm the ordering (P50 &amp;lt; Mean &amp;lt; P90 for skewed data) and read the gaps as skew. Make decisions on percentiles; keep the mean only as a companion that reveals skew.&lt;&#x2F;p&gt;
+&lt;p class=&quot;corollary&quot;&gt;Build numbers verified consistent: P50 8.35 · Mean 11.2 · P90 19.8 min · June 2026&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;script&gt;
+&#x2F;&#x2F; Pure DOM toggle between the two static SVG figures — no canvas, no resize observers.
+var XSTAT_CAP = {
+  skew: &#x27;Right-skewed: a tall cluster of fast builds and a long tail. The mean (yellow) is dragged right of the median (blue) by that tail; P90 (red) sits far out in it.&#x27;,
+  sym: &#x27;Symmetric (hypothetical): with no tail, the mean and median coincide — they land on the same line. This is the only case where &quot;average&quot; and &quot;typical&quot; mean the same thing. Real latency rarely looks like this.&#x27;
+};
+function xstatShow(mode) {
+  var skew = mode === &#x27;skew&#x27;;
+  var fSkew = document.getElementById(&#x27;xsFigSkew&#x27;), fSym = document.getElementById(&#x27;xsFigSym&#x27;);
+  var bSkew = document.getElementById(&#x27;xsBtnSkew&#x27;), bSym = document.getElementById(&#x27;xsBtnSym&#x27;);
+  if (fSkew) fSkew.hidden = !skew;
+  if (fSym) fSym.hidden = skew;
+  if (bSkew) { bSkew.classList.toggle(&#x27;active&#x27;, skew); bSkew.setAttribute(&#x27;aria-selected&#x27;, String(skew)); }
+  if (bSym) { bSym.classList.toggle(&#x27;active&#x27;, !skew); bSym.setAttribute(&#x27;aria-selected&#x27;, String(!skew)); }
+  var cap = document.getElementById(&#x27;xstatCaption&#x27;);
+  if (cap) cap.textContent = XSTAT_CAP[mode];
+}
+&lt;&#x2F;script&gt;
+&lt;&#x2F;div&gt;
+</content>
+        
+    </entry>
+</feed>

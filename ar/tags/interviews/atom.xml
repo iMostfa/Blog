@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="ar">
+    <title>مصطفى - interviews</title>
+    <subtitle>أفكار وتجارب من مهندس حاسوب يطارد الأساسيات.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/ar/tags/interviews/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2022-07-28T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/ar/tags/interviews/atom.xml</id>
+    <entry xml:lang="ar">
+        <title>انترفيوهات تيكنكال - انستاباج</title>
+        <published>2022-07-28T00:00:00+00:00</published>
+        <updated>2022-07-28T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ar/blog/interview-instabug/"/>
+        <id>https://imostfa.github.io/Blog/ar/blog/interview-instabug/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ar/blog/interview-instabug/">&lt;p&gt;البلوج دي مختصرة، هي مش مفيدة اوي لأني مكملتش الانترفيو بروسيس، لكن هي مشاركة للتجربة و ممكن يكون فيها تفاصيل تفيد اللي هيقرا&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;mt-qdmt-l-nstbj&quot;&gt;امتى قدمت على انستاباج&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;قدمت عن طريق التواصل مع بشمهندس هشام في انستاباج (وبقدره جدا شخصيا علشان الكود بتاعه جامد اوي) كان هو منزل تويت انهم عاوزين ناس تقدم و انا بعت له الCV على تويتر DM و استنيت رده بعد كدا بعتلي لينك احجز ميعاد للتواصل معاه&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;tfsyl-lmytnj&quot;&gt;تفاصيل الميتنج&lt;&#x2F;h3&gt;
+&lt;p&gt;الميتنج كان بالعربي بدأ بأنه طلب مني اعرف نفسي وكدا و اتناقشنا في الخبرات السابقة&#x2F; و الحالية اللي عندي، وعن شغلي حاليا في الشركة اللي انا فيها و سألني اذا كنت استخدمت اي برودكات من انستاباج قبل كدا و عرفني بالبروداكتس و الاهداف اللي هما شغالين عليها في النهاية قالي انه البوزيشن بيتطلب سنين خبرة اكتر بكتير، ودا مش متوفر عندي&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;tfsyl-mhm-w-khty-y&quot;&gt;تفاصيل مهمة و اخطائي&lt;&#x2F;h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;كان فيه نقطة مهمة جدا، و انه الCV بتاعي مكانش مرتب كويس ودا سبب لخبطة للبشمهندس لأنه مكانش قادر يفهم مين بيودي على فين، و كان لينكد ان فيه تاريخ مختلف عن الCV و انا متأكد انه دي حاجة قطعا بتأثر على قرار اللي بيعمل الانترفيو، صلحتها بعد كدا&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;شركة بحجم انستاباج بتكون عايزة ناس اشتغلت على بروداكتس و ابلكيشنز ليها سكيل يوزرس كبير جدا، انا عندي بعض الكونتربيشونز الصغيرة في Firefox و Apple ودا كويس، بس لو كنت عملت اكتر كان ممكن دا يقنعهم بأنه يجي مني&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;شركة زي انستاباج الاساسي عندهم انك تكون فاهم كويس جدا الانترنالز&#x2F; كومبايلرز at some level لأنه الشغل في iOS مش عبارة عن UI زي اغلب الشركات&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;لو كنت عديت الانترفيو دا، التاسك اللي بيطلبوها عبارة عن Logger و تكتبله تيستنج،و mocking، لأني شوفت التاسك دي في الانترنشيب بعد كدا&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;بعد كدا لقيت بوست على الفيسبوك بيقول انهم عاوزين فعلا خبرة ٥ و ٤ سنين، ودا طبعا مش متوفر عندي حتى الان… انستاباج من الشركات الجميلة بصراحة اللي الواحد يتمنى في يوم يشتغل فيها مع الشباب الشاطريين جدا&lt;&#x2F;p&gt;
+&lt;p&gt;مشاركة التجربة دي غرضها انه افيد اي حد ممكن يكون محتاج يعرف الدنيا بتمشي ازاي، لأني مكنتش عارف الدنيا بتمشي ازاي و اتمنيت انه اللاقي حد بيتكلم عن اللي بيحصل…&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="ar">
+        <title>انترفيوهات تيكنكال - سويڤل</title>
+        <published>2022-06-12T00:00:00+00:00</published>
+        <updated>2022-06-12T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ar/blog/interview-swvl/"/>
+        <id>https://imostfa.github.io/Blog/ar/blog/interview-swvl/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ar/blog/interview-swvl/">&lt;h3 id=&quot;mt-qdmt-l-swyvl&quot;&gt;امتى قدمت على سويڤل&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;قدمت على سويفل في نهاية ٢٠٢١، و الانترفيو بروسيس بدأت في يناير&#x2F;فبراير، التواريخ مهمة لسببين&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;فيه حاجات كتير حصلت في سويفل بعد كدا، نزلوا ناسداك، و بعدها حصل تسريح ل٣٥٪ من الموظفين&lt;&#x2F;li&gt;
+&lt;li&gt;انا بكتب البلوج دي في يونيو، يعني بعد حوالي ٥ شهور من التقديم، بحاول افتكر كل حاجة من الملاحظات اللي جمعتها، ممكن اكون ناسي بعض التفاصيل&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;zy-qdmt-l-swyvl&quot;&gt;ازاي قدمت على سويڤل&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;قدمت على سويفل من خلال الموقع بتاعهم، بعد ما شوفت تويت ع تويتر للبشمهندس &lt;a rel=&quot;noopener external&quot; target=&quot;_blank&quot; href=&quot;https:&#x2F;&#x2F;twitter.com&#x2F;muhammadhani89&quot;&gt;محمد هانئ&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;وبصراحة انا بقدره جدا و ممتن ليه جدا، وهيبان في باقية البلوج ليه&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;myn-swyvl&quot;&gt;مين سويڤل&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;بصراحة انا ممكن اجيب الوصف الخاص بسويڤل من الانترنت بس عموما هكتبه بنفسي&lt;&#x2F;p&gt;
+&lt;p&gt;سويڤل شركة نقل جماعي بدأت من مصر، وبعدين نقلت دبي تقريبا، كان قديما فيه مشاكل بخصوص بيئة العمل في سويڤل، بس قيل انه الامور اتغيرت للأفضل&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;nzr-m-l-lntrfywht&quot;&gt;نظرة عامة على الانترفيوهات&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;الانترفيو على بوزيشن iOS في سويفل كان كالآتي&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;HR assessment&lt;&#x2F;li&gt;
+&lt;li&gt;Technical 1: Multiple Choice Questions + Simple Problem solving&lt;&#x2F;li&gt;
+&lt;li&gt;Meeting with Engineering manger&lt;&#x2F;li&gt;
+&lt;li&gt;Technical 2: With iOS Team, Swift&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;mklm-ltsh-r&quot;&gt;مكالمة الاتش ار&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;في ٢ فبراير جالي اميل من الاتش، اننا نحدد ميعاد الانترفيو، الانترفيو كان يوم جمعة الساعة الضهر&lt;&#x2F;p&gt;
+&lt;p&gt;الاتش ار كان علي امام، ولأنه من باكستان كان الانترفيو بالانجلش&lt;&#x2F;p&gt;
+&lt;p&gt;الاسئلة اللي فيه كانت زي&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;How do you learn new things&lt;&#x2F;li&gt;
+&lt;li&gt;How do you deal with conflicts&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;بشكل عام كانت مكالمة لطيفة، مكانتش فديو كول علشان الانترنت عندنا احنا الاتنين بعافية شوية ، بعدها شرحلي المراحل بتاعت الانترفيو و بعتلي لينك الامتحان بعدها بحاجة بسيطة&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;lsy-l-lkhs-bswift-ios-assessment&quot;&gt;الاسئلة الخاصة بSwift&#x2F; iOS Assessment&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;تاني مرحلة كانت عبارة عن لينك، فيه امتحان لسويفت&#x2F; iOS&lt;&#x2F;p&gt;
+&lt;p&gt;الاسئلة فيه كانت بتكاڤر اغلب اساسيات سويفت و البرمجة&lt;&#x2F;p&gt;
+&lt;p&gt;الاسئلة المالتبل تشويز بتكاڤر النقاط الآتية&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Dynamic Dispatching vs Static Dispatching&lt;&#x2F;li&gt;
+&lt;li&gt;Synchronous execution vs Asynchronous execution&lt;&#x2F;li&gt;
+&lt;li&gt;SOLID Principles&lt;&#x2F;li&gt;
+&lt;li&gt;how can we detect keyboard appearance &#x2F; disapperance&lt;&#x2F;li&gt;
+&lt;li&gt;how to store object in UserDefaults&lt;&#x2F;li&gt;
+&lt;li&gt;memory leak in Classes&#x2F; Deinit call&lt;&#x2F;li&gt;
+&lt;li&gt;Set DataStructure&lt;&#x2F;li&gt;
+&lt;li&gt;passing values to functions by inout&lt;&#x2F;li&gt;
+&lt;li&gt;value capturing&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;sw-l-ltechincal-challange&quot;&gt;سؤال الTechincal Challange&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;have the function StarRating(str) take the str parameter being passed which will be an average rating between 0.00 and 5.00, and convert this rating into a list of 5 image names to be displayed in a user interface to represent the rating as a list of stars and half stars. Ratings should be rounded up to the nearest half. There are 3 image file names available: “full.jpg”, “half.jpg”, “empty.jpg”. The output will be the name of the 5 images (without the extension), from left to right, separated by spaces. For example: if str is “2.36” then this should be displayed by the following image: So your program should return the string “full full half empty empty”.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;ntyj-wl-mthn&quot;&gt;نتيجة اول امتحان&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;كانت انه انا passed، و الخطوة اللي كانت بعدها انه هعمل ميتنج مع EM في سويفل، وهو مهندس محمد هانئ، وهو بصراحة شخصية جميلة جدا استفدت و اتعلمت منها كتير&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;mytnj-m-em-fy-swyvl&quot;&gt;ميتنج مع EM في سويڤل&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;الميتنج كان لذيذ جدا و خفيف مش موتر او بصيغة رسمية كان عبارة عن دردشة مع بشمهندس محمد هانئ، و كان فيه اسئلة زي&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;How do you deal with conflicts&lt;&#x2F;li&gt;
+&lt;li&gt;What do you know about AGILE&lt;&#x2F;li&gt;
+&lt;li&gt;What do you love about SWVL B2B&lt;&#x2F;li&gt;
+&lt;li&gt;Tell me about something hard you’ve worked on solving&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;وهو سمع اسئلتي برضوا و في المجمل حسيت انه الفيدباك ايجابي جدا من التواصل معاه وكان في المجمل مكالمة لذيذة، لكن النتيجة النهائية بعد كدا انه اترفضت.. ليه ؟&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;sbb-lrfd&quot;&gt;اسباب الرفض&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;بصراحة لا اخفيك ايها القارئ العزيز اني زعلت و اتدايقت اني اترفضت، خصوصا انه حسيت من المكالمة مع بشمهندس محمد، انه النقاش كان جيد يعني، تواصلت معاه وطلبت منه اني اعرف الاسباب علشان دا هيساعدني في الانترفيوهات اللي بعدها، بعد طلبي كلمني البشمهندس و وضحلي الاسباب من وجهة نظره&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;في اغلب اجاباتي كنت بتكلم عن دومين معين( Computer graphics Applications) او عن فرع معين من افرع البرمجة، ودا اعطى ايحاء انه انا معنديش خبرات اخرى في مجالات اخرى داخل الiOS، من وجهة نظري انا كنت بتكلم عنه لأنه معقد و صعب جدا و كوني قدرت افهمه فمن المنطقي اني متمرس في المجالات الاخرى من وجهة نظر البشمهندس، كان من الاحسن اني اقوله على حاجات كتير تانية اشتغلت عليها علشان يصله التنوع، ودا شيء بقيت بعمله في كل الانترفيوهات بعد كدا..
+محتاج اشتغل علي مشاريع تأثر على ناس اكتر، ويكون ليها مستخدمين كتير، لأنه الستارت-اب اللي انا كنت فيها مكانتش عملت ريليس للابلكيشن ، والمشاريع اللي اشتغلت عليها قبل كدا مكانش فيها الاف اليوزرس يعني وبالنسبة لشركة زي سويفل، هما عايزين حد متمرس في العمل على تطبيقات ليها مستخدمين كتير .. و اثناء كلامي نصحني انه احاول ابدأ اشوف شغل تاني و دي بصراحة كان اول مرة حد يقترح عليا الاقتراح دا، انه لازم ابدأ اشوف شركات اخرى لأنه كان بقالي سنة و شهرين في الشركة اللي انا فيها ، وهي نصيحة جميلة اشكره عليها..عدد سنين خبرتي مش كبير اوي، و هما محتاجين يكون عدد سنين الخبرة اكبر من كدا،
+مع تأكيده انه حاسس او يتوقع انه لو انا دخلت الانترفيو التيكنكال كنت غالبا هباس الامتحان&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;stfdt-yh-mn-ltjrb&quot;&gt;استفدت ايه من التجربة&lt;&#x2F;h3&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;فيه حاجات كتير استفدتها، الفيدباك من البشمهندس وضحت لي حاجات انا مكنتش بفكر فيها ثانيا، كانت اول مرة ادخل انترفيو مالتبل تشويز في الiOS و اظن اني جاوبت كل الاسئلة صح، بس البروبليم سولفينج مكانش اوبتمايزد ثالثًا، ادركت ايه اللي ممكن يفكر فيه EM بيعمل معايا انترفيو&lt;&#x2F;p&gt;
+&lt;p&gt;وبصراحة الحاجات دي كلها فادتني في الانترفيو اللي عملته بعد كدا، مع جوجل..&lt;&#x2F;p&gt;
+&lt;p&gt;مشاركة التجربة دي غرضها انه افيد اي حد ممكن يكون محتاج يعرف الدنيا بتمشي ازاي، لأني مكنتش عارف الدنيا بتمشي ازاي و اتمنيت انه اللاقي حد بيتكلم عن اللي بيحصل…&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="ar">
+        <title>انترفيوهات تيكنكال - المقدمة</title>
+        <published>2022-06-12T00:00:00+00:00</published>
+        <updated>2022-06-12T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ar/blog/interviews-introduction/"/>
+        <id>https://imostfa.github.io/Blog/ar/blog/interviews-introduction/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ar/blog/interviews-introduction/">&lt;p&gt;في السلسلة دي، هتكلم عن تجربتي في عمل انترفيوهات في اكتر من شركة معروفة زي جوجل، سويفل، انستاباج، و شركات في اوروبا 🇪🇸🇩🇪&lt;&#x2F;p&gt;
+&lt;p&gt;الغرض من كتابة السلسلة دي، هي مشاركة تجربتي مع الناس بحيث نفيد بعض، لأنه في بداية الانترفيوهات كان ومازال فيه حاجات كتير مش عارفها بخصوص ازاي اجاوب، ازاي اتكلم ؟ ايه صح ؟ ومازلت بتعلم، وكنت بدور عن ناس كتير كتبت او شاركت الناس الانترفيو بروسيس في كل شركة&lt;&#x2F;p&gt;
+&lt;p&gt;طبعا مش كل الانترفيوهات مشيت حلو، بس في كل انترفيو استفدت حاجة و اتعلمت حاجة&lt;&#x2F;p&gt;
+&lt;p&gt;اللي هعمله اني هحاول اكتب كل الخطوات، و الاسئلة اللي اتسألتها.. تواريخ الانترفيو مش محددة لأسباب فنية، بس كلها سنة ٢٠٢٢&lt;&#x2F;p&gt;
+&lt;p&gt;كل شركة هيكون ليها بوست، بيوضح فيه البروسيس كلها من اولها لغاية المرحلة اللي وصلت لها فيه شركات عديت فيها اكتر من مرحلة زي سويفل و روباستا وجوجل وفيه شركات اخرى عديت فيها مراحل اكتر، و شركات مراحل اقل في كل واحدة من دول استفدت استفادة كبيرة، و اتعاملت مع ناس شاطرة جدا ادتني ثقة و علمتني كتير&lt;&#x2F;p&gt;
+&lt;p&gt;المعلومات اللي هكتبها في البوستات، ماهي الا تجربتي، وانا في ٢٠٢٢ لسه متخرج يونيو ٢٠٢١، يعني صغنن 😂 لو فيه غلط اكون ممتن اني اعرفه&lt;&#x2F;p&gt;
+&lt;p&gt;الحاجات اللي هشاركها في البوستات هتكون زي&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;اسئلة الاتش ار🧗🏻‍♂️&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;اسئلة تيكنكال في الموبايل و خصوصا iOS 📱&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;اسئلة بيهاڤيورال🤝&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;اسئلة بشتغل على التاسكات التيكنكال 🏎&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;محاولتي في مذاكرة الداتا ستراكشتر و الجرويذم 🏗&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;اي حاجة تانية تيجي في بالي&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+</content>
+        
+    </entry>
+</feed>

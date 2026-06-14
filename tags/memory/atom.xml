@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Mostafa - memory</title>
+    <subtitle>Thoughts, learnings, and experiences from a computer engineer chasing the fundamentals.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/tags/memory/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2020-11-07T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/tags/memory/atom.xml</id>
+    <entry xml:lang="en">
+        <title>How to Know the Size of Your Types in Swift</title>
+        <published>2020-11-07T00:00:00+00:00</published>
+        <updated>2020-11-07T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/blog/memory-alignment-swift/"/>
+        <id>https://imostfa.github.io/Blog/blog/memory-alignment-swift/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/blog/memory-alignment-swift/">&lt;h1 id=&quot;how-to-know-the-size-of-your-types-in-swift&quot;&gt;How to Know the Size of Your Types in Swift&lt;&#x2F;h1&gt;
+&lt;p&gt;In Swift, any object or type has 3 properties that describe how memory interacts with it. In this post we’ll look at two of them - &lt;code&gt;size&lt;&#x2F;code&gt; and &lt;code&gt;alignment&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;size-package&quot;&gt;Size 📦&lt;&#x2F;h2&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;Say you have two &lt;code&gt;struct&lt;&#x2F;code&gt;s in your program like these:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Student&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Professor&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; phoneNumber:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; mostfa &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; Student&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;age&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 10&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; ahmed &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; Professor&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;age&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 10&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;phoneNumber&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 010&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If I asked you which object is larger - &lt;code&gt;mostfa&lt;&#x2F;code&gt; or &lt;code&gt;ahmed&lt;&#x2F;code&gt; - logic says &lt;code&gt;ahmed&lt;&#x2F;code&gt;, because it’s made of two variables: &lt;code&gt;age&lt;&#x2F;code&gt; and &lt;code&gt;phoneNumber&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;But how do we confirm that with actual numbers? We use &lt;code&gt;MemoryLayout&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;computer-memory-layout&quot;&gt;💻 Memory Layout&lt;&#x2F;h2&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;Swift has a type called &lt;code&gt;MemoryLayout&lt;&#x2F;code&gt; that lets us check the sizes of our types - like &lt;code&gt;Student&lt;&#x2F;code&gt;, &lt;code&gt;Professor&lt;&#x2F;code&gt;, or any built-in type like &lt;code&gt;String&lt;&#x2F;code&gt; or &lt;code&gt;Bool&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; studentSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;Student&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; professorSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;Professor&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span&gt;(studentSize)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F; prints 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span&gt;(professorSize)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;prints 16 😉&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;As expected, &lt;code&gt;Professor&lt;&#x2F;code&gt; takes up more memory.&lt;&#x2F;p&gt;
+&lt;p&gt;If we want to check specific instances like &lt;code&gt;mostfa&lt;&#x2F;code&gt; and &lt;code&gt;ahmed&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; mostfaSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;ofValue&lt;&#x2F;span&gt;&lt;span&gt;: mostfa)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; ahmedSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;ofValue&lt;&#x2F;span&gt;&lt;span&gt;: ahmed)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span&gt;(mostfaSize)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;prints 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span&gt;(ahmedSize)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;also prints 16&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;But why 8? And why 16? Let’s dig into size a bit more.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;back-to-size-package&quot;&gt;Back to Size 📦&lt;&#x2F;h2&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;In Swift, calculating the size of a struct is straightforward - &lt;strong&gt;the size of a struct equals the sum of the sizes of its properties&lt;&#x2F;strong&gt;. So:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Student&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;     let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; inSchool:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Bool&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; let&lt;&#x2F;span&gt;&lt;span&gt; intSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Int&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;prints out 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; let&lt;&#x2F;span&gt;&lt;span&gt; boolSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;  &#x2F;&#x2F;prints out 1&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; studentSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;Student&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;prints out 9 ( 1 + 8 )&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The struct has one &lt;code&gt;Int&lt;&#x2F;code&gt; and one &lt;code&gt;Bool&lt;&#x2F;code&gt;, so its size is 8 + 1 = 9. Easy, right? 🦹🏻‍♂️&lt;&#x2F;p&gt;
+&lt;p&gt;Now let’s verify with another example:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; OtherStudent&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; inSchool:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Bool&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This is the same as &lt;code&gt;Student&lt;&#x2F;code&gt; above - just with the properties in a different order. You’d expect the same size, right?&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; OtherStudentSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span&gt;OtherStudent&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F; 16 !&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It’s 16, not 9. That’s because of &lt;strong&gt;alignment&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;alignment&quot;&gt;Alignment&lt;&#x2F;h2&gt;
+&lt;p&gt;The alignment of any &lt;code&gt;Int&lt;&#x2F;code&gt; in Swift is 8. What does that mean? It means the memory address where an &lt;code&gt;Int&lt;&#x2F;code&gt; is stored must be a &lt;strong&gt;multiple of 8&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Say we have:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; A &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 88&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; b &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 17&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Both &lt;code&gt;A&lt;&#x2F;code&gt; and &lt;code&gt;b&lt;&#x2F;code&gt; must be placed at memory addresses that are multiples of 8. If &lt;code&gt;A&lt;&#x2F;code&gt; is at address 0 (a multiple of 8) and &lt;code&gt;b&lt;&#x2F;code&gt; is at address 8 (also a multiple of 8) - no problem.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;When do we have a problem? In this situation:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;*&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;A lot of other code in the app which will be saved in memory&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;*&#x2F;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; A &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 88&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If other data already occupies addresses 0 through 4, and we try to place &lt;code&gt;A&lt;&#x2F;code&gt; at address 5 - we can’t. Because 5 is not a multiple of 8. So the compiler places &lt;code&gt;A&lt;&#x2F;code&gt; at address 8 instead, leaving addresses 5, 6, and 7 empty (wasted as padding).&lt;&#x2F;p&gt;
+&lt;p&gt;This brings us back to the original question: why does &lt;code&gt;OtherStudent&lt;&#x2F;code&gt; have a different size than &lt;code&gt;Student&lt;&#x2F;code&gt;?&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;alignment-and-size-bowling&quot;&gt;Alignment and Size 🎳&lt;&#x2F;h2&gt;
+&lt;hr &#x2F;&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; boolAlignment &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;alignment&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;prints out 1&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; IntegerAlignment &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Int&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;alignment&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;  &#x2F;&#x2F;prints out 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Student&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;     let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F; alignment: 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; inSchool:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Bool&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;  &#x2F;&#x2F; alignment: 1&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Since &lt;code&gt;Bool&lt;&#x2F;code&gt; has alignment 1, it can go at any address (every number is a multiple of 1). Since &lt;code&gt;Int&lt;&#x2F;code&gt; has alignment 8, it must go at a multiple-of-8 address.&lt;&#x2F;p&gt;
+&lt;p&gt;For &lt;code&gt;Student&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Int&lt;&#x2F;code&gt; goes at address 0 (✅ multiple of 8)&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;Bool&lt;&#x2F;code&gt; goes at address 8 (✅ multiple of 1)&lt;&#x2F;li&gt;
+&lt;li&gt;Total size = 9&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;hr &#x2F;&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; OtherStudent&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; inSchool:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Bool&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;  &#x2F;&#x2F; alignment: 1 - goes at address 0 ✅&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;        &#x2F;&#x2F; alignment: 8 - can&amp;#39;t go at address 1 ❌&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;For &lt;code&gt;OtherStudent&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Bool&lt;&#x2F;code&gt; goes at address 0 (✅ multiple of 1)&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;Int&lt;&#x2F;code&gt; &lt;strong&gt;cannot&lt;&#x2F;strong&gt; go at address 1 (❌ not a multiple of 8)&lt;&#x2F;li&gt;
+&lt;li&gt;The compiler leaves addresses 1–7 as padding&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;Int&lt;&#x2F;code&gt; goes at address 8 (✅ multiple of 8)&lt;&#x2F;li&gt;
+&lt;li&gt;Total size = 16 🤯&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;So the &lt;strong&gt;order of properties in a struct matters&lt;&#x2F;strong&gt; - it can affect the size due to alignment padding.&lt;&#x2F;p&gt;
+&lt;p&gt;To be continued …&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>
