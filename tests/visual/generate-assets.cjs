@@ -2,6 +2,7 @@
 //   - static/favicon.png            (512x512)  — "M" monogram
 //   - static/apple-touch-icon.png   (180x180)  — same
 //   - content/ai-learnings/2026-06-14-mean-median-percentiles/card.png (1200x628)
+//   - content/ai-learnings/2026-06-12-clang-modules-bazel/card.png      (1200x628)
 //
 // Run inside the snapshot container:
 //   docker run --rm --platform=linux/arm64 -v "$PWD":/work \
@@ -19,6 +20,8 @@ const ACCENT = '#9bb1d6';
 const MUTED = 'rgba(255,255,255,0.55)';
 const P50 = '#79c0ff';
 const P90 = '#ff7b72';
+const GREEN = '#7ee787';
+const PANEL = '#17171b';
 
 const FONT =
   "-apple-system,'Segoe UI',Inter,Roboto,'Helvetica Neue',Arial,sans-serif";
@@ -87,6 +90,64 @@ const cardHtml = `<!doctype html><html><head><meta charset="utf-8"><style>
   </div>
 </body></html>`;
 
+// ── Share card: clang modules, the "two graphs must agree" figure ───────────
+// Reuses Part 2's module-graph-vs-target-graph idea: a header-import edge that
+// exists on the left has no matching deps edge on the right (case 1).
+const NODE = (x, y, label, sub) => `
+  <rect x="${x}" y="${y}" width="240" height="70" rx="12" fill="${PANEL}" stroke="${MUTED}" stroke-width="1.5"/>
+  <text x="${x + 120}" y="${sub ? y + 32 : y + 43}" font-size="22" font-weight="700" fill="${FG}" text-anchor="middle" font-family="${FONT}">${label}</text>
+  ${sub ? `<text x="${x + 120}" y="${y + 54}" font-size="17" fill="${P90}" text-anchor="middle" font-family="${FONT}">${sub}</text>` : ''}`;
+
+const cardModulesHtml = `<!doctype html><html><head><meta charset="utf-8"><style>
+  html,body{margin:0;padding:0;overflow:hidden}
+  .card{width:1200px;height:628px;background:${BG};color:${FG};
+    box-sizing:border-box;padding:72px 76px;position:relative;
+    font-family:${FONT};overflow:hidden}
+  .kicker{font-size:22px;font-weight:700;letter-spacing:.18em;
+    text-transform:uppercase;color:${ACCENT}}
+  h1{font-size:72px;line-height:1.04;margin:26px 0 0;font-weight:800;
+    letter-spacing:-0.02em;max-width:620px}
+  .sub{margin-top:18px;font-size:30px;color:${MUTED};font-weight:500}
+  .legend{position:absolute;left:76px;bottom:72px;display:flex;gap:34px;
+    font-size:24px;color:${MUTED};align-items:center}
+  .legend b{color:${FG};font-weight:700}
+  .brand{position:absolute;right:76px;bottom:70px;font-size:26px;
+    font-weight:700;color:${FG}}
+  .brand .at{color:${ACCENT}}
+  svg{position:absolute;right:34px;top:206px;width:600px;height:auto}
+</style></head><body>
+  <div class="card">
+    <div class="kicker">AI Learnings</div>
+    <h1>Clang Modules &amp; Bazel</h1>
+    <div class="sub">From first principles</div>
+
+    <svg viewBox="0 0 600 320" fill="none">
+      <defs>
+        <marker id="ok" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="${GREEN}"/></marker>
+        <marker id="bad" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="${P90}"/></marker>
+      </defs>
+      <text x="160" y="24" font-size="19" font-weight="700" letter-spacing="0.1em" fill="${ACCENT}" text-anchor="middle" font-family="${FONT}">MODULE GRAPH</text>
+      <text x="450" y="24" font-size="19" font-weight="700" letter-spacing="0.1em" fill="${ACCENT}" text-anchor="middle" font-family="${FONT}">TARGET GRAPH</text>
+      <line x1="305" y1="40" x2="305" y2="300" stroke="${MUTED}" stroke-width="1" stroke-dasharray="3 5"/>
+      ${NODE(40, 48, 'FBSDKCoreKit')}
+      ${NODE(40, 222, 'CoreKit_Basics')}
+      <line x1="160" y1="118" x2="160" y2="216" stroke="${GREEN}" stroke-width="4" marker-end="url(#ok)"/>
+      <text x="172" y="174" font-size="18" fill="${MUTED}" font-family="${FONT}">#import</text>
+      ${NODE(330, 48, 'FBSDKCoreKit', 'deps = [ ]')}
+      ${NODE(330, 222, 'CoreKit_Basics')}
+      <line x1="450" y1="118" x2="450" y2="216" stroke="${P90}" stroke-width="4" stroke-dasharray="7 6" marker-end="url(#bad)"/>
+      <circle cx="450" cy="167" r="19" fill="${BG}" stroke="${P90}" stroke-width="2.5"/>
+      <text x="450" y="176" font-size="26" font-weight="800" fill="${P90}" text-anchor="middle" font-family="${FONT}">✗</text>
+    </svg>
+
+    <div class="legend">
+      <span><span style="color:${GREEN};font-weight:800">━</span> import edge</span>
+      <span><span style="color:${P90};font-weight:800">┅</span> <b>missing</b> deps edge</span>
+    </div>
+    <div class="brand"><span class="at">/</span> mostafa</div>
+  </div>
+</body></html>`;
+
 (async () => {
   const browser = await chromium.launch({
     args: ['--no-sandbox', '--disable-dev-shm-usage'],
@@ -108,6 +169,12 @@ const cardHtml = `<!doctype html><html><head><meta charset="utf-8"><style>
     1200,
     628,
     'content/ai-learnings/2026-06-14-mean-median-percentiles/card.png',
+  );
+  await shoot(
+    cardModulesHtml,
+    1200,
+    628,
+    'content/ai-learnings/2026-06-12-clang-modules-bazel/card.png',
   );
 
   await browser.close();
