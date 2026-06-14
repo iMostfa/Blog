@@ -1,0 +1,15 @@
+{#- Override of Duckquill's card partial.
+    The theme builds the card URL from `colocated_path`, which keeps a page's
+    date prefix (e.g. 2026-06-14-…). But colocated assets are output at the
+    permalink, where Zola strips that date prefix — so the theme's URL 404s for
+    date-prefixed posts. Use the permalink instead. -#}
+{%- if page.extra.card -%}
+	{{ page.permalink | safe }}{{ page.extra.card }}
+{%- elif section.extra.card -%}
+	{{ section.permalink | safe }}{{ section.extra.card }}
+{%- elif page.extra.banner -%}
+	{%- set card = resize_image(path=page.colocated_path ~ page.extra.banner, width=1200, height=628, op="fill") -%}
+	{{ card.url }}
+{%- else -%}
+	{{ get_url(path="card.png") }}
+{%- endif -%}

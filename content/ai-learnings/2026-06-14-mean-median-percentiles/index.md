@@ -4,6 +4,9 @@ date = 2026-06-14
 
 [taxonomies]
 tags = ["statistics", "performance", "build-systems", "metrics", "ai-learnings"]
+
+[extra]
+card = "card.png"
 +++
 
 This write-up was distilled from a real session reading a build dashboard: three numbers —
