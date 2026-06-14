@@ -68,6 +68,13 @@ know Bazel has "rules". Nothing more is assumed.
 .xmod .gloss dt { font-weight:700; color:var(--accent); margin-top:.9rem; }
 .xmod .gloss dd { margin:0.15rem 0 0 0; font-size:.9rem; }
 .xmod table td, .xmod table th { font-size:.88rem; vertical-align:top; }
+.xmod figure { margin:1rem 0; }
+.xmod .fig svg { width:100%; height:auto; display:block; }
+.xmod .svg-cap { font-size:.82rem; color:var(--text-light); text-align:center; margin-top:.5rem; line-height:1.55; }
+.xmod .donut-wrap { display:flex; flex-wrap:wrap; gap:1.25rem 2rem; align-items:center; }
+.xmod .donut-wrap svg { width:200px; height:200px; flex-shrink:0; margin:0 auto; }
+.xmod .donut-wrap .legend { flex:1; min-width:250px; }
+.xmod .legend .ldot { display:inline-block; }
 @media (max-width:600px) { .xmod .toc-grid { grid-template-columns:1fr; } }
 </style>
 
@@ -126,6 +133,52 @@ know Bazel has "rules". Nothing more is assumed.
 <p>An <strong>xcframework</strong> is a wrapper directory holding one such framework per platform slice (device, simulator, …).</p>
 </div>
 </div>
+<figure class="fig">
+<svg viewBox="0 0 640 372" role="img" aria-label="Two side-by-side search-order flowcharts for resolving an import. The quote include &quot;X.h&quot; tries the including file's own directory first, then each -I directory, otherwise file not found. The angle include &lt;Y/Z.h&gt; tries each -I directory, then each -F framework directory, then system and SDK paths, otherwise file not found. The first step of the quote path and the framework step of the angle path are highlighted as the steps that explain cases 6 and 1 respectively.">
+  <defs>
+    <marker id="xmDown" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="var(--text-light)"/></marker>
+  </defs>
+  <!-- QUOTE lane -->
+  <rect x="35" y="14" width="255" height="42" rx="6" fill="var(--bg-light)" stroke="var(--accent)" stroke-width="1.5"/>
+  <text x="162" y="33" font-size="13" font-weight="700" fill="var(--accent)" text-anchor="middle" font-family="var(--mono-font)">#import "X.h"</text>
+  <text x="162" y="48" font-size="10.5" fill="var(--text-light)" text-anchor="middle">quote include</text>
+  <line x1="162" y1="58" x2="162" y2="75" stroke="var(--text-light)" stroke-width="1.4" marker-end="url(#xmDown)"/>
+  <rect x="35" y="78" width="255" height="52" rx="6" fill="var(--bg)" stroke="var(--xpos)" stroke-width="1.5"/>
+  <text x="48" y="100" font-size="12" font-weight="700" fill="var(--fg-color)">1 · Includer's own directory</text>
+  <text x="48" y="118" font-size="10.5" fill="var(--text-light)">"../Shared/X.h" resolves here — no flags</text>
+  <line x1="162" y1="132" x2="162" y2="151" stroke="var(--text-light)" stroke-width="1.4" marker-end="url(#xmDown)"/>
+  <text x="172" y="145" font-size="10" fill="var(--text-light)">not found ↓</text>
+  <rect x="35" y="154" width="255" height="52" rx="6" fill="var(--bg)" stroke="var(--border)" stroke-width="1.5"/>
+  <text x="48" y="176" font-size="12" font-weight="700" fill="var(--fg-color)">2 · each -I dir, in order</text>
+  <text x="48" y="194" font-size="10.5" fill="var(--text-light)">supplied by flags only</text>
+  <line x1="162" y1="208" x2="162" y2="227" stroke="var(--text-light)" stroke-width="1.4" marker-end="url(#xmDown)"/>
+  <text x="172" y="221" font-size="10" fill="var(--text-light)">not found ↓</text>
+  <rect x="35" y="230" width="255" height="42" rx="6" fill="var(--bg)" stroke="var(--xneg)" stroke-width="1.5"/>
+  <text x="162" y="256" font-size="12" font-weight="700" fill="var(--xneg)" text-anchor="middle">else → file not found</text>
+  <!-- ANGLE lane -->
+  <rect x="350" y="14" width="255" height="42" rx="6" fill="var(--bg-light)" stroke="var(--accent)" stroke-width="1.5"/>
+  <text x="477" y="33" font-size="13" font-weight="700" fill="var(--accent)" text-anchor="middle" font-family="var(--mono-font)">#import &lt;Y/Z.h&gt;</text>
+  <text x="477" y="48" font-size="10.5" fill="var(--text-light)" text-anchor="middle">angle include</text>
+  <line x1="477" y1="58" x2="477" y2="75" stroke="var(--text-light)" stroke-width="1.4" marker-end="url(#xmDown)"/>
+  <rect x="350" y="78" width="255" height="52" rx="6" fill="var(--bg)" stroke="var(--border)" stroke-width="1.5"/>
+  <text x="363" y="100" font-size="12" font-weight="700" fill="var(--fg-color)">1 · each -I dir</text>
+  <text x="363" y="118" font-size="10.5" fill="var(--text-light)">looks for &lt;dir&gt;/Y/Z.h</text>
+  <line x1="477" y1="132" x2="477" y2="151" stroke="var(--text-light)" stroke-width="1.4" marker-end="url(#xmDown)"/>
+  <text x="487" y="145" font-size="10" fill="var(--text-light)">not found ↓</text>
+  <rect x="350" y="154" width="255" height="52" rx="6" fill="var(--bg)" stroke="var(--xpos)" stroke-width="1.5"/>
+  <text x="363" y="176" font-size="12" font-weight="700" fill="var(--fg-color)">2 · each -F framework dir</text>
+  <text x="363" y="194" font-size="10.5" fill="var(--text-light)">&lt;dir&gt;/Y.framework/Headers/Z.h — case 1</text>
+  <line x1="477" y1="208" x2="477" y2="227" stroke="var(--text-light)" stroke-width="1.4" marker-end="url(#xmDown)"/>
+  <text x="487" y="221" font-size="10" fill="var(--text-light)">not found ↓</text>
+  <rect x="350" y="230" width="255" height="52" rx="6" fill="var(--bg)" stroke="var(--border)" stroke-width="1.5"/>
+  <text x="363" y="252" font-size="12" font-weight="700" fill="var(--fg-color)">3 · System / SDK paths</text>
+  <text x="363" y="270" font-size="10.5" fill="var(--text-light)">toolchain defaults</text>
+  <line x1="477" y1="284" x2="477" y2="303" stroke="var(--text-light)" stroke-width="1.4" marker-end="url(#xmDown)"/>
+  <rect x="350" y="306" width="255" height="42" rx="6" fill="var(--bg)" stroke="var(--xneg)" stroke-width="1.5"/>
+  <text x="477" y="332" font-size="12" font-weight="700" fill="var(--xneg)" text-anchor="middle">else → file not found</text>
+</svg>
+</figure>
+<p class="svg-cap">Resolution is just this walk down a list of locations. The <span style="color:var(--xpos);font-weight:700">green</span> steps need no target-private flags; every other step depends on a <code>-I</code> or <code>-F</code> that must be present <em>in the running compilation</em> — which is exactly what changes when a module is compiled in isolation (Parts 4–5).</p>
 <div class="card">
 <h4>The consequence that matters</h4>
 <p>Header resolution is governed entirely by <strong>which flags are on the command line of the compilation currently running</strong>. The same header can resolve in one compilation and fail in another with no change to any file — only the flag set differs. The entire migration is about <em>which compilation</em> parses each header, and therefore which flags are in effect.</p>
@@ -170,6 +223,37 @@ know Bazel has "rules". Nothing more is assumed.
 <p>The migration is the switch from the first to the second.</p>
 </div>
 </div>
+<figure class="fig">
+<svg viewBox="0 0 640 274" role="img" aria-label="Two graphs side by side over the same two nodes, FBSDKCoreKit and FBSDKCoreKit_Basics. On the left, the module graph, an arrow runs from FBSDKCoreKit down to FBSDKCoreKit_Basics, labelled by the umbrella header's angle import. On the right, the Bazel target graph, the same two nodes have no connecting edge because the SPM binary target was generated with deps equal to an empty list; the missing edge is drawn as a red dashed arrow with a cross. The caption states the two graphs must agree under explicit compilation.">
+  <defs>
+    <marker id="xmMA" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="var(--accent)"/></marker>
+    <marker id="xmMR" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="var(--xneg)"/></marker>
+  </defs>
+  <text x="170" y="26" font-size="12.5" font-weight="700" fill="var(--accent)" text-anchor="middle">Module graph — header imports</text>
+  <text x="475" y="26" font-size="12.5" font-weight="700" fill="var(--accent)" text-anchor="middle">Bazel target graph — deps</text>
+  <line x1="320" y1="42" x2="320" y2="258" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 4"/>
+  <!-- LEFT: module graph -->
+  <rect x="80" y="50" width="180" height="46" rx="6" fill="var(--bg-light)" stroke="var(--border)" stroke-width="1.5"/>
+  <text x="170" y="78" font-size="12.5" font-weight="700" fill="var(--fg-color)" text-anchor="middle" font-family="var(--mono-font)">FBSDKCoreKit</text>
+  <line x1="170" y1="96" x2="170" y2="182" stroke="var(--accent)" stroke-width="2" marker-end="url(#xmMA)"/>
+  <text x="180" y="134" font-size="10.5" fill="var(--text-light)">#import</text>
+  <text x="180" y="148" font-size="10.5" fill="var(--text-light)">&lt;…_Basics/…&gt;</text>
+  <rect x="80" y="186" width="180" height="46" rx="6" fill="var(--bg-light)" stroke="var(--border)" stroke-width="1.5"/>
+  <text x="170" y="214" font-size="11.5" font-weight="700" fill="var(--fg-color)" text-anchor="middle" font-family="var(--mono-font)">FBSDKCoreKit_Basics</text>
+  <!-- RIGHT: target graph -->
+  <rect x="385" y="50" width="180" height="46" rx="6" fill="var(--bg-light)" stroke="var(--border)" stroke-width="1.5"/>
+  <text x="475" y="73" font-size="12.5" font-weight="700" fill="var(--fg-color)" text-anchor="middle" font-family="var(--mono-font)">FBSDKCoreKit</text>
+  <text x="475" y="88" font-size="10" fill="var(--xneg)" text-anchor="middle" font-family="var(--mono-font)">deps = [ ]</text>
+  <line x1="475" y1="96" x2="475" y2="182" stroke="var(--xneg)" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#xmMR)"/>
+  <circle cx="475" cy="139" r="11" fill="var(--bg)" stroke="var(--xneg)" stroke-width="1.5"/>
+  <text x="475" y="143" font-size="13" font-weight="700" fill="var(--xneg)" text-anchor="middle">✗</text>
+  <text x="492" y="135" font-size="10.5" fill="var(--xneg)">edge</text>
+  <text x="492" y="149" font-size="10.5" fill="var(--xneg)">absent</text>
+  <rect x="385" y="186" width="180" height="46" rx="6" fill="var(--bg-light)" stroke="var(--border)" stroke-width="1.5"/>
+  <text x="475" y="214" font-size="11.5" font-weight="700" fill="var(--fg-color)" text-anchor="middle" font-family="var(--mono-font)">FBSDKCoreKit_Basics</text>
+</svg>
+</figure>
+<p class="svg-cap">The umbrella header creates a <span style="color:var(--accent);font-weight:700">module-graph edge</span>, but RSPM generated the binary target with <code>deps = []</code>, so the matching <span style="color:var(--xneg);font-weight:700">target-graph edge is missing</span>. Implicit mode never compared the two; explicit mode compiles each module in isolation and the gap becomes case 1's <code>file not found</code>.</p>
 
 <h2 id="part3">Part 3 — Bazel: the minimum working model</h2>
 <p>Six concepts are sufficient to read everything that follows.</p>
@@ -270,6 +354,34 @@ know Bazel has "rules". Nothing more is assumed.
 <p class="rule">Under explicit compilation, each module map is compiled in an isolated, sandboxed action whose visible inputs are the owning target's files plus its declared dependencies' providers. Consumer search paths do not exist inside that sandbox.</p>
 <p class="corollary"><strong>Corollary (root cause of cases 6 and 8):</strong> when the aspect constructs a PCM action for a target, it takes the compilation context from <code>CcInfo</code> — and forwards only <code>-D</code> defines from the target's <code>copts</code>. Since <code>copts</code> never enter CcInfo (Part 3 §4), any <code>-I</code> search path supplied via copts is <strong>absent</strong> from the PCM compile. Search paths reach a PCM action only through the <code>includes</code> attribute or a dependency's CcInfo.</p>
 </div>
+<figure class="fig">
+<svg viewBox="0 0 640 296" role="img" aria-label="Two boxes contrasting the same module import in two compilations. The left box, the consumer Swift compile, lists framework search paths merged from all dependencies — dash F facebook, braze, zendesk, sentry, and dash I lookin slash Shared — and the import of the sibling header resolves with a green check because the PCM is built inside this compilation and inherits its full flag set. The right box, the isolated PCM action sandbox, contains only FBSDKCoreKit's own framework files because deps is empty, so the same sibling import fails with a red file-not-found, since the consumer search paths do not exist inside the sandbox.">
+  <!-- LEFT: consumer compile -->
+  <rect x="22" y="40" width="292" height="240" rx="8" fill="var(--bg)" stroke="var(--xpos)" stroke-width="1.5"/>
+  <text x="168" y="26" font-size="12.5" font-weight="700" fill="var(--fg-color)" text-anchor="middle">Consumer Swift compile</text>
+  <text x="40" y="68" font-size="10.5" fill="var(--text-light)">search paths merged from all deps' CcInfo:</text>
+  <text x="40" y="92" font-size="11.5" fill="var(--fg-color)" font-family="var(--mono-font)">-F facebook&#160;&#160;-F braze</text>
+  <text x="40" y="112" font-size="11.5" fill="var(--fg-color)" font-family="var(--mono-font)">-F zendesk&#160;&#160;&#160;-F sentry</text>
+  <text x="40" y="132" font-size="11.5" fill="var(--fg-color)" font-family="var(--mono-font)">-I lookin/Shared&#160;&#160;…</text>
+  <line x1="40" y1="150" x2="296" y2="150" stroke="var(--border)" stroke-width="1"/>
+  <text x="40" y="178" font-size="11.5" font-weight="700" fill="var(--fg-color)">PCM built inside this compile</text>
+  <text x="40" y="206" font-size="11.5" fill="var(--xpos)" font-family="var(--mono-font)">#import &lt;…_Basics/…&gt;</text>
+  <text x="40" y="226" font-size="12.5" font-weight="700" fill="var(--xpos)">✓ resolves</text>
+  <text x="40" y="252" font-size="10.5" fill="var(--text-light)">inherits the full flag set</text>
+  <!-- RIGHT: isolated PCM sandbox -->
+  <rect x="326" y="40" width="292" height="240" rx="8" fill="var(--bg)" stroke="var(--xneg)" stroke-width="1.5"/>
+  <text x="472" y="26" font-size="12.5" font-weight="700" fill="var(--fg-color)" text-anchor="middle">Isolated PCM action — sandbox</text>
+  <text x="344" y="68" font-size="10.5" fill="var(--text-light)">visible inputs (deps = [ ]):</text>
+  <text x="344" y="92" font-size="11.5" fill="var(--fg-color)" font-family="var(--mono-font)">FBSDKCoreKit/ own files</text>
+  <text x="344" y="116" font-size="10.5" fill="var(--text-light)">— nothing else exists here —</text>
+  <line x1="344" y1="150" x2="600" y2="150" stroke="var(--border)" stroke-width="1"/>
+  <text x="344" y="178" font-size="11.5" font-weight="700" fill="var(--fg-color)">PCM built as its own action</text>
+  <text x="344" y="206" font-size="11.5" fill="var(--xneg)" font-family="var(--mono-font)">#import &lt;…_Basics/…&gt;</text>
+  <text x="344" y="226" font-size="12.5" font-weight="700" fill="var(--xneg)">✗ file not found</text>
+  <text x="344" y="252" font-size="10.5" fill="var(--text-light)">consumer -F paths absent here</text>
+</svg>
+</figure>
+<p class="svg-cap">Same import, two worlds. The consumer compile sees every dependency's search paths merged together, so a sibling resolves incidentally; the isolated PCM action sees only declared inputs, so the identical line fails. That difference is the entire migration.</p>
 
 <h2 id="part6">Part 6 — Case studies: nine failures, in build order</h2>
 <p>Each entry names the failing action, explains why the same code compiled under implicit mode, derives the root cause from Parts 1–5, and documents the fix.</p>
@@ -416,13 +528,24 @@ know Bazel has "rules". Nothing more is assumed.
 <h2 id="part7">Part 7 — Root-cause classification</h2>
 <p>The nine failures reduce to four categories, each with a distinct diagnostic signature and fix mechanism.</p>
 <div class="diagram">
-<div class="chart-wrap"><canvas id="xmodCausesChart" role="img" aria-label="Doughnut chart grouping the nine migration failures into four root-cause categories: missing dependency edges (3), invalid vendor metadata (3), toolchain coverage gaps (2), and path hygiene (1)"></canvas></div>
+<div class="donut-wrap">
+<svg viewBox="0 0 220 220" role="img" aria-label="Doughnut chart grouping the nine migration failures into four root-cause categories: missing dependency edges, 3 of 9; invalid vendor metadata, 3 of 9; toolchain coverage gaps, 2 of 9; and path hygiene, 1 of 9.">
+  <g stroke="var(--bg-light)" stroke-width="3">
+    <path d="M110,20 A90 90 0 0 1 187.94,155 L156.77,137 A54 54 0 0 0 110,56 Z" fill="var(--accent)"><title>Missing dependency edges — 3 of 9</title></path>
+    <path d="M187.94,155 A90 90 0 0 1 32.06,155 L63.23,137 A54 54 0 0 0 156.77,137 Z" fill="var(--link)"><title>Invalid vendor metadata — 3 of 9</title></path>
+    <path d="M32.06,155 A90 90 0 0 1 52.15,41.06 L75.29,68.64 A54 54 0 0 0 63.23,137 Z" fill="var(--accent-light)"><title>Toolchain coverage gaps — 2 of 9</title></path>
+    <path d="M52.15,41.06 A90 90 0 0 1 110,20 L110,56 A54 54 0 0 0 75.29,68.64 Z" fill="var(--text-light)"><title>Path hygiene — 1 of 9</title></path>
+  </g>
+  <text x="110" y="105" font-size="34" font-weight="800" fill="var(--fg-color)" text-anchor="middle">9</text>
+  <text x="110" y="128" font-size="12" fill="var(--text-light)" text-anchor="middle">failures</text>
+</svg>
 <ul class="legend" id="xmodLegend">
-<li><span class="ldot" data-seg="0"></span><span><strong>Missing dependency edges — 3</strong><span class="ld">Cases 1, 3, 5. Header-level imports with no corresponding deps edge. Fix: target_deps.</span></span></li>
-<li><span class="ldot" data-seg="1"></span><span><strong>Invalid vendor metadata — 3</strong><span class="ld">Cases 2, 4, 7. Module maps and headers that were wrong but never compiled. Fix: rules patch, source patch, rename.</span></span></li>
-<li><span class="ldot" data-seg="2"></span><span><strong>Toolchain coverage gaps — 2</strong><span class="ld">Cases 6, 8. Inputs carried in copts or flags that the aspect cannot see. Fix: include rewrite, per-target opt-out.</span></span></li>
-<li><span class="ldot" data-seg="3"></span><span><strong>Path hygiene — 1</strong><span class="ld">Case 9. Whitespace in paths mishandled by the new action's params files. Fix: rename.</span></span></li>
+<li><span class="ldot" style="background:var(--accent)"></span><span><strong>Missing dependency edges — 3</strong><span class="ld">Cases 1, 3, 5. Header-level imports with no corresponding deps edge. Fix: target_deps.</span></span></li>
+<li><span class="ldot" style="background:var(--link)"></span><span><strong>Invalid vendor metadata — 3</strong><span class="ld">Cases 2, 4, 7. Module maps and headers that were wrong but never compiled. Fix: rules patch, source patch, rename.</span></span></li>
+<li><span class="ldot" style="background:var(--accent-light)"></span><span><strong>Toolchain coverage gaps — 2</strong><span class="ld">Cases 6, 8. Inputs carried in copts or flags that the aspect cannot see. Fix: include rewrite, per-target opt-out.</span></span></li>
+<li><span class="ldot" style="background:var(--text-light)"></span><span><strong>Path hygiene — 1</strong><span class="ld">Case 9. Whitespace in paths mishandled by the new action's params files. Fix: rename.</span></span></li>
 </ul>
+</div>
 </div>
 
 <h2 id="part8">Part 8 — Diagnostic reference</h2>
@@ -493,9 +616,7 @@ know Bazel has "rules". Nothing more is assumed.
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
-var xmodChart = null;
 function xmodShowMode(mode) {
   var isImplicit = mode === 'implicit';
   document.getElementById('panelImplicit').classList.toggle('active', isImplicit);
@@ -505,58 +626,4 @@ function xmodShowMode(mode) {
   document.getElementById('btnImplicit').setAttribute('aria-selected', isImplicit);
   document.getElementById('btnExplicit').setAttribute('aria-selected', !isImplicit);
 }
-function xmodChartColors() {
-  var s = getComputedStyle(document.documentElement);
-  return [
-    s.getPropertyValue('--accent').trim(),
-    s.getPropertyValue('--link').trim(),
-    s.getPropertyValue('--accent-light').trim(),
-    s.getPropertyValue('--text-light').trim()
-  ];
-}
-function xmodBuildChart() {
-  if (typeof Chart === 'undefined') return;
-  var canvas = document.getElementById('xmodCausesChart');
-  if (!canvas) return;
-  if (xmodChart) { xmodChart.destroy(); xmodChart = null; }
-  var s = getComputedStyle(document.documentElement);
-  var colors = xmodChartColors();
-  xmodChart = new Chart(canvas, {
-    type: 'doughnut',
-    data: {
-      labels: ['Missing dependency edges', 'Invalid vendor metadata', 'Toolchain coverage gaps', 'Path hygiene'],
-      datasets: [{
-        data: [3, 3, 2, 1],
-        backgroundColor: colors,
-        borderColor: s.getPropertyValue('--bg-light').trim(),
-        borderWidth: 3,
-        hoverOffset: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false,
-      cutout: '60%',
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          enabled: true,
-          callbacks: {
-            label: function(c) { return ' ' + c.parsed + ' of 9 failures (' + Math.round(c.parsed / 9 * 100) + '%)'; }
-          }
-        }
-      }
-    }
-  });
-  document.querySelectorAll('#xmodLegend .ldot').forEach(function(dot) {
-    dot.style.background = colors[parseInt(dot.dataset.seg, 10)];
-  });
-}
-document.addEventListener('DOMContentLoaded', function() {
-  xmodBuildChart();
-  new MutationObserver(function(muts) {
-    muts.forEach(function(m) { if (m.attributeName === 'data-theme') xmodBuildChart(); });
-  }).observe(document.documentElement, { attributes: true });
-});
 </script>
