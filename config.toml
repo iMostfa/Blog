@@ -33,6 +33,7 @@ display_author = true
 header_nav = [
   { url = "/", name_en = "/home/", name_ar = "/الرئيسية/" },
   { url = "/blog", name_en = "/blog/", name_ar = "/مقالات/" },
+  { url = "/ai-learnings", name_en = "/ai-learnings/", name_ar = "/دروس-الذكاء/" },
   { url = "/about", name_en = "/about/", name_ar = "/عني/" },
 ]
 
