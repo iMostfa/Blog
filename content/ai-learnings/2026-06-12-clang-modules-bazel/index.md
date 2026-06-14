@@ -4,6 +4,9 @@ date = 2026-06-12
 
 [taxonomies]
 tags = ["bazel", "build-systems", "ios", "swift", "ai-learnings"]
+
+[extra]
+card = "card.png"
 +++
 
 This write-up was distilled from a real migration session: enabling explicit Clang modules
