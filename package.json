@@ -1,0 +1,16 @@
+{
+  "name": "blog-visual-tests",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Visual snapshot tests for the blog (Playwright, run in a pinned linux/amd64 container so baselines match CI).",
+  "scripts": {
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots",
+    "snap:image": "docker build --platform=linux/arm64 -t blog-snapshots -f tests/visual/Dockerfile .",
+    "snap:test": "npm run snap:image && docker run --rm --platform=linux/arm64 -v \"$PWD\":/work -v blog-snap-modules:/work/node_modules -w /work blog-snapshots sh -lc \"npm install --no-audit --no-fund && npm run test:visual\"",
+    "snap:update": "npm run snap:image && docker run --rm --platform=linux/arm64 -v \"$PWD\":/work -v blog-snap-modules:/work/node_modules -w /work blog-snapshots sh -lc \"npm install --no-audit --no-fund && npm run test:visual:update\""
+  },
+  "devDependencies": {
+    "@playwright/test": "1.49.1"
+  }
+}

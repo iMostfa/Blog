@@ -1,0 +1,42 @@
+name: Visual snapshots
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  visual:
+    # arm64 runner so rendering matches local Apple Silicon baselines exactly.
+    # Free for public repositories.
+    runs-on: ubuntu-24.04-arm
+    # Same image used locally (tests/visual/Dockerfile) so committed baselines
+    # match exactly. Keep this tag in sync with package.json + the Dockerfile.
+    container:
+      image: mcr.microsoft.com/playwright:v1.49.1-jammy
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Zola
+        run: |
+          ZOLA_VERSION=0.22.1
+          curl -sSL "https://github.com/getzola/zola/releases/download/v${ZOLA_VERSION}/zola-v${ZOLA_VERSION}-aarch64-unknown-linux-gnu.tar.gz" \
+            | tar -xz -C /usr/local/bin
+          zola --version
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run visual snapshot tests
+        run: npx playwright test
+
+      - name: Upload report (diffs on failure)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

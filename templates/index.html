@@ -1,33 +1,53 @@
 {% extends "base.html" %}
 
 {% block content %}
-    {{ section.content | safe }}
+{%- set date_format = macros_translate::translate(key="date_format", default="%B %d, %Y", language_strings=language_strings) -%}
+{%- set date_locale = macros_translate::translate(key="date_locale", default="en_US", language_strings=language_strings) -%}
 
-    {% if lang == config.default_language %}
-        {% set blog = get_section(path="blog/_index.md") %}
-    {% else %}
-        {% set blog = get_section(path="blog/_index." ~ lang ~ ".md") %}
-    {% endif %}
-    <ul class="posts">
-        {% for page in blog.pages %}
-        <li>
-            <a href="{{ page.permalink }}">{{ page.title }}</a>
-            <span class="date">{{ page.date | date(format="%Y-%m-%d") }}</span>
-        </li>
-        {% endfor %}
-    </ul>
+{# Intro / landing copy from content/_index.md (or _index.ar.md). #}
+{{ section.content | safe }}
 
-    {% if paginator %}
-        {% include "partials/pagination.html" %}
-    {% endif %}
+{# Recent blog posts. #}
+{%- if lang == config.default_language -%}
+	{%- set blog = get_section(path="blog/_index.md") -%}
+{%- else -%}
+	{%- set blog = get_section(path="blog/_index." ~ lang ~ ".md") -%}
+{%- endif -%}
 
-    {% set tags = get_taxonomy(kind="tags", lang=lang) %}
-    {% if tags.items %}
-    <h2>Tags</h2>
-    <div class="tags">
-        {% for term in tags.items %}
-        <a href="{{ term.permalink }}" class="tag">#{{ term.name }}</a>
-        {% endfor %}
-    </div>
-    {% endif %}
-{% endblock %}
+{%- if blog.pages -%}
+	<h2>{{ macros_translate::translate(key="Blog", default="Blog", language_strings=language_strings) }}</h2>
+	<div id="article-list">
+		{%- for page in blog.pages | slice(end=5) %}
+			<article>
+				<a href="{{ page.permalink | safe }}"></a>
+				<h3>
+					<a href="{{ page.permalink | safe }}">{{ page.title }}</a>
+				</h3>
+				{%- if page.description %}
+					{{ page.description | markdown | safe }}
+				{%- endif %}
+				{%- if page.date -%}
+					<div class="details">
+						<small>
+							<time datetime="{{ page.date | date(format='%+') }}" pubdate>
+								{{- page.date | date(format=date_format, locale=date_locale) -}}
+							</time>
+						</small>
+					</div>
+				{%- endif -%}
+			</article>
+		{%- endfor %}
+	</div>
+{%- endif -%}
+
+{# Tags cloud. #}
+{%- set tags = get_taxonomy(kind="tags", lang=lang) -%}
+{%- if tags.items -%}
+	<h2>{{ macros_translate::translate(key="tags", default="Tags", language_strings=language_strings) }}</h2>
+	<ul class="tags">
+		{%- for term in tags.items %}
+			<li><a class="tag" href="{{ term.permalink }}">{{ term.name }}</a></li>
+		{%- endfor %}
+	</ul>
+{%- endif -%}
+{% endblock content %}
