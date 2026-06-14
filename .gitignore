@@ -1,5 +1,8 @@
 public/
 
+# Bazel convenience symlinks (bazel-bin, bazel-out, bazel-<workspace>, ...)
+/bazel-*
+
 # Node / Playwright
 node_modules/
 /test-results/

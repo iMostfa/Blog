@@ -1,0 +1,23 @@
+load("@rules_playwright//playwright:defs.bzl", "playwright_browser_matrix", "playwright_integrity_map")
+
+# Bootstrap helper: `bazel run //tools/playwright:integrity_map` prints sha256
+# integrity values for the pinned Playwright browsers. Paste the output into the
+# `integrity_path_map` of `playwright.repo(...)` in MODULE.bazel so browser
+# downloads are checksum-pinned (fully hermetic). Re-run when bumping Playwright.
+playwright_integrity_map(
+    name = "integrity_map",
+    # Downloads large browser archives; keep out of `//...` wildcards.
+    tags = ["manual"],
+    browsers = playwright_browser_matrix(
+        browser_names = [
+            "chromium",
+            "chromium-headless-shell",
+        ],
+        platforms = [
+            "mac14-arm64",
+            "ubuntu24.04-x64",
+            "ubuntu24.04-arm64",
+        ],
+        playright_repo_name = "playwright",
+    ),
+)

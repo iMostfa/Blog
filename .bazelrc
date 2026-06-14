@@ -1,0 +1,16 @@
+# Bzlmod is the only dependency system (no WORKSPACE).
+common --enable_bzlmod
+
+# Surface failing test logs without needing --test_output on every invocation.
+test --test_output=errors
+
+# Keep actions from leaking arbitrary host environment into the sandbox.
+build --incompatible_strict_action_env
+
+# rules_playwright unzips the browser as a tree artifact and needs source dirs
+# tracked so the browser bundle is materialised correctly.
+startup --host_jvm_args=-DBAZEL_TRACK_SOURCE_DIRECTORIES=1
+
+# Convenience config for CI (linux): non-interactive, more log on failure.
+build:ci --show_timestamps
+test:ci --test_output=errors --keep_going

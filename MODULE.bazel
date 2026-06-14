@@ -1,0 +1,53 @@
+"""Bazel module for the Zola blog: hermetic build + visual tests."""
+
+module(
+    name = "blog",
+    version = "0.0.0",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "platforms", version = "0.0.10")
+bazel_dep(name = "aspect_rules_js", version = "3.2.2")
+bazel_dep(name = "rules_playwright", version = "0.5.3")
+
+# Force a Bazel 9-compatible aspect_bazel_lib (older versions transitively
+# pulled in by rules_playwright use APIs removed in Bazel 9).
+bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
+
+# Hermetic Zola binary -> @zola//:zola_bin
+zola_ext = use_extension("//tools/zola:extensions.bzl", "zola")
+use_repo(zola_ext, "zola")
+
+# Node / npm dependencies for the Playwright visual tests, from the existing
+# package-lock.json (no separate pnpm lockfile needed).
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)
+npm.npm_translate_lock(
+    name = "npm",
+    pnpm_lock = "//:pnpm-lock.yaml",
+    verify_node_modules_ignored = "//:.bazelignore",
+)
+use_repo(npm, "npm")
+
+# Hermetic pnpm (used to (re)generate pnpm-lock.yaml).
+pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm")
+use_repo(pnpm, "pnpm")
+
+# Hermetic Playwright browser (full Chromium) pinned to the @playwright/test
+# version used by the suite.
+playwright = use_extension("@rules_playwright//playwright:extensions.bzl", "playwright")
+playwright.repo(
+    name = "playwright",
+    playwright_version = "1.49.1",
+    # Checksum-pin the Chromium builds (revision 1148) for the platforms we run
+    # on — macOS arm64 (local) and Linux x64/arm64 (CI). Regenerate with
+    # `bazel build //tools/playwright:integrity_map` after bumping Playwright.
+    integrity_path_map = {
+        "builds/chromium/1148/chromium-mac-arm64.zip": "sha256-mOnjyatnEPvI9iqi1IULtmTFouNBWz8oWN8cZL5e8cU=",
+        "builds/chromium/1148/chromium-headless-shell-mac-arm64.zip": "sha256-7jf+UNEgGXBPK3EJGs6lY1GYMKAn35c+5YwD/QgQO8I=",
+        "builds/chromium/1148/chromium-linux.zip": "sha256-dFXRe0B7vNHMMMW8i8gfpOZ6wTY129XKgfeCTsS1BDk=",
+        "builds/chromium/1148/chromium-headless-shell-linux.zip": "sha256-Q8jx4p4InZdl7YMIPrvKp8f+WCqnYtBnj4iDi1XZL2M=",
+        "builds/chromium/1148/chromium-linux-arm64.zip": "sha256-98S7kf4nQ1gRIuBBXI03UFU4PLaBDCuyOtp1XeMKhWc=",
+        "builds/chromium/1148/chromium-headless-shell-linux-arm64.zip": "sha256-vmVBN2S3U/tzGH3R12DMZiJzDypNojkj7vdpc8F/slw=",
+    },
+)
+use_repo(playwright, "playwright")

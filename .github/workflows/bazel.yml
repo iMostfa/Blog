@@ -1,0 +1,65 @@
+name: Bazel
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    # Linux so the visual baselines (committed as *-linux.png) are comparable.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The duckquill theme is a git submodule and is a build input.
+          submodules: recursive
+
+      - name: Install Bazelisk
+        run: |
+          sudo curl -sSL -o /usr/local/bin/bazel \
+            https://github.com/bazelbuild/bazelisk/releases/download/v1.28.1/bazelisk-linux-amd64
+          sudo chmod +x /usr/local/bin/bazel
+          bazel version
+
+      - name: Cache Bazel
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/bazel
+          key: bazel-${{ runner.os }}-${{ hashFiles('MODULE.bazel', 'pnpm-lock.yaml', '.bazelversion') }}
+          restore-keys: bazel-${{ runner.os }}-
+
+      # Hermetic build + the cross-platform check gate.
+      - name: Build site + run checks
+        run: bazel test //... --config=ci
+
+      - name: Build production site artifact
+        run: bazel build //:site
+
+      - name: Upload built site
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: bazel-bin/site/public
+          retention-days: 14
+
+      # Visual snapshots via the hermetic Playwright toolchain. NOTE: the
+      # committed *-linux baselines were produced by the Docker/Playwright-image
+      # flow (.github/workflows/visual.yml). The Bazel path uses rules_playwright's
+      # own Chromium, so the first run here may differ until baselines are
+      # regenerated for this toolchain (`bazel run //:update_snapshots` on Linux).
+      # Kept non-blocking; the authoritative visual gate remains visual.yml.
+      - name: Visual snapshot tests (Bazel/Playwright)
+        id: visual
+        continue-on-error: true
+        run: bazel test //:visual_test --config=ci
+
+      - name: Upload visual diffs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bazel-playwright-results
+          path: bazel-testlogs/visual_test/test.outputs/
+          if-no-files-found: ignore
+          retention-days: 14

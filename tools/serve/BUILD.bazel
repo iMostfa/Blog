@@ -1,0 +1,9 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
+
+# Dependency-free static file server (hermetic Node) used by the visual tests
+# to serve the pre-built site.
+js_binary(
+    name = "static_server",
+    entry_point = "serve.mjs",
+    visibility = ["//visibility:public"],
+)

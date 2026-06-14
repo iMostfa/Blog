@@ -1,0 +1,8 @@
+# Package marker for the Zola toolchain helpers.
+# Rules are loaded from //tools/zola:defs.bzl and the module extension from
+# //tools/zola:extensions.bzl.
+
+exports_files([
+    "defs.bzl",
+    "extensions.bzl",
+])

@@ -1,0 +1,121 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@npm//:@playwright/test/package_json.bzl", playwright_bin = "bin")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//tools/zola:defs.bzl", "zola_site")
+
+npm_link_all_packages(name = "node_modules")
+
+# All Zola inputs except config.toml. The duckquill theme is a checked-out git
+# submodule, so its files are globbed directly (its .git pointer is excluded).
+filegroup(
+    name = "site_srcs",
+    srcs = glob(
+        [
+            "content/**",
+            "templates/**",
+            "static/**",
+            "i18n/**",
+            "themes/duckquill/**",
+        ],
+        exclude = [
+            "themes/duckquill/.git/**",
+            "themes/duckquill/.git",
+        ],
+        allow_empty = False,
+    ),
+    visibility = ["//visibility:public"],
+)
+
+# Production build (uses the base_url from config.toml).
+zola_site(
+    name = "site",
+    config = "config.toml",
+    srcs = [":site_srcs"],
+    visibility = ["//visibility:public"],
+)
+
+# Test build: same site, but with a localhost base_url so the static server
+# used by the visual tests serves correct absolute asset/link URLs at :8765.
+zola_site(
+    name = "site_test",
+    config = "config.toml",
+    srcs = [":site_srcs"],
+    base_url = "http://localhost:8765",
+    visibility = ["//visibility:public"],
+)
+
+# Hermetic, cross-platform gate: asserts the site builds offline.
+build_test(
+    name = "check_site",
+    targets = [":site"],
+)
+
+# ---------------------------------------------------------------------------
+# Visual snapshot tests (Playwright + hermetic Chromium).
+#
+# The test serves the site with the hermetic `zola serve` (same render path as
+# the legacy npm flow) and drives Chromium provided by rules_playwright.
+#
+# NOTE: committed baselines are `-linux` PNGs. This target compares against
+# baselines for the *host* OS, so it is authoritative only on Linux (CI). On
+# macOS, Playwright looks for `-darwin` baselines (absent) and the test reports
+# missing snapshots — use `bazel run //:update_snapshots` to generate local
+# ones, or rely on the Linux CI run.
+# ---------------------------------------------------------------------------
+
+# Everything the test needs at runtime: the spec + config + baselines, the
+# Playwright npm package, the hermetic Chromium, the pre-built site, and the
+# static server that serves it.
+_VISUAL_DATA = [
+    "playwright.config.ts",
+    "package.json",
+    ":site_test",
+    "//tools/serve:static_server",
+    "//:node_modules/@playwright/test",
+    # Full Chromium for headed runs; headless-shell is what Playwright 1.49 uses
+    # for headless (the default in this suite).
+    "@playwright//:chromium",
+    "@playwright//:chromium-headless-shell",
+] + glob([
+    "tests/visual/visual.spec.ts",
+    "tests/visual/visual.spec.ts-snapshots/**",
+])
+
+_VISUAL_ENV = {
+    # Parent dir of the unzipped browser builds, where Playwright expects them.
+    "PLAYWRIGHT_BROWSERS_PATH": "$(rootpath @playwright//:chromium-headless-shell)/../",
+    # The static server binary + the directory it should serve (the built site).
+    "STATIC_SERVER": "$(rootpath //tools/serve:static_server)",
+    "SITE_DIR": "$(rootpath :site_test)",
+    "CI": "1",
+}
+
+playwright_bin.playwright_test(
+    name = "visual_test",
+    args = ["test"],
+    data = _VISUAL_DATA,
+    env = _VISUAL_ENV,
+    tags = [
+        "no-sandbox",
+        # The static server binds a local socket.
+        "requires-network",
+        # Committed baselines are -linux; this target compares against the host
+        # OS, so it's only authoritative on Linux (CI runs it explicitly).
+        # `manual` keeps `bazel test //...` green on non-Linux dev machines.
+        "manual",
+    ],
+)
+
+playwright_bin.playwright_binary(
+    name = "update_snapshots",
+    args = [
+        "test",
+        "--update-snapshots",
+    ],
+    data = _VISUAL_DATA,
+    env = _VISUAL_ENV | {
+        "UPDATE_SNAPSHOTS": "true",
+    },
+    # Pulls in Chromium; keep out of `//...` wildcards (run explicitly).
+    tags = ["manual"],
+)
