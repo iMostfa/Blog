@@ -1,7 +1,8 @@
 +++
 title = "AI Learnings"
 sort_by = "date"
-page_template = "blog/page.html"
+template = "article_list.html"
+page_template = "article.html"
 +++
 
 Deep technical write-ups distilled from real engineering sessions done together with AI agents.

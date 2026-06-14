@@ -1,1 +1,14 @@
 public/
+
+# Node / Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Crash dumps from emulated runs (should not occur on native arm64)
+*.core
+
+# NOTE: committed baselines under tests/visual/*-snapshots/ are intentionally
+# tracked — they are the source of truth for the visual diff.

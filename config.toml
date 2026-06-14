@@ -1,8 +1,9 @@
 base_url = "https://imostfa.github.io/Blog"
-theme = "anemone"
+theme = "duckquill"
+author = "Mostafa"
 
-compile_sass = false
-minify_html = false
+compile_sass = true
+minify_html = true
 generate_feeds = true
 generate_sitemap = true
 
@@ -23,18 +24,49 @@ taxonomies = [{ name = "tags", feed = true, paginate_by = 10 }]
 render_emoji = true
 external_links_target_blank = true
 smart_punctuation = true
-highlighting = { style = "inline", theme = "dracula" }
+bottom_footnotes = true
+github_alerts = true
+
+[markdown.highlighting]
+# Inline (style-attribute) highlighting with a single dark theme — fits the
+# forced-dark black look and avoids CSS-file wiring.
+theme = "dracula"
 
 [extra]
-author = { name = "Mostafa" }
-list_pages = true
-display_author = true
+# Force the black look: start in dark mode.
+default_theme = "dark"
+# Subtle blue-grey accent. Duckquill derives the page background from this
+# via color-mix(accent 10%, black), so a cool accent yields a neutral near-black
+# background instead of the default brown/orange. custom.css pins it to pure black.
+accent_color = "#46618c"
+accent_color_dark = "#9bb1d6"
+# Additional stylesheet (resolved from ./static/).
+styles = ["custom.css"]
+# Link to the repo source in the nav.
+source_url = "https://github.com/imostfa/Blog"
+show_reading_time = true
+show_copy_button = true
+show_backlinks = false
+show_share_button = false
 
-header_nav = [
-  { url = "/", name_en = "/home/", name_ar = "/الرئيسية/" },
-  { url = "/blog", name_en = "/blog/", name_ar = "/مقالات/" },
-  { url = "/ai-learnings", name_en = "/ai-learnings/", name_ar = "/دروس-الذكاء/" },
-  { url = "/about", name_en = "/about/", name_ar = "/عني/" },
+[extra.nav]
+show_feed = true
+show_theme_switcher = true
+show_repo = true
+# Names are i18n keys (see i18n/{en,ar}.toml); URLs resolve per-language.
+links = [
+  { url = "/blog/", name = "Blog" },
+  { url = "/ai-learnings/", name = "AI Learnings" },
+  { url = "/about/", name = "About" },
+]
+
+[extra.footer]
+show_copyright = true
+show_powered_by = false
+links = [
+  { url = "/blog/", name = "Blog" },
+  { url = "/ai-learnings/", name = "AI Learnings" },
+  { url = "/about/", name = "About" },
 ]
 
 [extra.giscus]
