@@ -90,7 +90,7 @@ and that a compiler turns source code into machine code. Nothing more.
 .xpgo .bars { display:grid; gap:.45rem; margin:.6rem 0; }
 .xpgo .barrow { display:grid; grid-template-columns:minmax(6rem,9rem) 1fr 3.5rem; gap:.6rem; align-items:center; font-size:.84rem; }
 .xpgo .track { height:.85rem; border-radius:999px; background:var(--bg); border:1px solid var(--border); overflow:hidden; }
-.xpgo .fill { height:100%; width:var(--w,50%); background:var(--accent); }
+.xpgo .fill { display:block; height:100%; width:var(--w,50%); background:var(--accent); transition:width .15s ease; }
 .xpgo .fill.hot { background:var(--hot); }
 .xpgo .fill.cold { background:var(--cold); }
 .xpgo .fill.warm { background:var(--warm); }
@@ -128,10 +128,11 @@ and that a compiler turns source code into machine code. Nothing more.
 <li><a href="#part6">Function layout and page faults</a></li>
 <li><a href="#part7">Balanced partitioning</a></li>
 <li><a href="#part8">Reddit's iOS pipeline</a></li>
-<li><a href="#part9">Measurement and traps</a></li>
-<li><a href="#part10">Diagnostic reference</a></li>
-<li><a href="#part11">FAQ</a></li>
-<li><a href="#part12">Glossary</a></li>
+<li><a href="#part9">Case study: reading a real profile</a></li>
+<li><a href="#part10">Measurement and traps</a></li>
+<li><a href="#part11">Diagnostic reference</a></li>
+<li><a href="#part12">FAQ</a></li>
+<li><a href="#part13">Glossary</a></li>
 </ol>
 </nav>
 
@@ -535,7 +536,100 @@ release build
 
 <p>Those are size wins. The startup win was subtler to measure because iOS performs background optimizations after installation. Reddit focused on first-day behavior after install/update, where cold-start layout matters most, and used a dual-release strategy: one standard release, then an identical-code optimized release.</p>
 
-<h2 id="part9">Part 9 — Measurement and traps</h2>
+<h2 id="part9">Part 9 — Case study: reading a real profile</h2>
+<p>Everything above was theory plus other people's numbers. So I collected an IR PGO profile from the app I work on — a large marketplace iOS app, ~100 build modules — using a UI test that performs 6 cold launches and a feed browse pass. Then I actually read the profile. This section is what the theory looks like against production-scale code, and it changed how I think about two things: how extreme the hot/cold split really is, and whose code the hot set is made of.</p>
+
+<div class="metric-row">
+<div class="metric"><div class="label">Functions instrumented</div><div class="value">383,676</div><div class="sub">the whole app + every dependency</div></div>
+<div class="metric"><div class="label">Executions recorded</div><div class="value">36.65M</div><div class="sub">sum of every branch-point counter</div></div>
+<div class="metric"><div class="label">Never called</div><div class="value">96.32%</div><div class="sub">369,574 functions had entry count 0</div></div>
+</div>
+
+<h3>How skewed is "skewed"?</h3>
+<p>Before looking, I assumed hot/cold meant something like 20/80. The real distribution is not in that universe. <code>llvm-profdata show --detailed-summary</code> prints a cumulative table: how many counter blocks (branch points) does it take to cover each share of all recorded executions? Verbatim output:</p>
+
+<pre>$ xcrun llvm-profdata show --detailed-summary app.profdata
+Total functions: 383676
+Total number of blocks: 1073586
+Total count: 36654739
+Detailed summary:
+26 blocks (0.00%) with count >= 197216 account for 50% of the total counts.
+485 blocks (0.05%) with count >= 6384 account for 90% of the total counts.
+1084 blocks (0.10%) with count >= 1505 account for 95% of the total counts.
+4666 blocks (0.43%) with count >= 133 account for 99% of the total counts.</pre>
+
+<div class="iviz">
+<h4>Blocks needed to cover each share of execution</h4>
+<div class="bars">
+<div class="barrow"><span>50% of counts</span><span class="track"><span class="fill hot" style="--w:50%"></span></span><span>26</span></div>
+<div class="barrow"><span>80%</span><span class="track"><span class="fill hot" style="--w:80%"></span></span><span>181</span></div>
+<div class="barrow"><span>90%</span><span class="track"><span class="fill warm" style="--w:90%"></span></span><span>485</span></div>
+<div class="barrow"><span>95%</span><span class="track"><span class="fill warm" style="--w:95%"></span></span><span>1,084</span></div>
+<div class="barrow"><span>99%</span><span class="track"><span class="fill cold" style="--w:99%"></span></span><span>4,666</span></div>
+<div class="barrow"><span>100%</span><span class="track"><span class="fill cold" style="--w:100%"></span></span><span>24,071</span></div>
+</div>
+<p class="dcaption">Bar length = share of execution covered; the number on the right = blocks needed, out of 1,073,586. Only 24,071 blocks (2.2%) executed at all.</p>
+</div>
+
+<div class="callout">
+<p class="rule">If execution were uniform, covering 50% of the counts would take ~537,000 blocks. It took 26. That is a concentration factor of roughly 20,000×.</p>
+<p class="corollary">This is why PGO works at all: the compiler can lavish attention on a few hundred functions and treat literally everything else as cold, and that policy is correct for 97.8% of the binary.</p>
+</div>
+
+<h3>Whose code is hot? Not mine.</h3>
+<p>My second wrong assumption: that the hot set would be my app's code. Bucketing all 21M function <em>entries</em> by what kind of code was entered:</p>
+
+<div class="iviz">
+<h4>Share of function entries by code kind</h4>
+<div class="bars">
+<div class="barrow"><span>Swift runtime helpers</span><span class="track"><span class="fill hot" style="--w:43.5%"></span></span><span>43.5%</span></div>
+<div class="barrow"><span>Compiler glue</span><span class="track"><span class="fill warm" style="--w:37.8%"></span></span><span>37.8%</span></div>
+<div class="barrow"><span>Third-party SDKs</span><span class="track"><span class="fill cold" style="--w:16%"></span></span><span>16.0%</span></div>
+<div class="barrow"><span>My app's code</span><span class="track"><span class="fill" style="--w:1.5%"></span></span><span>1.5%</span></div>
+</div>
+<p class="dcaption">"Compiler glue" = protocol/value witnesses, outlined copy/destroy helpers, thunks, metadata accessors — machinery the compiler generates around everyone's code.</p>
+</div>
+
+<p>The single most-called function in the entire app was <code>__swift_memcpy1_1</code> — 2,920,324 calls. That is 2.9 million <em>one-byte copies</em>, almost all driven by one third-party experimentation SDK that round-trips its JSON payloads through type-erased <code>Any</code> boxes during launch. The hottest single branch point in the binary was the read loop of nanopb — the C protobuf parser inside the analytics SDK — at 3.31M executions, because analytics state is parsed <em>and re-encoded</em> on every cold start.</p>
+
+<table>
+<thead><tr><th>Hottest spots in the binary</th><th>What it is</th><th>Max count</th></tr></thead>
+<tbody>
+<tr><td><code>buf_read</code> (nanopb)</td><td>protobuf decode loop, analytics SDK</td><td>3,312,715</td></tr>
+<tr><td><code>__swift_memcpy1_1</code></td><td>runtime helper: copy one byte</td><td>2,920,324</td></tr>
+<tr><td><code>__swift_noop_void_return</code></td><td>runtime helper: do nothing</td><td>2,629,953</td></tr>
+<tr><td><code>AnyEncodable</code> destroy/copy witnesses</td><td>Codable type-erasure glue, experiments SDK</td><td>535,920 / 446,600</td></tr>
+</tbody>
+</table>
+
+<p>Three more things the profile revealed that no amount of code review would have surfaced:</p>
+
+<div class="cards">
+<div class="card">
+<h4>The profile is a free product audit</h4>
+<p>17% of all function entries belonged to one experimentation SDK's Codable glue. The localization layer burned 250K entries in just 56 functions, copying a large enum payload on every string lookup. Neither showed up in any Instruments session we had run — they were spread across too many tiny calls.</p>
+</div>
+<div class="card">
+<h4>Dead weight is measurable</h4>
+<p>A generated analytics-events package contributed 6.8% of all functions in the binary but ~0.05% of execution. That is exactly the code the cold-marking half of PGO shrinks — and the strongest argument for the layout techniques in Parts 5–7.</p>
+</div>
+<div class="card">
+<h4>The hot set is glue, so PGO's wins are glue wins</h4>
+<p>Inlining a 3-line value witness into its hot caller eliminates call overhead on millions of one-byte copies. The classic C wins apply too: precise branch weights in nanopb's decode loops, the hottest code in the binary.</p>
+</div>
+</div>
+
+<p>To do this on any app: build with <code>-fprofile-generate</code> (plus swiftc's IR-profile flags on iOS), run a launch workload, merge, then read the result before applying it:</p>
+
+<pre>xcrun llvm-profdata show --detailed-summary app.profdata   <span class="dim"># the skew table</span>
+xcrun llvm-profdata show --topn=50 app.profdata | xcrun swift-demangle   <span class="dim"># hottest functions</span>
+xcrun llvm-profdata show --all-functions --counts app.profdata | less    <span class="dim"># everything</span></pre>
+
+<div class="callout">
+<p class="rule">Read the profile before you feed it to the compiler. The same file that guides the optimizer is the most honest launch-behavior audit you will ever get for free.</p>
+</div>
+
+<h2 id="part10">Part 10 — Measurement and traps</h2>
 <p>PGO sounds mechanical, but the quality of the result depends on the quality of the profile and the measurement plan.</p>
 
 <table>
@@ -564,7 +658,7 @@ release build
 <p class="rule">The hard engineering is not "turn on PGO". The hard engineering is collecting profiles you trust and proving the optimized binary helped.</p>
 </div>
 
-<h2 id="part10">Part 10 — Diagnostic reference</h2>
+<h2 id="part11">Part 11 — Diagnostic reference</h2>
 <p>Useful commands and flags to recognize when reading a PGO pipeline:</p>
 
 <table>
@@ -594,7 +688,7 @@ release build
 <div id="xpgo-cmd-card" class="term-card">Build an instrumented binary that emits raw profile data. This is the learning build, not the final release build.</div>
 </div>
 
-<h2 id="part11">Part 11 — FAQ</h2>
+<h2 id="part12">Part 12 — FAQ</h2>
 <details class="faq">
 <summary>Is PGO the same as test coverage?</summary>
 <p>No. Both may use instrumentation, but the goal differs. Test coverage asks "did tests execute this code?" PGO asks "how should the optimizer spend effort based on execution behavior?" A profile can be useful for PGO even if it is not a complete coverage report.</p>
@@ -638,7 +732,7 @@ release build
 </div>
 </div>
 
-<h2 id="part12">Part 12 — Glossary</h2>
+<h2 id="part13">Part 13 — Glossary</h2>
 <div class="iviz">
 <h4>Pick a term</h4>
 <div class="term-grid">
