@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="ar">
+    <title>مصطفى - combine</title>
+    <subtitle>أفكار وتجارب من مهندس حاسوب يطارد الأساسيات.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/ar/tags/combine/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2022-07-28T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/ar/tags/combine/atom.xml</id>
+    <entry xml:lang="ar">
+        <title>ازاي تهندل السبسكريبشن في كومباين</title>
+        <published>2022-07-28T00:00:00+00:00</published>
+        <updated>2022-07-28T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ar/blog/combine-subscriptions/"/>
+        <id>https://imostfa.github.io/Blog/ar/blog/combine-subscriptions/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ar/blog/combine-subscriptions/">&lt;p&gt;لما تكون بتستخدم Combine في الفيوكنترولر&#x2F;الفيوموديل، بيكون عليك مسؤلية هندلة و الحفاظ على السبسكريبشنز aka Disposals&lt;&#x2F;p&gt;
+&lt;p&gt;لو افترضنا الكود الآتي كمثال على بابلشر بيأبديت الUI في الابلكيشن:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;class&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; ViewController&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; UIViewController&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;var&lt;&#x2F;span&gt;&lt;span&gt; disposeBag:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Set&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; =&lt;&#x2F;span&gt;&lt;span&gt; []&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; animated&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span&gt;) {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;  super&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(animated)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  publisher.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;sink&lt;&#x2F;span&gt;&lt;span&gt; { newValue &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;in&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;    self&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;updateUI&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;with&lt;&#x2F;span&gt;&lt;span&gt;: newValue)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;store&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; &amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;disposeBag)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;اللي بيحصل هنا انه لما بنعمل سبسكرايب بنحفظ السبسكريبشن (AnyCancellable) في الSet الخاصة بالDisposeBag&lt;&#x2F;p&gt;
+&lt;p&gt;ليه بنعمل كدا ؟ علشان لو محفظتش الريفرينس بتاع الكانسيلبل في Array&#x2F;normal variable&#x2F;Set الARC هيشيل الفاريبل من الميموري وفي كومباين لازم علشان تستلم فاليوز، تكون حافظ السبسكريبشن&lt;&#x2F;p&gt;
+&lt;p&gt;كأنك لازم تفضل ماسك السلك اللي بيربطك بالبابلشر اللي بيبعت الداتا&lt;&#x2F;p&gt;
+&lt;p&gt;نفترض انه خلاص انا اخدت الداتا اللي انا عايزها و دلوقتي الكنترولر دا اليوزر هيخرج منه، ازاي اكنسل السبسكريبشن بتاعتي و معدتش استلم اي داتا ؟ هل دا بيحصل بشكل اوتوماتيك ؟ ولا لازم اهندله بنفسي ؟ ايه اللي هيحصل لو انا مشيلتش الكانسيلبل و فضلت سايبه محفوظ ؟&lt;&#x2F;p&gt;
+&lt;p&gt;كطريقة من طرق التعامل مع السؤال دي انه نعمل الآتي&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;class&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; ViewController&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; UIViewController&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;  deinit&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;    print&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;i&amp;#39;m leaving the memory&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;var&lt;&#x2F;span&gt;&lt;span&gt; disposeBag:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Set&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; =&lt;&#x2F;span&gt;&lt;span&gt; []&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; viewDidDisappear&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; animated&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span&gt;)  {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt; super&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;viewDidDisappear&lt;&#x2F;span&gt;&lt;span&gt;(animated)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  disposeBag.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;removeAll&lt;&#x2F;span&gt;&lt;span&gt;()&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; animated&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span&gt;) {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;  super&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(animated)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  publisher.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;sink&lt;&#x2F;span&gt;&lt;span&gt; { newValue &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;in&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;    self&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;updateUI&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;with&lt;&#x2F;span&gt;&lt;span&gt;: newValue)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;store&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; &amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;disposeBag)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;لما الفيوكنترولر يختفي من الشاشة(في اغلب الاحيان معاناه انه خلاص اليوزر مش شايفه، بس مش ديما) ممكن تفضي الDisposeBag كلها، و بكدا السبسكريبشنز اللي محفوظة جواها هتتشال و الكنترولر كله هيتشال من الميموري&lt;&#x2F;p&gt;
+&lt;p&gt;و تقدر تتأكد من دا بأنك تشوف deinit بيتعملها كول، لما تقفل الكنترولر، ورغم انه دا حل للمشكلة،،لكن هو بيترك عليك مسؤولية انك تعمل call للسطر دا كل في ViewDisAppear وفي بعض الاحيان مش هتبقى عايز تكنسل السبسكريبشن لما الفيو تختفي،&lt;&#x2F;p&gt;
+&lt;p&gt;كحل اخر، ممكن تخلي مسؤولية كنسلة السبسكريبشن على ARC&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;class&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; ViewController&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; UIViewController&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;  deinit&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;    print&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;i&amp;#39;m leaving the memory&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;var&lt;&#x2F;span&gt;&lt;span&gt; disposeBag:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Set&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; =&lt;&#x2F;span&gt;&lt;span&gt; []&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; animated&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span&gt;) {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;  super&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(animated)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  publisher.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;sink&lt;&#x2F;span&gt;&lt;span&gt; {  [&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;weak&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt; self&lt;&#x2F;span&gt;&lt;span&gt;]  newValue &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;in&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;    self&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;updateUI&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;with&lt;&#x2F;span&gt;&lt;span&gt;: newValue)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;store&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; &amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;disposeBag)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;هنا احنا في الواقع حلينا مشكلتين، لأنه الكلوجر بتاع Sink بيكابتشر self، ودا في حد ذاته ممكن يعمل Memory Leak لو مفضتش الDisposeBag لكن لما تخلي self weakly capturered دا هيخلي ARC يقدر يشيل الSet بتاعت DisposeBag&lt;&#x2F;p&gt;
+&lt;p&gt;وبناء عليه، احسن حل لو انت جوا الفيوكونترولر&#x2F;فيو موديل، انك متعملش سترونج كابتشر على سيلف، و عموما حاول متعملش سترونج كابتشر في الكلوجرز طول حياتك 😂&lt;&#x2F;p&gt;
+&lt;p&gt;الكلام اللي في البلوج دي يمشي على اي ريآكتيف فريمورك زي RxSwift&#x2F;ReactiveSwift وكدا..&lt;&#x2F;p&gt;
+&lt;p&gt;والبوست دا هو استفاضة في اجابتي على نفس السؤال في ستاك اوفرفولو https:&#x2F;&#x2F;stackoverflow.com&#x2F;a&#x2F;62964220&#x2F;5253913&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="ar">
+    <title>مصطفى - unit-testing</title>
+    <subtitle>أفكار وتجارب من مهندس حاسوب يطارد الأساسيات.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/ar/tags/unit-testing/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2020-11-02T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/ar/tags/unit-testing/atom.xml</id>
+    <entry xml:lang="ar">
+        <title>إيه هو الUnit testing</title>
+        <published>2020-11-02T00:00:00+00:00</published>
+        <updated>2020-11-02T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ar/blog/unit-testing-intro/"/>
+        <id>https://imostfa.github.io/Blog/ar/blog/unit-testing-intro/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ar/blog/unit-testing-intro/">&lt;h1 id=&quot;yh-hw-lunit-testing&quot;&gt;إيه هو الUnit testing&lt;&#x2F;h1&gt;
+&lt;h1 id=&quot;yh-hw-l-unit-testing&quot;&gt;إيه هو ال Unit testing&lt;&#x2F;h1&gt;
+&lt;p&gt;هنتكلم هنا عن إيه هو ال Unit testing كفكرة عامة، مع اجزاء من الكود اللازم بشكل مبسط&lt;&#x2F;p&gt;
+&lt;p&gt;لو هنعرف الunit testing كود في سطر واحد، نقدر نقول انه هو عبارة عن كتابة كود يتأكد من انه الفانكشنز اللي انت كتبتها، بتشتغل زي ما احنا عاوزين، ديمًا، و بتؤدي الهدف المطلوب منها ديمًا&lt;&#x2F;p&gt;
+&lt;p&gt;ليه ؟ فيه اسباب كتيرة، ممكن نقول منها&lt;&#x2F;p&gt;
+&lt;p&gt;علشان احيانًا بنكتب كود، و نيجي بعد فترة كبيرة، مش فاكرين هو كان بيعمل، و نعدل عليه، و الابلكييشن يشتغل عادي،&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;احيانا بيكون عندنا bug، نيجي نحلها عن طريق انه نغير في كود مكتوب من زمان، و شغال، و نلاقي الbug اتحلت، بس مناخدش بالنا انه و احنا بنحلها بوظنا حاجة تانية مثلا&lt;&#x2F;li&gt;
+&lt;li&gt;احيانًا لو تيم بيشتغل مع بعضه، ممكن واحد يكتب كود شغال، يصحى صاحبه يعدل على الكود دا وسط شغله، و مياخدش باله انه بوظ حاجة او غير حاجة اساسية المفروض الفانكشن تعملها&lt;&#x2F;li&gt;
+&lt;li&gt;تقدر تكتشف الbugs قبل ما التيستر، او الكلاينت، يكتشفها&lt;&#x2F;li&gt;
+&lt;li&gt;بتقلل الكود اللي ممكن يبقى ملوش لازمة في الفانكشن بتاعتك و بتساعد على كتابة كود افضل و انضف - بيساعد على دا حاجات زي TDD&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;دلوقتي قولنا تعريف بسيط، و قولنا بعض الاسباب اللي المفروض تخليك تكتب unit testing، نشوف مثال، و مننساش ديمًا الهدف بتاعنا&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;lhdf-y-fnkshn-bnktbh-fy-lkwd-l-dy-bt-n-tshtgl-dyman-zy-m-hn-wzyn-w-thqq-lmtlwb-mnh&quot;&gt;الهدف : اي فانكشن بنكتبها في الكود العادي بتاعنا، تشتغل ديمًا زي ما احنا عاوزين، و تحقق المطلوب منها&lt;&#x2F;h2&gt;
+&lt;p&gt;بمعنى إيه ؟ تخيل لو عندنا الفانكشن دي&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; insertDot&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;to&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; sentance&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;String&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; -&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; String&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;if the last character in sentance is &amp;quot;.&amp;quot; will return the sentance without any modification&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    guard&lt;&#x2F;span&gt;&lt;span&gt; sentance.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;last&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; !=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; else&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; return&lt;&#x2F;span&gt;&lt;span&gt; sentance }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;return the senance with a dot added at the end&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    return&lt;&#x2F;span&gt;&lt;span&gt; sentance &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;+&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h3 id=&quot;lhdf-fy-lfnkshn-dy-hdfh-nh-tdyf-nqt-fy-khr-ljml-lly-htjylh&quot;&gt;الهدف في الفانكشن دي هدفها انها تضيف نقطة في اخر الجملة اللي هتجيلها&lt;&#x2F;h3&gt;
+&lt;p&gt;الفانكشن دي بتحقق الهدف ازاي ؟ عن طريق حاجتين&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;لو الجملة اللي اللي عاوزين نضيفلها نقطة، اصلا اخرها نقطة، في الحالة دي احنا مش عاوزين يتضافلها نقطة كمان&lt;&#x2F;li&gt;
+&lt;li&gt;لو الجملة مفيهاش نقطة في آخر الجملة، نضيف لها نقطة&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;اللي احنا عاوزين نعمله، اننا نحافظ على الأهداف دي، بمعنى آخر، عايزين نكتب كود، يتأكد، انه ديما، الفانكشن دي بتحقق الهدفين دول.، الكود اللي احنا هنكتبه بيسمى“ test“ او بشكل ادق بيسمى unit test, هنحتاج نكتب ٢ unit tests، كل test بيتأكد من هدف واحد من الاهداف بتاعتنا&lt;&#x2F;p&gt;
+&lt;p&gt;هنا هنكتب الكود اللي محتاجينه علشان نحقق الهدفين دول - من غير توضيح تفاصيل الكود دا هيكون مكتوب فين - علشان نركز على الفكرة بس&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;الكود اللازم لعمل test unit للهدف الاول في الفانكشن دي:&lt;&#x2F;p&gt;
+&lt;p&gt;و الهدف من التيست دا: انه لما لما الفانكشن اللي بنعملها تيست، يجيلها Mostfa. النتيجة تكون Mostfa.&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; test_NoDublicate_dots&lt;&#x2F;span&gt;&lt;span&gt;() {&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;1&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;        let&lt;&#x2F;span&gt;&lt;span&gt; output &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; insertDot&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;to&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Mostfa.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;2&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;           XCTAssertEqual&lt;&#x2F;span&gt;&lt;span&gt;(output, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Mostfa.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;No dot&amp;#39;s should be added&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;3&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;في ١:&lt;&#x2F;p&gt;
+&lt;p&gt;بنكتب اسم الفانكشن ، وبنقول هي هتعمل إيه test لإيه في الأسم، هنا الأسم بيقول انه مش عاوزين اكتر من نقطة في الجملة اللي هتطلع لنا&lt;&#x2F;p&gt;
+&lt;p&gt;في ٢:&lt;&#x2F;p&gt;
+&lt;p&gt;بنعمل كول للفانكشن اللي احنا بنجربها و هنحفظ النتيجة في output&lt;&#x2F;p&gt;
+&lt;p&gt;لاحظ انه الجملة اللي بنضيفلها نقطة في آخرها هنا اصلا، فيها نقطة، و من المفترض انه الجملة ترجع زي ماهي، من غير نقطتين في الآخر&lt;&#x2F;p&gt;
+&lt;p&gt;في ٣: بنستخدم فانكشن موجودة في الفريم ورك اللي بنستخدمها للتيست نعمل تيست، اسمها XCTAssertEqual ببساطة احنا بنقول إيه الهدف بتاعنا، او ايه الشيئ اللي عاوزينه يحصل، احنا عاوزن ، output يساوي. .Mostfa ، لأنه دا الهدف بتاعنا،&lt;&#x2F;p&gt;
+&lt;p&gt;الفانكشن دي ممكن نقول انها بتعمل كدا&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; test_NoDublicate_dots&lt;&#x2F;span&gt;&lt;span&gt;() {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;        let&lt;&#x2F;span&gt;&lt;span&gt; output &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; insertDot&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;to&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Mostfa.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;        XCTAssertEqual&lt;&#x2F;span&gt;&lt;span&gt;(output, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Mostfa.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;No dots should be added&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;        if&lt;&#x2F;span&gt;&lt;span&gt; output &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;==&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Mostfa.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;            &#x2F;&#x2F;we are happy, no errors!&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;        }&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; else&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;            assertionFailure&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;stop here!, we are not happy, that&amp;#39;s not supposed to happen&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;        }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;لما تشغل التيست دا، النتيجة هتكون علامة صح ✅ علشان فعلا الفانكشن اللي بنعملها تيست insertDot، فعلا مش بتضيف نقطة للجملة لو في اخرها نقطة&lt;&#x2F;p&gt;
+&lt;p&gt;كدا مبروك اول تيست عملناه،&lt;&#x2F;p&gt;
+&lt;p&gt;لو واحد مجنون راح لعب في الفانكشن الاساسية وخلاها كدا&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; insertDot&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;to&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; sentance&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;String&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; -&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; String&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;if the last character in sentance is &amp;quot;.&amp;quot; will return it with any modification&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    guard&lt;&#x2F;span&gt;&lt;span&gt; sentance.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;last&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; !=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; else&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; return&lt;&#x2F;span&gt;&lt;span&gt; sentance }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;return the senance with a dot added at the end&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    return&lt;&#x2F;span&gt;&lt;span&gt; sentance &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;+&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;و جينا نشغل التيست اللي كتبناه هنلاقي النتيجة كدا&lt;&#x2F;p&gt;
+&lt;p&gt;وجنبها اكس ❌&lt;&#x2F;p&gt;
+&lt;p&gt;ليه ؟ لأنه الtest لما اشتغل لقى انه النتيجة ..Mostfa و دا مش اللي احنا متوقعينه، و اللي مش المفروض الفانكشن دي تعمله&lt;&#x2F;p&gt;
+&lt;p&gt;في الوضع الحالي، بعد اي شغل نعمله في البروجكت، هنعمل run للtest فانكشنز اللي موجودة، المفروض لو شغلنا سليم، كله يبقى اخضر، لكن لو فيه حاجة لونها احمر، هنعرف انه احنا بوظنا حاجة، نروح نشوف بوظنا إيه&lt;&#x2F;p&gt;
+&lt;p&gt;نيجي للهدف التاني بتاعنا اللي بنعمله test وهو منطقي اكتر،&lt;&#x2F;p&gt;
+&lt;p&gt;في التيست دا، بنتأكد انه لو كان الجملة بتاعتنا مفيش نقطة في آخرها،&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; test_dot_isAdded&lt;&#x2F;span&gt;&lt;span&gt;() {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;        let&lt;&#x2F;span&gt;&lt;span&gt; output &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; insertDot&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;to&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Essam&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;        XCTAssertEqual&lt;&#x2F;span&gt;&lt;span&gt;(output, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Essam.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;بكل بساطة بنعمل فاريبل output و بقول للفانكشن بتاعتنا تضيف نقطة في آخر الجملة Essam&lt;&#x2F;p&gt;
+&lt;p&gt;و بستخدم نفس الفانكشن اللي استخدمناها فوق، بنقول، انه احنا بنتوقع، انه ديمًا، الأوت بوت يكون .Essam&lt;&#x2F;p&gt;
+&lt;p&gt;ولو كل حاجة ماشية زي ما توقعنا&lt;&#x2F;p&gt;
+&lt;p&gt;ولو فيه واحد مجنون كان بيشتغل على الكود، و عمل تغير على الفانكشن الاصلية بتاعنا و خلاها كدا مثلا&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; insertDot&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;to&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; sentance&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;String&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; -&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; String&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;if the last character in sentance is &amp;quot;.&amp;quot; will return it with any modification&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    guard&lt;&#x2F;span&gt;&lt;span&gt; sentance.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;last&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; !=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; else&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; return&lt;&#x2F;span&gt;&lt;span&gt; sentance }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;return the senance with a dot added at the end&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    return&lt;&#x2F;span&gt;&lt;span&gt; sentance &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;+&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;💕&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;لما نيجي نشغل التيست، هنلاقي النتيجة كدا&lt;&#x2F;p&gt;
+&lt;p&gt;ودا متوقع، بيقولنا انه المفروض لما الجملة تكون Essam الناتج يكون .Essam مش يكون 💕Essam، فأحنا نروح نبص على الفانكشن و نشوف غيرنا فيها إيه علشان الtest ينجح تاني&lt;&#x2F;p&gt;
+&lt;p&gt;ولو كل حاجة مظبوطة، دي الصورة النهائية اللي المفروض نحصل عليها&lt;&#x2F;p&gt;
+&lt;p&gt;و بكدا نكون وصلنا نهاية المقالة النهاردة، احنا هنا اتكلمنا عن مقدمة عن الtesting، مع مثال بسيط جدا جدا جدا، بيوضح ازاي بنفكر في التيستنج، و المفروض نعمل إيه علشان نعمل تيست&lt;&#x2F;p&gt;
+&lt;p&gt;فيه حاجات ناقصة، زي مثلا الكود بتاعت التيست بيتكتب فين بالظبط في البروجكت، و ازاي نعمل تيست لحاجة معقدة اكتر من كدا، كل النقاط دي ممكن نتكلم عنها في جزء تاني بيشرح الموضوع تفصيلا،&lt;&#x2F;p&gt;
+&lt;p&gt;و نعمل tests لل API layer بتاعنا، بشكل متقدم اكتر.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

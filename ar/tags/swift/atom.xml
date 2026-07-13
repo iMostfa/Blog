@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="ar">
+    <title>مصطفى - swift</title>
+    <subtitle>أفكار وتجارب من مهندس حاسوب يطارد الأساسيات.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/ar/tags/swift/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2022-08-07T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/ar/tags/swift/atom.xml</id>
+    <entry xml:lang="ar">
+        <title>ازاي تعمل Volume Casting</title>
+        <published>2022-08-07T00:00:00+00:00</published>
+        <updated>2022-08-07T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ar/blog/volume-casting-scenekit/"/>
+        <id>https://imostfa.github.io/Blog/ar/blog/volume-casting-scenekit/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ar/blog/volume-casting-scenekit/">&lt;h1 id=&quot;zy-t-ml-volume-casting&quot;&gt;ازاي تعمل Volume Casting&lt;&#x2F;h1&gt;
+&lt;p&gt;في المدونة دي هنتكلم عن ازاي نعمل امبلمنتيشن لفيتشر مش موجودة في SceneKit بس علشان نعمل الامبلمنتيشن محتاجين نفهم اكتر من عن الكونسبت نفسه، بعدين نشوف ايه المشكلة اللي عندنا، بعدين نشوف ازاي ممكن نحلها بالكودينج&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;yh-hy-lry-ray&quot;&gt;إيه هي الراي Ray&lt;&#x2F;h2&gt;
+&lt;p&gt;الراي في سياق الكمبيوتر جرافيكس و في سياق حديثنا النهاردة هي عبارة عن نقطة مع اتجاه، يعني تقدر تقول انه اسم آخر ل الڤيكتور&lt;&#x2F;p&gt;
+&lt;p&gt;و تقدر تتخيل الراي على انها قلم ليزر في ايدك، ليه بوزيشن، وقطعا ليه اتجاه، اللي هو اتجاه الانارة&lt;&#x2F;p&gt;
+&lt;p&gt;في الصورة&lt;&#x2F;p&gt;
+&lt;p&gt;rPos = ray position in the space&lt;&#x2F;p&gt;
+&lt;p&gt;rDir = ray dieraction in the space&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;yh-hw-lry-kstynj-ray-casting&quot;&gt;ايه هو الراي-كاستينج Ray Casting&lt;&#x2F;h2&gt;
+&lt;p&gt;الراي كاستينج هو عملية بنحاول نعرف فيها، اذا الراي اللي عندنا هتتقاطع مع اي جزء في السبيس ولا لا&lt;&#x2F;p&gt;
+&lt;p&gt;لأنه الراي ليها نقطة واتجاه تقدر تمدها في السبيس براحتك، في الصورة دي الراي تم مدها في الفرغ، لغاية ما قطعت الكورة الكبيرة في النص، وبكدا نكون عرفنا انه الراي دي، بتقطع الكورة اللي في النص..&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;mthl-l-lry-kstnj&quot;&gt;مثال على الراي-كاستنج&lt;&#x2F;h2&gt;
+&lt;p&gt;فيه استخدامات كتير للموضوع دا، من اشهرها و اهمها، بيكون مع الماوس بتاع الكمبيوتر&lt;&#x2F;p&gt;
+&lt;p&gt;تخيل انه عندك شاشة فيه اوبجكتس كتير كلها ثري-دي و عاوز لما تضغط بالماوس، الجزء المعين اللي ضغط عليه لونه يتغير، او يتحدد، زيه زي اي لعبة بالماوس بتلعبها ع الكمبيوتر، او حتى في الموبايل التاتش&lt;&#x2F;p&gt;
+&lt;p&gt;لما تكون انت شايف اللعبة (سكرين سبيس) فأنت شايف العالم من زاوية(عالم) الكاميرا، لما بتضغط بالماوس على مكان معين، اللي بيحصل انه بيطلع راي، و الراي دي بتكمل لغاية ما تخبط في اي عنصر، و ممكن في الواقع متخبطش خالص لو انت ضغط في حتة مفيهاش اوبجكت&lt;&#x2F;p&gt;
+&lt;p&gt;لاحظ انه التحدي&#x2F;المشكلة هنا انه لما بتضغط بالماوس فأنت بتضغط في السكرين سبيس ودا بيكون 2D لكن العالم اللي فيه الاوبجكتس بتاعتك بيكون ثري دي، و الهدف بتاع الراي كاستنج انه يعرف اذا مكان الماوس بتاعك في التو-دي بعد ما يتحول لثري-دي هيلمس جزء من الاوبجكتس بتاعتك ولا لا&lt;&#x2F;p&gt;
+&lt;p&gt;لما بنقول اوبجكتس فأحنا نقصد اي جزء ثري-دي في البرنامج&#x2F;اللعبة زي الاشكال اللي فوق ع اليمين، او الكور اللي في اول ومثال، وهكذا&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;lhyt-tystnj-fy-mhrkt-ll-b&quot;&gt;الهيت تيستنج في محركات الالعاب&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;unity-ray-casting&quot;&gt;Unity Ray casting&lt;&#x2F;h3&gt;
+&lt;p&gt;الهيت-تيستنج زي ما وضحنا فوق ببساطة بيستخدم لمعرفة اذا انت لمست جزء معين في اللعبة او البرنامج الثري-دي اللي انت شغال فيه ولا لا، ونظرا لأنه يعتبر شيء اساسي، يعتبر موجود ليه امبلمنتيشن في كل محركات الالعاب&lt;&#x2F;p&gt;
+&lt;p&gt;في يونيتي ممكن تعمل كدا&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;Ray ray &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; Camera.main.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;ScreenPointToRay&lt;&#x2F;span&gt;&lt;span&gt;(Input.mousePosition);&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;            RaycastHit hit;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;            if&lt;&#x2F;span&gt;&lt;span&gt; (Physics.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;Raycast&lt;&#x2F;span&gt;&lt;span&gt;(ray, out hit, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;100&lt;&#x2F;span&gt;&lt;span&gt;))&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;            {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;                Debug.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;Log&lt;&#x2F;span&gt;&lt;span&gt;(hit.transform.name);&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;                Debug.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;Log&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;hit&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;);&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;            }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;فانكشن Phisycs.RayCast هي اللي بتقوم بعمل كل حسابات الكاستنج في يونيتي&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;scenekit-ray-cast&quot;&gt;SceneKit Ray Cast&lt;&#x2F;h3&gt;
+&lt;p&gt;في سين كيت ممكن تعمل راي كاستنج(آبل بتسميه هيت تيستنج) عن طريق الكود الآتي و هيجيبلك اذا كانت الضغطة بتاعتك على اوبجكت معين&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; locationOfTapIn2D &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; tapRecognizer.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;location&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span&gt;: sceneView)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; hitResults &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; diagramView.sceneView.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;hitTest&lt;&#x2F;span&gt;&lt;span&gt;(locationOfTapIn2D, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;options&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; nil&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; tappedNode &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; hitResults.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;first&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;?&lt;&#x2F;span&gt;&lt;span&gt;.node&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;the object you have tapped&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;كل اللي فات دا جميل، اتكلمنا عن الراي، و عن عملية الراي كاستنج، و ازاي متوفر في محركات الالعاب المختلفة&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;hjt-lry-kstnj-myqdrsh-y-mlh&quot;&gt;حاجات الراي-كاستنج ميقدرش يعملها&lt;&#x2F;h2&gt;
+&lt;p&gt;تخيل انه عندك ابلكيشن بيتطلب انك تجيب اقرب اوبجكتس لضغطة معينة&lt;&#x2F;p&gt;
+&lt;p&gt;بمعنى انه في الصورة دي مطلوب منك تجيب اقرب اوبجكتس للضغطة، لأنه فعليا مكان الضغطة هنا في الفراغ&lt;&#x2F;p&gt;
+&lt;p&gt;و النتيجة المرادة كالآتي، انه احنا نقدر نحدد اقرب ٤ اوبجكتس للضغطة، او اقرب ٥، المهم نقدر نحدد&lt;&#x2F;p&gt;
+&lt;p&gt;الموضوع يصبح اكثر تعقيدا و اكثر اهمية لو بشكل عام انت عايز تجيب الاوبجكتس المتجاورة لأي ضغطة لو افترضت انه اليوزر ضغط بصباعه مكان ما&lt;&#x2F;p&gt;
+&lt;p&gt;لأنه فيه اجزاء متداخلة، ممكن يكون اليوزر قاصده الجزء الصغير اللي لونه جراي، او الجزء البورتقالي الكبير&lt;&#x2F;p&gt;
+&lt;p&gt;لو احنا استخدمنا الهيت-تيستنج مش هنقدر نعرف الاجزاء اللي جنب بعض، لأنه زي ما وضحنا فوق، هو بطلع راي واحدة بس، من مكان اللمسة، و و لما تخبط في جزء معين، يقولك انها خبطت فيه وبناء عليه يقولك انك حاولت تلمس الجزء المعين دا، في حالتنا عاوزين نحاول نعرف الاجزاء اللي الاقرب ل اللمسة&lt;&#x2F;p&gt;
+&lt;p&gt;اللي احنا محتاجينه، اننا نعمل حاجة مشابهة توصلنا لزيادة القطر بتاع الراي نفسها، فبدل ما تخبط في اوبجكت واحد، تخبط في الاتنين اللي جنب بعض&lt;&#x2F;p&gt;
+&lt;p&gt;لاحظ ازاي الراي متقاطعة مع الجزئين، بدل جزء واحد&lt;&#x2F;p&gt;
+&lt;p&gt;الصورة اللي فوق بتوضح اللي نتمنى اننا نقدر نعمله، لكن فعليا منقدرش نعمل دا بالراي لأنها عبارة عن فيكتور مش حاجة ليها ثيكنس او نصف قطر، لكن دي اول نقطة تجاه الوصول للحل،اننا تخيلناه..&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;nw-akhr-mn-lkstnj&quot;&gt;انواع آخرى من الكاستنج&lt;&#x2F;h2&gt;
+&lt;p&gt;في بعض محركات الالعاب، فيه حل للموضوع دا، ببساطة بدل ما بتعمل كاستنج ب راي، ممكن تعمل كاستنج بمكعب، او كاستنج بسليندر&lt;&#x2F;p&gt;
+&lt;p&gt;ازاي ؟ تعالى نتخيل انه مكان ما الراي هتخبط في جزء معين، هنحط مكعب&lt;&#x2F;p&gt;
+&lt;p&gt;وبعد ما نحط المكعب، نشوف بقى المكعب دا بيتقاطع مع اوبجكتس ولا لا، لو قدرنا نعمل كدا، نظريا المكعب هيتقاطع مع الاوبجكتس القريبة من الراي، حسب حجمه&lt;&#x2F;p&gt;
+&lt;p&gt;الطريقة دي من الكاستنج، اسمها ڤوليوم كاستنج، لأنك فيها بتعمل الكاستنج بالڤوليوم بتاع المكعب، او بتاع اي شكل اخر حسب اختيارك&lt;&#x2F;p&gt;
+&lt;p&gt;في محرك زي يونيتي، موجود امبلمنتيشنز جاهزة بتعمل كاستنج للڤوليومز دي بأستخدام الطريقة دي، هيرجعلنا مثلا انه اليوزر بيحاول يضغط على&lt;&#x2F;p&gt;
+&lt;p&gt;Option 1, or option 2&lt;&#x2F;p&gt;
+&lt;p&gt;وبناء عليه ممكن نطلع دا في منيو بحيث هو يختار قصده انهي اوبجكت من الاتنين
+BoxCast 📦Capsule Cast💊Sphere Cast 🏀RigidBody Cast 🥎&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;volume-casting-in-scenekit&quot;&gt;Volume Casting In SceneKit&lt;&#x2F;h2&gt;
+&lt;p&gt;علشان نعمل شيء مشابهة للڤوليوم كاستنج في سين كيت، محتاجين نحاول نعمل مجموعة من الخطوات&lt;&#x2F;p&gt;
+&lt;p&gt;1- Detect Touch Location using Normal HitTesting (already discussed the code)&lt;&#x2F;p&gt;
+&lt;p&gt;In this stage we will convert the touch location from 2D space (Device screen) to a 3D space (World space) which will let us know where our touches belong to in the 3D world.&lt;&#x2F;p&gt;
+&lt;p&gt;2- place a cube, which has an origin equal to the detected point of hit testing&lt;&#x2F;p&gt;
+&lt;p&gt;In this step, we will place an cube on the previously determined 3D Point from step 1&lt;&#x2F;p&gt;
+&lt;p&gt;3- calculate&#x2F;process the intersections with that cube This will be fun …&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;technical-implementation-of-volume-casting-in-scenekit&quot;&gt;Technical Implementation of Volume Casting In SceneKit&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;1-detect-touch-location&quot;&gt;1. Detect Touch Location&lt;&#x2F;h3&gt;
+&lt;p&gt;في الخطوة دي هنشتغل كأننا كنا عاوزين نعمل راي كاستنج عادي&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F;Inside the tap gesture Selector&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; locationOfTapIn2D &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; tapRecognizer.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;location&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span&gt;: sceneView)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; hitResults &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; diagramView.sceneView.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;hitTest&lt;&#x2F;span&gt;&lt;span&gt;(locationOfTapIn2D, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;options&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; nil&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; firstTappedNode &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; hitResults.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;first&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;the object you have tapped&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h3 id=&quot;2-place-the-cube-box&quot;&gt;2. Place the cube(Box)&lt;&#x2F;h3&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; boxHeight &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 12&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; boxGeometry &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; SCNBox.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;init&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;width&lt;&#x2F;span&gt;&lt;span&gt;: boxHeight,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; height&lt;&#x2F;span&gt;&lt;span&gt;: boxHeight,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; length&lt;&#x2F;span&gt;&lt;span&gt;: boxHeight,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; chamferRadius&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 2&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; boxNode &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; SCNNode&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;geometry&lt;&#x2F;span&gt;&lt;span&gt;: boxGeometry)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F;Note that the node is placed to the root node (World space)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;sceneView&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;?&lt;&#x2F;span&gt;&lt;span&gt;.scene&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;?&lt;&#x2F;span&gt;&lt;span&gt;.rootNode.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;addChildNode&lt;&#x2F;span&gt;&lt;span&gt;(boxNode)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F;Place the box at the touch Coordinates&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;boxNode.worldPosition&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; =&lt;&#x2F;span&gt;&lt;span&gt; firstHit.worldCoordinates&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;boxNode.name&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; =&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;VOLUME_CASTING_BOX&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F;This&amp;#39;s important because you don&amp;#39;t want the user to see the box you&amp;#39;ve placed.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;boxNode.isHidden&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; =&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; true&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F;PhisycsBody is needed so we can check later which objects&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F; &amp;#39;are intersecting with this box&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;boxNode.physicsBody&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; =&lt;&#x2F;span&gt;&lt;span&gt; .&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;init&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;type&lt;&#x2F;span&gt;&lt;span&gt;: .kinematic,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; shape&lt;&#x2F;span&gt;&lt;span&gt;: .&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;init&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;node&lt;&#x2F;span&gt;&lt;span&gt;: boxNode, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;options&lt;&#x2F;span&gt;&lt;span&gt;: [&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span&gt;]))&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;هنا حطينا البوكس اللي بنتكلم عنه، اللي هو هيبقى زي البوكس الاصفر اللي في الصورة اللي فوق، و حددنا له اسم، و حددنا المكان بتاعه ، بالظبط زي الصورة اللي فوق&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;3-check-which-objects-are-intersecting-with-the-placed-box&quot;&gt;3. Check which objects are intersecting with the placed box:&lt;&#x2F;h3&gt;
+&lt;p&gt;اللي احنا عاوزين نعمله هنا، اننا نشوف البادي بتاع البوكس، بيتقاطع مع مين، ممكن تحقق دا عن طريق استخدام الفانكشن بترجع اراي من &lt;code&gt;SCNPhysicsContact&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;ودا تايب بيحفظ جواه تفاصيل التقاطع الخاصة بالمكعب، و بما انها اراي، فدا معناه انه المكعب قد يتقاطع مع اكتر من اوبجكت، يعني لو معانا الاراي دي، نقدر نعرف اللمسة بتاعتنا قريبة من اي اوبجكت في الورلد&lt;&#x2F;p&gt;
+&lt;p&gt;التايب الخاص ب &lt;code&gt;SCNPhysicsContact&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;مهم جدا و بيحتوي على كل التفاصيل الخاصة بالكونتاكت، الكونتاكت الواحد في حالتنا معناه انه دا اوبجكت يتقاطع مع المكعب اللي احنا حطيناه&lt;&#x2F;p&gt;
+&lt;p&gt;لو عندنا ٢ كونتاكت، يبقى فيه ٢ اوجكت يتقاطع مع المكعب&lt;&#x2F;p&gt;
+&lt;p&gt;لاحظ هنا انه كل كونتاكت بيعطيلك ٢ نود&lt;&#x2F;p&gt;
+&lt;p&gt;NodeA, NodeB&lt;&#x2F;p&gt;
+&lt;p&gt;الاولاني هيكون المكعب بتاعك، التاني، اللي هو نود بي، هيكون الجزء اللي بيتقاطع معاه وبناء عليه ممكن تكتب الآتي&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; boxContacts &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; scene.physicsWorld.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;contactTest&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;with&lt;&#x2F;span&gt;&lt;span&gt;: boxNode.physicsBody&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;!&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;options&lt;&#x2F;span&gt;&lt;span&gt;: [&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span&gt;]&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span&gt; boxContacts.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;count&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; &amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 0&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F;Print Contacts name&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; let&lt;&#x2F;span&gt;&lt;span&gt; nodesNames &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; boxContacts&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    .&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;map&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt; $0&lt;&#x2F;span&gt;&lt;span&gt;.nodeB.name&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; ??&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;NO_OBJECT_NAME&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt; }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    .&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;filter&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt; $0&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; !=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;VOLUME_CASTING_BOX&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt; }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;    print&lt;&#x2F;span&gt;&lt;span&gt;(nodesNames)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F; Also, you have access to the node itself&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F; in case you want to highlight it&#x2F;scale it&#x2F;do whatever you want&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;boxContacts.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;forEach&lt;&#x2F;span&gt;&lt;span&gt; { contactWithBox &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;in&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;    print&lt;&#x2F;span&gt;&lt;span&gt;(contactWithBox.nodeB)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt; }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h2 id=&quot;khtm-lmblmntyshn&quot;&gt;ختام الامبلمنتيشن&lt;&#x2F;h2&gt;
+&lt;p&gt;الكود الاخير لو محطوط في Main Thread&lt;&#x2F;p&gt;
+&lt;p&gt;غالبا الكود هيكراش، ليه ؟ علشان سين كيت شغالة من ثريد خاص بيها و بناء عليه فيه احتمالية مش قليلة ل الريس كونديشنز، و عموما افضل حاجة انها تأكسس سين كيت ديما و ابدا من الثريد بتاعها.. ازاي ؟&lt;&#x2F;p&gt;
+&lt;p&gt;محتاج تكونفيرم ل SCNSceneRendererDelegate&lt;&#x2F;p&gt;
+&lt;p&gt;و يكون الكود بتاعك في الفانكشن دي،&lt;&#x2F;p&gt;
+&lt;p&gt;الفانكشن دي بيتعملها كول لكل فريم هيتعمله رندر، نظريا اللعبة او البرنامج بتاعك ممكن يكون كله في الفانكشن دي، ودا الصح لو انت عايز البرنامج بتاعك يكون ثريد سيف، بس في اغلب الاحيان هتجد صعوبة كبيرة في انك تهندل اللوجيك كله فيها&lt;&#x2F;p&gt;
+&lt;p&gt;لأنه علشان دي فانكشن بيتعملها كول لكل فريم، المفروض ميكونش فيها انستراكشنز كتير تاخد وقت طويل..&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; renderer&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; renderer&lt;&#x2F;span&gt;&lt;span&gt;: SCNSceneRenderer, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;willRenderScene&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; scene&lt;&#x2F;span&gt;&lt;span&gt;: SCNScene, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;atTime&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; time&lt;&#x2F;span&gt;&lt;span&gt;: TimeInterval) {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F; Place your code here&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F;this variable will be true when user taps on the screen&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F; from the selector of tap gesture&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F; Note: - This also not safe, the app will crach if main thread is setting it while&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F; SceneKit tries to read it, but for the sake of simplicity i will left it like this..&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F; Also, it doesn&amp;#39;t happen to crach because of this particular propertiy, but yeah..&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span&gt; isCheckingCloseObjectsToTap,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; node &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; scene.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;nodeNamed&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;VOLUME_CASTING_BOX&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; as?&lt;&#x2F;span&gt;&lt;span&gt; SCNNode {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;defer&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F; after checking convert it to false, because we don&amp;#39;t want to check in the next frame&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F; Also, you have access to the node itself&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F; in case you want to highlight it&#x2F;scale it&#x2F;do whatever you want&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;&#x2F; if this looks too verbose, then it&amp;#39;s, this&amp;#39;s how Rendering loops work :&#x2F;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;isCheckingCloseObjectsToTap &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; false&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; boxContacts &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; scene.physicsWorld.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;contactTest&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;with&lt;&#x2F;span&gt;&lt;span&gt;: boxNode.physicsBody&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;!&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;options&lt;&#x2F;span&gt;&lt;span&gt;: [&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span&gt;]&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span&gt; boxContacts.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;count&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; &amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 0&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; let&lt;&#x2F;span&gt;&lt;span&gt; nodesNames &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span&gt; boxContacts&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    .&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;map&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt; $0&lt;&#x2F;span&gt;&lt;span&gt;.nodeB.name&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; ??&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt; }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    .&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;filter&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt; $0&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; !=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;VOLUME_CASTING_BOX&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt; }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;    print&lt;&#x2F;span&gt;&lt;span&gt;(nodesNames)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;boxContacts.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;forEach&lt;&#x2F;span&gt;&lt;span&gt; { contactWithBox &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;in&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;    print&lt;&#x2F;span&gt;&lt;span&gt;(contactWithBox.nodeB)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt; }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h2 id=&quot;lkhtm&quot;&gt;الختام&lt;&#x2F;h2&gt;
+&lt;p&gt;بأستخدام الطريقة دي نقدر نحاكي البيهافيور بتاع الڤوليوم كاستنج اللي في يونيتي، انا بقول نحاكي لأني حتى الان مش متأكد اذا فيه طريقة احسن ولا لا، لكن في كل الاحوال هي الطريقة دي شغالة كويس، و منها تقدر تسأل اليوزر عن الاوبجكت اللي عايز يختاره بالظبط اللي قريب من مكان لمسته, كان ممكن نحاول نعمل امبلمنتيشن بنفسنا لبعض الفانكشنز الموجودة في سين-كيت زي هيت تيستنج و كونتاكت تيست، بس دا كان هيضيف تعقيد اكبر..&lt;&#x2F;p&gt;
+&lt;p&gt;سين-كيت عبارة عن محرك جميل و قوي في عالم آبل لكن مش فيه كل الفانكشنز و الدعم اللي موجود في يونيتي، و كمان ينقصه الدوكيمنتيشن بشكل كبير جدا جدا، مفيش حتى الان حسب ما اعرف حد عمل امبلمنتيشن مشابه للفوليوم كاستنج في سين كيت و بناء عليه ممكت ابقى اكتب نفس البلوج لكن بالانجليزي بما انه دا محتوى مش موجود ابدا ع النت.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="ar">
+        <title>ازاي تهندل السبسكريبشن في كومباين</title>
+        <published>2022-07-28T00:00:00+00:00</published>
+        <updated>2022-07-28T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ar/blog/combine-subscriptions/"/>
+        <id>https://imostfa.github.io/Blog/ar/blog/combine-subscriptions/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ar/blog/combine-subscriptions/">&lt;p&gt;لما تكون بتستخدم Combine في الفيوكنترولر&#x2F;الفيوموديل، بيكون عليك مسؤلية هندلة و الحفاظ على السبسكريبشنز aka Disposals&lt;&#x2F;p&gt;
+&lt;p&gt;لو افترضنا الكود الآتي كمثال على بابلشر بيأبديت الUI في الابلكيشن:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;class&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; ViewController&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; UIViewController&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;var&lt;&#x2F;span&gt;&lt;span&gt; disposeBag:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Set&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; =&lt;&#x2F;span&gt;&lt;span&gt; []&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; animated&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span&gt;) {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;  super&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(animated)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  publisher.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;sink&lt;&#x2F;span&gt;&lt;span&gt; { newValue &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;in&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;    self&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;updateUI&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;with&lt;&#x2F;span&gt;&lt;span&gt;: newValue)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;store&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; &amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;disposeBag)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;اللي بيحصل هنا انه لما بنعمل سبسكرايب بنحفظ السبسكريبشن (AnyCancellable) في الSet الخاصة بالDisposeBag&lt;&#x2F;p&gt;
+&lt;p&gt;ليه بنعمل كدا ؟ علشان لو محفظتش الريفرينس بتاع الكانسيلبل في Array&#x2F;normal variable&#x2F;Set الARC هيشيل الفاريبل من الميموري وفي كومباين لازم علشان تستلم فاليوز، تكون حافظ السبسكريبشن&lt;&#x2F;p&gt;
+&lt;p&gt;كأنك لازم تفضل ماسك السلك اللي بيربطك بالبابلشر اللي بيبعت الداتا&lt;&#x2F;p&gt;
+&lt;p&gt;نفترض انه خلاص انا اخدت الداتا اللي انا عايزها و دلوقتي الكنترولر دا اليوزر هيخرج منه، ازاي اكنسل السبسكريبشن بتاعتي و معدتش استلم اي داتا ؟ هل دا بيحصل بشكل اوتوماتيك ؟ ولا لازم اهندله بنفسي ؟ ايه اللي هيحصل لو انا مشيلتش الكانسيلبل و فضلت سايبه محفوظ ؟&lt;&#x2F;p&gt;
+&lt;p&gt;كطريقة من طرق التعامل مع السؤال دي انه نعمل الآتي&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;class&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; ViewController&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; UIViewController&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;  deinit&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;    print&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;i&amp;#39;m leaving the memory&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;var&lt;&#x2F;span&gt;&lt;span&gt; disposeBag:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Set&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; =&lt;&#x2F;span&gt;&lt;span&gt; []&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; viewDidDisappear&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; animated&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span&gt;)  {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt; super&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;viewDidDisappear&lt;&#x2F;span&gt;&lt;span&gt;(animated)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  disposeBag.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;removeAll&lt;&#x2F;span&gt;&lt;span&gt;()&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; animated&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span&gt;) {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;  super&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(animated)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  publisher.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;sink&lt;&#x2F;span&gt;&lt;span&gt; { newValue &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;in&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;    self&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;updateUI&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;with&lt;&#x2F;span&gt;&lt;span&gt;: newValue)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;store&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; &amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;disposeBag)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;لما الفيوكنترولر يختفي من الشاشة(في اغلب الاحيان معاناه انه خلاص اليوزر مش شايفه، بس مش ديما) ممكن تفضي الDisposeBag كلها، و بكدا السبسكريبشنز اللي محفوظة جواها هتتشال و الكنترولر كله هيتشال من الميموري&lt;&#x2F;p&gt;
+&lt;p&gt;و تقدر تتأكد من دا بأنك تشوف deinit بيتعملها كول، لما تقفل الكنترولر، ورغم انه دا حل للمشكلة،،لكن هو بيترك عليك مسؤولية انك تعمل call للسطر دا كل في ViewDisAppear وفي بعض الاحيان مش هتبقى عايز تكنسل السبسكريبشن لما الفيو تختفي،&lt;&#x2F;p&gt;
+&lt;p&gt;كحل اخر، ممكن تخلي مسؤولية كنسلة السبسكريبشن على ARC&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;class&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; ViewController&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; UIViewController&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;  deinit&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;    print&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;i&amp;#39;m leaving the memory&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;var&lt;&#x2F;span&gt;&lt;span&gt; disposeBag:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Set&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; =&lt;&#x2F;span&gt;&lt;span&gt; []&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;_&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; animated&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;Bool&lt;&#x2F;span&gt;&lt;span&gt;) {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;  super&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;viewDidLoad&lt;&#x2F;span&gt;&lt;span&gt;(animated)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  publisher.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;sink&lt;&#x2F;span&gt;&lt;span&gt; {  [&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;weak&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt; self&lt;&#x2F;span&gt;&lt;span&gt;]  newValue &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;in&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #BD93F9;font-style: italic;&quot;&gt;    self&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;updateUI&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;with&lt;&#x2F;span&gt;&lt;span&gt;: newValue)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  }.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;store&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; &amp;amp;&lt;&#x2F;span&gt;&lt;span&gt;disposeBag)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;هنا احنا في الواقع حلينا مشكلتين، لأنه الكلوجر بتاع Sink بيكابتشر self، ودا في حد ذاته ممكن يعمل Memory Leak لو مفضتش الDisposeBag لكن لما تخلي self weakly capturered دا هيخلي ARC يقدر يشيل الSet بتاعت DisposeBag&lt;&#x2F;p&gt;
+&lt;p&gt;وبناء عليه، احسن حل لو انت جوا الفيوكونترولر&#x2F;فيو موديل، انك متعملش سترونج كابتشر على سيلف، و عموما حاول متعملش سترونج كابتشر في الكلوجرز طول حياتك 😂&lt;&#x2F;p&gt;
+&lt;p&gt;الكلام اللي في البلوج دي يمشي على اي ريآكتيف فريمورك زي RxSwift&#x2F;ReactiveSwift وكدا..&lt;&#x2F;p&gt;
+&lt;p&gt;والبوست دا هو استفاضة في اجابتي على نفس السؤال في ستاك اوفرفولو https:&#x2F;&#x2F;stackoverflow.com&#x2F;a&#x2F;62964220&#x2F;5253913&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="ar">
+        <title>ايه سبب تسمية BehaviorSubject</title>
+        <published>2022-07-27T00:00:00+00:00</published>
+        <updated>2022-07-27T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ar/blog/rxswift-behaviorsubject/"/>
+        <id>https://imostfa.github.io/Blog/ar/blog/rxswift-behaviorsubject/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ar/blog/rxswift-behaviorsubject/">&lt;h3 id=&quot;mqdm&quot;&gt;مقدمة&lt;&#x2F;h3&gt;
+&lt;p&gt;بصراحة انا من محبي الافكار و المفاهيم اللي بتقدمها الريأكتڤ بروجرامينج، لأنها في اغلب الاوقات بتسهل فهم الكود و بتقلل بعض الباجز الفترة دي ابتديت اقرا عن rxSwift، علمًا بأني اصلا بستخدم Combine كأريكتڤ فريمورك،&lt;&#x2F;p&gt;
+&lt;p&gt;لقيت انه فيه Subject اسمه BehaviorSubject وهو عبارة عن سابجكت بيبعت اخر فاليو اتبعتت عليه،اول ما السبسكرايبر يسبسكرايب و طبعا بيبعت بعد كدا اي ڤاليو تتبعت عليه&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;sbb-ltsmy&quot;&gt;سبب التسمية&lt;&#x2F;h3&gt;
+&lt;p&gt;بصراحة لقيت نفسي بقول، هو فين البيهاڤيور في الموضوع ؟ ليه فيه كلمة بيهاڤيور، علمات انه الSubject اللي بيعمل نفس الكلام دا في Combine اسمه واضح جدا، الا وهو CurrentValueSubject&lt;&#x2F;p&gt;
+&lt;p&gt;و الاسم واضح جدا، عبارة عن سابجكت بيحفظ و بيبعت الكارنت فاليو، فليه التسمية مش واضحة في RxSwift زي ماهي واضحة في Combine ؟ الاجابة كانت كالآتي&lt;&#x2F;p&gt;
+&lt;p&gt;In the world of functional reactive programming, a behavior is a value that changes over time. This is exactly what a BehaviorSubject represents: when you subscribe you get the current value, and then you can continue to observe the changes.&lt;&#x2F;p&gt;
+&lt;p&gt;ودا معناه انه كلمة بيهافيور في عالم الريآكتيف بروجرامينج معناها الڤاليو التي يتم مراقبتها و يتم متابعة تغيرها..&lt;&#x2F;p&gt;
+&lt;p&gt;معلومة جديدة، حبيت اني شاركها، و الايام الجاية ممكن اكتب اكتر عن rxSwift لأني بدرس الفرق بينها و Combine&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="ar">
+        <title>إزاي تعرف احجام ال Types بتاعتك في سويفت</title>
+        <published>2020-11-07T00:00:00+00:00</published>
+        <updated>2020-11-07T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ar/blog/memory-alignment-swift/"/>
+        <id>https://imostfa.github.io/Blog/ar/blog/memory-alignment-swift/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ar/blog/memory-alignment-swift/">&lt;h1 id=&quot;zy-t-rf-hjm-l-types-bt-tk-fy-swyft&quot;&gt;إزاي تعرف احجام ال Types بتاعتك في سويفت ؟&lt;&#x2F;h1&gt;
+&lt;p&gt;في سويفت، اي اوبجيكت او تايب، ليه ٣ خصائص ممكن يعبرولك عن تعامل الميموري مع الأوبجيكت دا، هنتعرف على خاصيتين من الخصائص دي في التدوينة دي، و بعضها فيه تدوينات اخرى،&lt;&#x2F;p&gt;
+&lt;p&gt;الخصائص اللي هنتكلم عنها النهاردة هي Size , alignment&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;lhjm-size-package&quot;&gt;الحجم | Size 📦&lt;&#x2F;h2&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;لو عندك اتنين &lt;code&gt;struct&lt;&#x2F;code&gt; في البرنامج بتاعك زي دول:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Student&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Professor&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; phoneNumber:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; mostfa &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; Student&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;age&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 10&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; ahmed &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; Professor&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;age&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 10&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;phoneNumber&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 010&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;و سألتك تتوقع الأوبجيكت اللي اسمه مصطفى اكبر ؟ ولا الللي اسمه احمد ؟ بالمنطق، الأوبجيكت اللي اسمه احمد اكبر علشان هو مكون من متغيرين، &lt;code&gt;age&lt;&#x2F;code&gt; و &lt;code&gt;phoneNumber&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;بس ازاي نتأكد من انه كلامنا صح ؟ لازم ارقام تثبت صحة كلامنا ؟ علشان نتأكد هنستخدم MemoryLayout&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;computer-memory-layout&quot;&gt;💻 Memory Layout&lt;&#x2F;h2&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;فيه في سويفت نوع اسمه MemoryLayout النوع دا بيخلينا نقدر نتأكد من احجام الأنواع اللي عندنا زي Student و Professor و اي نوع في سويفت زي String و Bool علشان نعرف الSize اللي اي اوبجيكت من نوع Student او من نوع Professor هياخده من الميموري:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; studentSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; professorSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span&gt;(studentSize)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F; prints 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span&gt;(professorSize)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;prints 16 😉&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;هنا استخدمنا MemoryLayout و طلبنا منها تجيب حجم&#x2F;size اي اوبجيكت هيتعمل من الtypes هيبقى حجمه كام زي ما توقعنا، professor هتاخد مساحة اكبر من الميموري&lt;&#x2F;p&gt;
+&lt;p&gt;ولو عاوزين نتأكد من الكلام على الأوبجيكتس، زي اوبجيكت آحمد و مصطفى اللي فوق&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; mostfaSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;ofValue&lt;&#x2F;span&gt;&lt;span&gt;: mostfa)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; ahmedSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;ofValue&lt;&#x2F;span&gt;&lt;span&gt;: ahmed)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span&gt;(mostfaSize)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;prints 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span&gt;(ahmedSize)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;also prints 16&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;لكن ليه ؟ ليه ٨ ؟ و ليه ١٦ ؟ نرجع تاني للحجم## للحجم | Size&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;nrj-llhjm-size-package&quot;&gt;نرجع للحجم | Size 📦&lt;&#x2F;h2&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;في سويفت سهل انك تحسب حجم اي ستراكت في البرنامج، لأنه حجم الستراكت = حجم المتغيرات اللي جواه بمعنى إيه ؟ بمعنى انه&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Student&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;     let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; inSchool:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Bool&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; let&lt;&#x2F;span&gt;&lt;span&gt; intSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;  &#x2F;&#x2F;prints out 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; let&lt;&#x2F;span&gt;&lt;span&gt; boolSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;  &#x2F;&#x2F;prints out 1&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; studentSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;prints out 9 ( 1+ 8 )&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;علشان الستراكت دا متكون من متغير من نوع Int و متغير من نوع Bool , حجمه هيساوي مجموع حجم الBool و حجم الInt ، سهلة خالص، صح ؟🦹🏻‍♂️&lt;&#x2F;p&gt;
+&lt;p&gt;طيب خلينا نتأكد بمثال تاني&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; OtherStudent&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; inSchool:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Bool&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;هنا دا OtherStudent نفس الStudent اللي فوق بالظبط، لكن الفرق اننا غيرنا ترتيب الproperties بتاعنا، المفروض يكون نفس الSize ؟!!!&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; OtherStudentSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F; 16 .alignment &#x2F;&#x2F;prints out 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;ال Alignment لأي Integer في سويفت عبارة عن ٨، الرقم دا معناه إيه ؟ معناه انه عنوان الMemory اللي هيتم وضع فيه الInteger لازم يكون من مضاعفات ال٨&lt;&#x2F;p&gt;
+&lt;p&gt;لو عندي الكود الآتي&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; A &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 88&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; b &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 17&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;دا معناه انه المتغير A و b لازم يتحطوا في عنوان ميموري من مضاعفات ال٨، نلاحظ عنوان الميموري للمتغير A في الصورة = صفر، و بما انه الصفر من مضاعفات ال٨، يبقى معندناش مشكلة ايضًا، المتغير b موجود في العنوان ٨ وبما انه ال٨ من مضاعفات ال ٨ ايضًا معندناش مشاكل&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;امتى يكون عندنا مشكلة ؟ يكون عندنا مشكلة في الموقف الآتي&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;*&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;A lot of other code in the app which will be saved in memory&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;*&#x2F;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; A &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 88&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;لو فيه بيانات اخرى Other موجودة في الميموري من العنوان صفر الى العنوان ٤ ، و جينا نحط المتغير a في العنوان رقم ٥، مش هنقدر ! ليه ؟ لأنه طبقًا ل Alignment الخاص ب Integer لازم يتم وضعه في عنوان من مضاعفات ال ٨ وبناء عليه هيتم وضع المتغير A في العنوان رقم ٨، و هيكون العناوين ٥،٦،٧ فاضيين&lt;&#x2F;p&gt;
+&lt;p&gt;ومن هنا نقدر نرجع للسؤال الأساسي، ليه OtherStudent حجمه اختلف عن Student&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;alignment-and-size-bowling&quot;&gt;Alignment and size 🎳&lt;&#x2F;h2&gt;
+&lt;hr &#x2F;&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; boolAlignment &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;alignment&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;prints out 1&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; IntegerAlignment &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;alignment&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;prints out 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Student&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;     let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; inSchool:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Bool&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;بمعرفة انه ال Alignment للBool يساوي ١، دا يعني انه ممكن احط الBoolean values في اي عنوان في الميموري، لأنه كل الارقام تعتبر من مضاعفات الواحد، وايضا بمعرفة انه الAlignment للIntegers يساوي ٨ دا معناه انه ممكن نحط الIntegers في العنواين اللي من مضاعفات ٨&lt;&#x2F;p&gt;
+&lt;p&gt;هنا، الInteger عنوان صفر، و الصفر من مضاعفات ال ٨&lt;&#x2F;p&gt;
+&lt;p&gt;و الBoolean عنوان٨، و ال٨ من مضاعفات ال ١ ودا معناه انه ال Alignment تحقق و شغال و زي الفل و بناء عليه حجم الStudent يساوي ٩&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; OtherStudent&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; inSchool:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Bool&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;لو جينا نطبق قواعد الAlignment هنا هنلاقي الآتي&lt;&#x2F;p&gt;
+&lt;p&gt;اول حاجة هيتم وضع الBoolean value في العنوان صفر، و لأنه الصفر من مضاعفات ال١، الAlignment تصبح مظبوطة ✅&lt;&#x2F;p&gt;
+&lt;p&gt;لكن الInteger مينفعش يتحط في العنوان رقم ١ ❌ لأن العنوان رقم ١ مش من مضاعفات ال ٨ وبناء عليه هيتم تركه فاضي، وترك جميع العناوين اللي مش من مضاعفات ٨ فاضية، حتى نصل الى اول رقم من مضاعفات ٨، وهو ال ٨، ونحط فيه الInteger&lt;&#x2F;p&gt;
+&lt;p&gt;النتيجة هنا، انه بسبب ال Alignment اصبح الstruct حجمه ١٦ 🤯&lt;&#x2F;p&gt;
+&lt;p&gt;To be continued …&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

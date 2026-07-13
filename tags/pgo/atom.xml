@@ -1,0 +1,822 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Mostafa - pgo</title>
+    <subtitle>Thoughts, learnings, and experiences from a computer engineer chasing the fundamentals.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/tags/pgo/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2026-07-12T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/tags/pgo/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Profile-Guided Optimization, From First Principles</title>
+        <published>2026-07-12T00:00:00+00:00</published>
+        <updated>2026-07-12T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ai-learnings/profile-guided-optimization/"/>
+        <id>https://imostfa.github.io/Blog/ai-learnings/profile-guided-optimization/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ai-learnings/profile-guided-optimization/">&lt;p&gt;This write-up was distilled from an LLVM talk about making Profile-Guided Optimization (PGO) useful
+for mobile apps. The talk starts from a very practical problem: mobile startup is sensitive to page
+faults, but traditional PGO often improves speed by increasing code size through inlining. That trade-off
+is awkward on mobile, where smaller code can launch faster.&lt;&#x2F;p&gt;
+&lt;p&gt;The interesting idea in the talk is temporal profiling: record when functions first execute, merge many
+startup traces, then let the linker reorder functions so startup code sits together in the final binary.
+The reported results were the kind worth remembering: up to 40% fewer startup page faults, almost 1-3%
+compressed-size reduction, and in one Firefox iOS experiment, over 6% compressed-size reduction for the
+client binary from function reordering alone.&lt;&#x2F;p&gt;
+&lt;p&gt;Reddit’s iOS optimization write-up is the production-scale case study that made the idea click for me.
+Using PGO, temporal profiling, and function reordering, Reddit reduced the main iOS binary from 198.6 MiB
+to 157.1 MiB and the compressed IPA from 280.6 MiB to 239.6 MiB. The numbers are impressive, but the
+core idea is more important: instead of asking the compiler and linker to guess what matters, you run the
+app, record what actually happened, and feed that evidence back into the next build.&lt;&#x2F;p&gt;
+&lt;p&gt;This document builds that idea from scratch. Prerequisites: you know an app eventually becomes a binary
+and that a compiler turns source code into machine code. Nothing more.&lt;&#x2F;p&gt;
+&lt;style&gt;
+.xpgo { --pos:#1a7f37; --neg:#b3261e; --warn:#9a6700; --hot:#b3261e; --warm:#bf8700; --cold:#0969da; --ink:#57606a; }
+[data-theme=&quot;dark&quot;] .xpgo { --pos:#7ee787; --neg:#ff7b72; --warn:#e3b341; --hot:#ff7b72; --warm:#e3b341; --cold:#79c0ff; --ink:#8b949e; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=&quot;light&quot;]) .xpgo { --pos:#7ee787; --neg:#ff7b72; --warn:#e3b341; --hot:#ff7b72; --warm:#e3b341; --cold:#79c0ff; --ink:#8b949e; } }
+.xpgo .toc-grid { display:grid; grid-template-columns:1fr 1fr; gap:.25rem 2rem; list-style:none; padding:0; margin:.5rem 0 0; }
+.xpgo .toc-grid a { display:block; padding:.15rem 0; }
+.xpgo .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:.75rem; margin:1rem 0; }
+.xpgo .card { background:var(--bg-light); border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:1rem; }
+.xpgo .card h4 { margin:.1rem 0 .5rem; font-size:1rem; }
+.xpgo .card p, .xpgo .card li { font-size:.9rem; margin:.5rem 0; }
+.xpgo .card ul { margin:.25rem 0; padding-left:1.2rem; }
+.xpgo pre { font-size:.8rem; line-height:1.5; overflow-x:auto; }
+.xpgo .dim { color:var(--text-light); }
+.xpgo .ok { color:var(--pos); font-weight:700; }
+.xpgo .err { color:var(--neg); font-weight:700; }
+.xpgo .hot { color:var(--hot); font-weight:700; }
+.xpgo .cold { color:var(--cold); font-weight:700; }
+.xpgo .warm { color:var(--warm); font-weight:700; }
+.xpgo .diagram { border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:1.25rem; background:var(--bg-light); margin:1rem 0; }
+.xpgo .dgrid { display:flex; flex-wrap:wrap; gap:.6rem; align-items:stretch; }
+.xpgo .dbox { border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:.75rem .85rem; background:var(--bg); font-size:.82rem; line-height:1.5; flex:1; min-width:190px; }
+.xpgo .dbox .dtitle { font-weight:700; font-size:.86rem; margin-bottom:.35rem; }
+.xpgo .arrow { display:flex; align-items:center; justify-content:center; color:var(--text-light); font-weight:700; min-width:1.5rem; }
+.xpgo .dcaption { font-size:.85rem; color:var(--text-light); margin-top:.8rem; line-height:1.6; }
+.xpgo .callout { border:1px solid var(--accent); border-left:4px solid var(--accent); border-radius:var(--standard-border-radius); padding:1.1rem 1.25rem; margin:1rem 0; background:var(--bg-light); }
+.xpgo .callout .rule { font-weight:700; font-size:1.03rem; line-height:1.55; margin:.2rem 0; }
+.xpgo .callout .corollary { color:var(--text-light); font-size:.9rem; margin:.65rem 0 0; }
+.xpgo table td, .xpgo table th { font-size:.88rem; vertical-align:top; }
+.xpgo .pill { display:inline-block; border-radius:999px; padding:0 .55rem; font-size:.68rem; font-weight:700; border:1px solid currentColor; }
+.xpgo .pill.hot { color:var(--hot); }
+.xpgo .pill.cold { color:var(--cold); }
+.xpgo .pill.warm { color:var(--warm); }
+.xpgo .layout { display:grid; grid-template-columns:1fr; gap:.7rem; margin:1rem 0; }
+.xpgo .row { display:grid; grid-template-columns:7rem 1fr; gap:.7rem; align-items:center; }
+.xpgo .rlabel { font-size:.75rem; font-weight:700; color:var(--text-light); text-transform:uppercase; letter-spacing:.04em; }
+.xpgo .pages { display:flex; flex-wrap:wrap; gap:.28rem; }
+.xpgo .page { width:2rem; height:1.4rem; border:1px solid var(--border); border-radius:.25rem; background:var(--bg); }
+.xpgo .page.hot { background:color-mix(in srgb,var(--hot) 34%,var(--bg)); border-color:var(--hot); }
+.xpgo .page.warm { background:color-mix(in srgb,var(--warm) 30%,var(--bg)); border-color:var(--warm); }
+.xpgo .page.cold { background:color-mix(in srgb,var(--cold) 24%,var(--bg)); border-color:var(--cold); }
+.xpgo .metric-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.75rem; margin:1rem 0; }
+.xpgo .metric { border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:1rem; background:var(--bg-light); border-top:3px solid var(--accent); }
+.xpgo .metric .label { font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text-light); }
+.xpgo .metric .value { font-size:1.6rem; font-weight:800; line-height:1.15; margin:.25rem 0; color:var(--accent); }
+.xpgo .metric .sub { font-size:.82rem; color:var(--text-light); }
+.xpgo .iviz { border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:1rem; background:var(--bg-light); margin:1rem 0; }
+.xpgo .iviz h4 { margin:.1rem 0 .65rem; font-size:1rem; }
+.xpgo .seg { display:inline-flex; flex-wrap:wrap; gap:.25rem; border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:.25rem; background:var(--bg); margin:.15rem 0 .8rem; }
+.xpgo .seg button { border:0; border-radius:.25rem; padding:.4rem .75rem; background:transparent; color:var(--text-light); cursor:pointer; font:inherit; font-size:.86rem; }
+.xpgo .seg button.active { background:var(--accent); color:var(--accent-text); }
+.xpgo .panel { display:none; }
+.xpgo .panel.active { display:block; }
+.xpgo .mini-flow { display:flex; flex-wrap:wrap; gap:.45rem; align-items:stretch; margin:.5rem 0; }
+.xpgo .node { border:1px solid var(--border); border-radius:var(--standard-border-radius); background:var(--bg); padding:.65rem .75rem; min-width:8.5rem; flex:1; font-size:.84rem; line-height:1.45; }
+.xpgo .node strong { display:block; margin-bottom:.2rem; }
+.xpgo .node.hot { border-color:var(--hot); background:color-mix(in srgb,var(--hot) 12%,var(--bg)); }
+.xpgo .node.cold { border-color:var(--cold); background:color-mix(in srgb,var(--cold) 12%,var(--bg)); }
+.xpgo .node.warm { border-color:var(--warm); background:color-mix(in srgb,var(--warm) 12%,var(--bg)); }
+.xpgo .bars { display:grid; gap:.45rem; margin:.6rem 0; }
+.xpgo .barrow { display:grid; grid-template-columns:minmax(6rem,9rem) 1fr 3.5rem; gap:.6rem; align-items:center; font-size:.84rem; }
+.xpgo .track { height:.85rem; border-radius:999px; background:var(--bg); border:1px solid var(--border); overflow:hidden; }
+.xpgo .fill { display:block; height:100%; width:var(--w,50%); background:var(--accent); transition:width .15s ease; }
+.xpgo .fill.hot { background:var(--hot); }
+.xpgo .fill.cold { background:var(--cold); }
+.xpgo .fill.warm { background:var(--warm); }
+.xpgo .range-line { display:grid; grid-template-columns:7rem 1fr 4rem; gap:.7rem; align-items:center; margin:.5rem 0; font-size:.86rem; }
+.xpgo input[type=&quot;range&quot;] { width:100%; accent-color:var(--accent); }
+.xpgo .stamp-row { display:flex; flex-wrap:wrap; gap:.4rem; margin:.65rem 0; }
+.xpgo .stamp { border:1px solid var(--border); border-radius:var(--standard-border-radius); background:var(--bg); padding:.45rem .6rem; min-width:4.8rem; text-align:center; font-family:var(--mono-font); font-size:.78rem; }
+.xpgo .stamp.on { border-color:var(--hot); color:var(--hot); background:color-mix(in srgb,var(--hot) 10%,var(--bg)); }
+.xpgo .stage { opacity:.55; }
+.xpgo .stage.active { opacity:1; border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+.xpgo .choice-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:.6rem; margin:.7rem 0; }
+.xpgo .choice { border:1px solid var(--border); border-radius:var(--standard-border-radius); background:var(--bg); padding:.75rem; font-size:.86rem; }
+.xpgo .choice strong { display:block; margin-bottom:.25rem; color:var(--accent); }
+.xpgo .term-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:.45rem; margin:.6rem 0; }
+.xpgo .term-grid button { text-align:left; border:1px solid var(--border); border-radius:var(--standard-border-radius); background:var(--bg); color:var(--fg-color); padding:.55rem .65rem; cursor:pointer; font:inherit; font-size:.84rem; }
+.xpgo .term-grid button.active { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+.xpgo .term-card { border:1px solid var(--accent); border-radius:var(--standard-border-radius); background:var(--bg); padding:.85rem; font-size:.9rem; min-height:4rem; }
+.xpgo details.faq { border:1px solid var(--border); border-radius:var(--standard-border-radius); margin-bottom:.55rem; padding:.2rem .6rem; }
+.xpgo details.faq summary { cursor:pointer; font-weight:700; padding:.45rem 0; }
+.xpgo details.faq p { font-size:.92rem; margin:.45rem 0; }
+.xpgo .gloss dt { font-weight:700; color:var(--accent); margin-top:.9rem; }
+.xpgo .gloss dd { margin:.15rem 0 0; font-size:.9rem; }
+@media (max-width:650px) { .xpgo .toc-grid { grid-template-columns:1fr; } .xpgo .row { grid-template-columns:1fr; gap:.3rem; } .xpgo .arrow { min-width:100%; } }
+&lt;&#x2F;style&gt;
+&lt;div class=&quot;xpgo&quot;&gt;
+&lt;nav aria-label=&quot;Contents&quot;&gt;
+&lt;h2 id=&quot;contents&quot;&gt;Contents&lt;&#x2F;h2&gt;
+&lt;ol class=&quot;toc-grid&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#part1&quot;&gt;What the compiler normally guesses&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part2&quot;&gt;Why mobile cares about hot code and size&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part3&quot;&gt;The PGO feedback loop&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part4&quot;&gt;Coverage profiling&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part5&quot;&gt;Temporal profiling&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part6&quot;&gt;Function layout and page faults&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part7&quot;&gt;Balanced partitioning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part8&quot;&gt;Reddit&#x27;s iOS pipeline&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part9&quot;&gt;Case study: reading a real profile&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part10&quot;&gt;Measurement and traps&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part11&quot;&gt;Diagnostic reference&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part12&quot;&gt;FAQ&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part13&quot;&gt;Glossary&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;&#x2F;nav&gt;
+&lt;h2 id=&quot;part1&quot;&gt;Part 1 — What the compiler normally guesses&lt;&#x2F;h2&gt;
+&lt;p&gt;A compiler has to make performance decisions before your app has ever run. Should this function be inlined? Which branch is likely? Which loop deserves more aggressive optimization? Which code should be kept close together in the final binary?&lt;&#x2F;p&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Static guess vs. profile-guided build&lt;&#x2F;h4&gt;
+&lt;div class=&quot;mini-flow&quot;&gt;
+&lt;div class=&quot;node warm&quot;&gt;&lt;strong&gt;Static build&lt;&#x2F;strong&gt;Source code shape&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node warm&quot;&gt;&lt;strong&gt;Heuristics&lt;&#x2F;strong&gt;Compiler guesses hot paths&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node cold&quot;&gt;&lt;strong&gt;Risk&lt;&#x2F;strong&gt;Budget goes to the wrong code&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;mini-flow&quot;&gt;
+&lt;div class=&quot;node hot&quot;&gt;&lt;strong&gt;PGO build&lt;&#x2F;strong&gt;Instrumented app run&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node hot&quot;&gt;&lt;strong&gt;Profile data&lt;&#x2F;strong&gt;Real hot paths recorded&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node&quot;&gt;&lt;strong&gt;Optimized build&lt;&#x2F;strong&gt;Budget follows evidence&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;The difference is not that PGO has a smarter compiler. It gives the compiler a measured workload to believe.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;Without profiles, the compiler uses static heuristics: educated guesses based on the shape of the code. Those guesses are often reasonable, but they are still guesses. A function that looks small may be irrelevant. A branch that looks unlikely may be the branch every user hits during startup. A generic utility may be cold in most of the app but hot on the first screen.&lt;&#x2F;p&gt;
+&lt;div class=&quot;cards&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Static optimization&lt;&#x2F;h4&gt;
+&lt;p&gt;The compiler looks only at source&#x2F;IR. It optimizes based on general rules: small functions are inline candidates, loops get transformed, branches get predicted from code shape.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Profile-guided optimization&lt;&#x2F;h4&gt;
+&lt;p&gt;You first build an instrumented app, run representative flows, merge the generated profile files, then rebuild using those profiles. The compiler now has evidence.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Switch the compiler&#x27;s view&lt;&#x2F;h4&gt;
+&lt;div class=&quot;seg&quot; role=&quot;tablist&quot; aria-label=&quot;Compiler view&quot;&gt;
+&lt;button class=&quot;active&quot; type=&quot;button&quot; onclick=&quot;xpgoShow(&#x27;guess-view&#x27;,&#x27;guess&#x27;)&quot;&gt;Static guess&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoShow(&#x27;guess-view&#x27;,&#x27;profile&#x27;)&quot;&gt;Profile evidence&lt;&#x2F;button&gt;
+&lt;&#x2F;div&gt;
+&lt;div data-xpgo-group=&quot;guess-view&quot; data-xpgo-panel=&quot;guess&quot; class=&quot;panel active&quot;&gt;
+&lt;div class=&quot;mini-flow&quot;&gt;
+&lt;div class=&quot;node warm&quot;&gt;&lt;strong&gt;Source shape&lt;&#x2F;strong&gt;Small function, branch, loop&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node&quot;&gt;&lt;strong&gt;Heuristic&lt;&#x2F;strong&gt;&quot;This probably matters&quot;&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node cold&quot;&gt;&lt;strong&gt;Risk&lt;&#x2F;strong&gt;Wrong path gets budget&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;Without profiles, the compiler only sees the code&#x27;s shape. It cannot know which path users actually hit.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div data-xpgo-group=&quot;guess-view&quot; data-xpgo-panel=&quot;profile&quot; class=&quot;panel&quot;&gt;
+&lt;div class=&quot;mini-flow&quot;&gt;
+&lt;div class=&quot;node hot&quot;&gt;&lt;strong&gt;Runtime data&lt;&#x2F;strong&gt;startup called this 1,000x&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node&quot;&gt;&lt;strong&gt;Optimizer&lt;&#x2F;strong&gt;Spend budget here&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node cold&quot;&gt;&lt;strong&gt;Cold path&lt;&#x2F;strong&gt;Keep small, move later&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;PGO replaces &quot;probably&quot; with measured behavior from the workload you chose.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;PGO is a feedback loop: build with instrumentation → run realistic behavior → collect profiles → rebuild using those profiles.&lt;&#x2F;p&gt;
+&lt;p class=&quot;corollary&quot;&gt;The profile does not change what your program means. It changes how aggressively and where the toolchain spends optimization budget.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;The rule to remember: coverage PGO tells the compiler what code is hot. Temporal PGO tells the linker what code runs together. On mobile, both matter because code size and code layout affect startup.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part2&quot;&gt;Part 2 — Why mobile cares about hot code and size&lt;&#x2F;h2&gt;
+&lt;p&gt;Mobile startup is not only about how fast one function executes after it is already in memory. Before that function can run, its code has to be present in memory. If it is not, the kernel brings in the page that contains it, and that page fault costs time. A smaller and better-laid-out &lt;code&gt;__TEXT&lt;&#x2F;code&gt; section usually means fewer pages touched during startup.&lt;&#x2F;p&gt;
+&lt;p&gt;This is why the hot&#x2F;cold distinction matters. PGO is deciding where the toolchain should spend optimization budget. Some code deserves aggressive treatment because it runs during startup or a critical flow. Some code should mostly stay out of the way because making it bigger or placing it early can hurt the path users actually feel.&lt;&#x2F;p&gt;
+&lt;p&gt;PGO starts with a simple split: some code is &lt;span class=&quot;hot&quot;&gt;hot&lt;&#x2F;span&gt;, some code is &lt;span class=&quot;cold&quot;&gt;cold&lt;&#x2F;span&gt;. Hot does not mean &quot;important to the product&quot; and cold does not mean &quot;dead&quot;. Hot means &quot;executed often, or executed during an important measured window&quot;. Cold means &quot;rarely executed in the profile you collected&quot;.&lt;&#x2F;p&gt;
+&lt;table&gt;
+&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Category&lt;&#x2F;th&gt;&lt;th&gt;Meaning&lt;&#x2F;th&gt;&lt;th&gt;Optimization implication&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;&lt;span class=&quot;pill hot&quot;&gt;Hot&lt;&#x2F;span&gt;&lt;&#x2F;td&gt;&lt;td&gt;Runs frequently or during a critical flow such as cold startup.&lt;&#x2F;td&gt;&lt;td&gt;Worth inlining, branch tuning, layout priority, and sometimes more code size.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;span class=&quot;pill cold&quot;&gt;Cold&lt;&#x2F;span&gt;&lt;&#x2F;td&gt;&lt;td&gt;Runs rarely or never in the collected workload.&lt;&#x2F;td&gt;&lt;td&gt;Avoid wasting binary size. Keep it out of the hot path and often optimize for size.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;span class=&quot;pill warm&quot;&gt;Warm&lt;&#x2F;span&gt;&lt;&#x2F;td&gt;&lt;td&gt;Runs sometimes, but not in the first-order path.&lt;&#x2F;td&gt;&lt;td&gt;Optimize normally; do not let it disrupt startup layout.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;
+&lt;&#x2F;table&gt;
+&lt;p&gt;The phrase &quot;hot path&quot; is only meaningful relative to the workload you profiled. If your profile comes from login and home-feed startup, then PGO learns about login and home-feed startup. It cannot magically optimize a checkout flow, editor flow, or obscure settings screen unless that behavior appears in the profile.&lt;&#x2F;p&gt;
+&lt;h3&gt;Why &lt;code&gt;-Oz&lt;&#x2F;code&gt; can beat &quot;faster&quot; optimization&lt;&#x2F;h3&gt;
+&lt;p&gt;On desktop&#x2F;server code, &quot;optimize for speed&quot; often sounds like the obvious default. On mobile, size is part of speed. That is why mobile apps are often built with &lt;code&gt;-Oz&lt;&#x2F;code&gt; or other size-aware settings instead of blindly choosing speed-oriented optimization. More inlining can make a hot CPU loop faster, but it can also inflate code size enough to hurt cold startup.&lt;&#x2F;p&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Move the inlining dial&lt;&#x2F;h4&gt;
+&lt;div class=&quot;range-line&quot;&gt;
+&lt;label for=&quot;xpgo-inline-range&quot;&gt;Inlining&lt;&#x2F;label&gt;
+&lt;input id=&quot;xpgo-inline-range&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; value=&quot;35&quot; oninput=&quot;xpgoInline(this.value)&quot;&gt;
+&lt;strong id=&quot;xpgo-inline-label&quot;&gt;35%&lt;&#x2F;strong&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;bars&quot;&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;CPU call overhead&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span id=&quot;xpgo-overhead&quot; class=&quot;fill cold&quot; style=&quot;--w:65%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span id=&quot;xpgo-overhead-label&quot;&gt;65%&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;Code size&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span id=&quot;xpgo-codesize&quot; class=&quot;fill hot&quot; style=&quot;--w:35%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span id=&quot;xpgo-codesize-label&quot;&gt;35%&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;Startup page risk&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span id=&quot;xpgo-pagerisk&quot; class=&quot;fill warm&quot; style=&quot;--w:42%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span id=&quot;xpgo-pagerisk-label&quot;&gt;42%&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;Inlining can reduce call overhead, but it also grows code. On mobile, too much growth can make startup worse even if individual calls are faster.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part3&quot;&gt;Part 3 — The PGO feedback loop&lt;&#x2F;h2&gt;
+&lt;p&gt;At a high level, PGO has two builds and one run in the middle.&lt;&#x2F;p&gt;
+&lt;div class=&quot;diagram&quot;&gt;
+&lt;div class=&quot;dgrid&quot;&gt;
+&lt;div class=&quot;dbox&quot;&gt;&lt;div class=&quot;dtitle&quot;&gt;1. Instrumented build&lt;&#x2F;div&gt;Compile with flags such as &lt;code&gt;-fprofile-generate&lt;&#x2F;code&gt;. The produced app includes counters or probes that write execution data.&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox&quot;&gt;&lt;div class=&quot;dtitle&quot;&gt;2. Representative run&lt;&#x2F;div&gt;Exercise the app through realistic flows: startup, logged-out, logged-in, notifications, critical screens, experiments.&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox&quot;&gt;&lt;div class=&quot;dtitle&quot;&gt;3. Merge profiles&lt;&#x2F;div&gt;Combine raw outputs with &lt;code&gt;llvm-profdata merge&lt;&#x2F;code&gt; into a stable &lt;code&gt;.profdata&lt;&#x2F;code&gt; file.&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox&quot;&gt;&lt;div class=&quot;dtitle&quot;&gt;4. Optimized build&lt;&#x2F;div&gt;Rebuild with &lt;code&gt;-fprofile-use=&#x2F;path&#x2F;profile.profdata&lt;&#x2F;code&gt;. The compiler and linker now optimize with evidence.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;The profiles are build inputs. Treat them like generated artifacts with a freshness policy, not like magic constants checked in forever.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Step through the feedback loop&lt;&#x2F;h4&gt;
+&lt;div class=&quot;seg&quot; role=&quot;tablist&quot; aria-label=&quot;PGO loop steps&quot;&gt;
+&lt;button class=&quot;active&quot; type=&quot;button&quot; onclick=&quot;xpgoStage(&#x27;loop&#x27;,1)&quot;&gt;1 Build&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoStage(&#x27;loop&#x27;,2)&quot;&gt;2 Run&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoStage(&#x27;loop&#x27;,3)&quot;&gt;3 Merge&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoStage(&#x27;loop&#x27;,4)&quot;&gt;4 Rebuild&lt;&#x2F;button&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;mini-flow&quot; data-xpgo-stage-group=&quot;loop&quot;&gt;
+&lt;div class=&quot;node stage active&quot; data-xpgo-stage=&quot;1&quot;&gt;&lt;strong&gt;Instrument&lt;&#x2F;strong&gt;Add counters&#x2F;timestamps&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node stage&quot; data-xpgo-stage=&quot;2&quot;&gt;&lt;strong&gt;Exercise&lt;&#x2F;strong&gt;Run representative flows&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node stage&quot; data-xpgo-stage=&quot;3&quot;&gt;&lt;strong&gt;Merge&lt;&#x2F;strong&gt;Turn raw runs into profile input&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node stage&quot; data-xpgo-stage=&quot;4&quot;&gt;&lt;strong&gt;Optimize&lt;&#x2F;strong&gt;Compiler&#x2F;linker use the profile&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p id=&quot;xpgo-loop-caption&quot; class=&quot;dcaption&quot;&gt;The first build is deliberately instrumented; it is not the final app you ship.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;pre&gt;clang -fprofile-generate ...       &lt;span class=&quot;dim&quot;&gt;# build an instrumented binary&lt;&#x2F;span&gt;
+.&#x2F;run-representative-workload      &lt;span class=&quot;dim&quot;&gt;# emits one or more .profraw files&lt;&#x2F;span&gt;
+llvm-profdata merge *.profraw -o app.profdata
+clang -fprofile-use=app.profdata ...&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;part4&quot;&gt;Part 4 — Coverage profiling&lt;&#x2F;h2&gt;
+&lt;p&gt;Coverage profiling answers: &lt;strong&gt;what ran, and how much?&lt;&#x2F;strong&gt; It records function counts, branch behavior, and other execution-frequency signals. When you feed that profile into a later compile, the compiler can make better local decisions.&lt;&#x2F;p&gt;
+&lt;div class=&quot;cards&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Inlining&lt;&#x2F;h4&gt;
+&lt;p&gt;Inlining removes a function call by copying the callee into the caller. It can expose further optimization, but it can also grow the binary. PGO helps spend inlining budget on hot calls instead of cold ones.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Branch layout&lt;&#x2F;h4&gt;
+&lt;p&gt;If one branch is usually taken, the compiler can lay out the common path so the CPU does less jumping and prediction is easier.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Loop and codegen choices&lt;&#x2F;h4&gt;
+&lt;p&gt;Loops that actually run many iterations can justify heavier optimization. Cold loops should not receive the same attention by default.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Choose a coverage profile&lt;&#x2F;h4&gt;
+&lt;div class=&quot;seg&quot; role=&quot;tablist&quot; aria-label=&quot;Coverage workload&quot;&gt;
+&lt;button class=&quot;active&quot; type=&quot;button&quot; onclick=&quot;xpgoShow(&#x27;coverage-view&#x27;,&#x27;startup&#x27;)&quot;&gt;Startup profile&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoShow(&#x27;coverage-view&#x27;,&#x27;settings&#x27;)&quot;&gt;Settings profile&lt;&#x2F;button&gt;
+&lt;&#x2F;div&gt;
+&lt;div data-xpgo-group=&quot;coverage-view&quot; data-xpgo-panel=&quot;startup&quot; class=&quot;panel active&quot;&gt;
+&lt;div class=&quot;bars&quot;&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;bootstrap()&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill hot&quot; style=&quot;--w:95%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;950&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;decodeFeed()&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill hot&quot; style=&quot;--w:78%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;780&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;openSettings()&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill cold&quot; style=&quot;--w:4%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;40&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;The compiler sees startup and feed code as hot, so inlining and branch decisions bias toward that path.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div data-xpgo-group=&quot;coverage-view&quot; data-xpgo-panel=&quot;settings&quot; class=&quot;panel&quot;&gt;
+&lt;div class=&quot;bars&quot;&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;bootstrap()&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill warm&quot; style=&quot;--w:35%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;350&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;decodeFeed()&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill cold&quot; style=&quot;--w:12%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;120&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;openSettings()&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill hot&quot; style=&quot;--w:92%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;920&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;A different workload teaches a different truth. This is why representative profiling matters.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;Coverage PGO is mostly about compiler decisions inside and between functions.&lt;&#x2F;p&gt;
+&lt;p class=&quot;corollary&quot;&gt;It tells the optimizer where the execution weight is, so it can avoid treating every path as equally important. The mobile caveat: default IRPGO is often tuned toward inlining and speed, so without size-aware settings it can grow the binary.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;That caveat matters. If PGO says &quot;this call is hot&quot;, the compiler may inline it. Sometimes that is exactly right. Sometimes the extra code size creates more instruction-cache pressure and more pages to fault in. LLVM has size-oriented knobs such as profile-guided size optimization and inlining controls for this reason. PGO is evidence; policy still matters.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part5&quot;&gt;Part 5 — Temporal profiling&lt;&#x2F;h2&gt;
+&lt;p&gt;Coverage answers &quot;how often?&quot;. Temporal profiling answers &lt;strong&gt;&quot;when, and in what order?&quot;&lt;&#x2F;strong&gt; That distinction matters for startup. During a cold launch, the device does not load your entire binary into memory at once. It faults in pages as code is touched. If startup functions are scattered across the file, the system touches more pages earlier.&lt;&#x2F;p&gt;
+&lt;p&gt;Temporal profiling records an execution trace: function A happened, then B, then C. For mobile startup, that sequence is gold. It lets the linker place functions that execute close together physically close together in the binary.&lt;&#x2F;p&gt;
+&lt;div class=&quot;diagram&quot;&gt;
+&lt;div class=&quot;dgrid&quot;&gt;
+&lt;div class=&quot;dbox&quot;&gt;&lt;div class=&quot;dtitle&quot;&gt;Coverage profile&lt;&#x2F;div&gt;&lt;code&gt;FeedViewController.viewDidLoad&lt;&#x2F;code&gt;: 1&lt;br&gt;&lt;code&gt;JSONDecoder.decode&lt;&#x2F;code&gt;: 340&lt;br&gt;&lt;code&gt;SettingsScreen.open&lt;&#x2F;code&gt;: 0&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox&quot;&gt;&lt;div class=&quot;dtitle&quot;&gt;Compiler learns&lt;&#x2F;div&gt;Decode path is hot. Settings path is cold. Inline and branch decisions should reflect that.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;dgrid&quot; style=&quot;margin-top:.7rem&quot;&gt;
+&lt;div class=&quot;dbox&quot;&gt;&lt;div class=&quot;dtitle&quot;&gt;Temporal profile&lt;&#x2F;div&gt;&lt;code&gt;main → AppDelegate → bootstrap → feed → first cell&lt;&#x2F;code&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox&quot;&gt;&lt;div class=&quot;dtitle&quot;&gt;Linker learns&lt;&#x2F;div&gt;These functions belong near each other because startup touches them in this order.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;Both profiles describe the same app, but they answer different optimization questions.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Record first-call timestamps&lt;&#x2F;h4&gt;
+&lt;div class=&quot;seg&quot; role=&quot;tablist&quot; aria-label=&quot;Temporal trace&quot;&gt;
+&lt;button class=&quot;active&quot; type=&quot;button&quot; onclick=&quot;xpgoTrace(0)&quot;&gt;Reset&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoTrace(1)&quot;&gt;Call 1&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoTrace(2)&quot;&gt;Call 2&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoTrace(3)&quot;&gt;Call 3&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoTrace(4)&quot;&gt;Call 4&lt;&#x2F;button&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;stamp-row&quot;&gt;
+&lt;span id=&quot;xpgo-stamp-main&quot; class=&quot;stamp&quot;&gt;main&lt;br&gt;0&lt;&#x2F;span&gt;
+&lt;span id=&quot;xpgo-stamp-app&quot; class=&quot;stamp&quot;&gt;App&lt;br&gt;0&lt;&#x2F;span&gt;
+&lt;span id=&quot;xpgo-stamp-feed&quot; class=&quot;stamp&quot;&gt;Feed&lt;br&gt;0&lt;&#x2F;span&gt;
+&lt;span id=&quot;xpgo-stamp-cell&quot; class=&quot;stamp&quot;&gt;Cell&lt;br&gt;0&lt;&#x2F;span&gt;
+&lt;span id=&quot;xpgo-stamp-settings&quot; class=&quot;stamp&quot;&gt;Settings&lt;br&gt;0&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;p id=&quot;xpgo-trace-caption&quot; class=&quot;dcaption&quot;&gt;Before execution, every timestamp is zero. Zero means &quot;not observed in this run.&quot;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;In Reddit&#x27;s write-up, temporal profiling used LLVM&#x27;s &lt;code&gt;-pgo-temporal-instrumentation&lt;&#x2F;code&gt;. The LLVM talk explains the mechanism: every instrumented function gets a timestamp slot initialized to zero; on the first call, the runtime writes the current global timestamp and increments it. When the raw profile is dumped, functions can be sorted by timestamp to recover a trace. A zero timestamp means the function did not run in that profile.&lt;&#x2F;p&gt;
+&lt;p&gt;A key detail: temporal instrumentation has much lower binary-size overhead than traditional IR PGO instrumentation, which helps the profiled app behave more like the real release app. If the profiled build is wildly different from release, its function order is less trustworthy.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part6&quot;&gt;Part 6 — Function layout and page faults&lt;&#x2F;h2&gt;
+&lt;p&gt;A binary is not just a bag of functions. It is an ordered file. That order affects cold startup because the kernel brings code into memory in pages. Reddit&#x27;s article calls out 16 KiB pages on iOS. The exact page size matters less than the invariant: touching code from many far-apart regions causes more page faults than touching code from nearby regions.&lt;&#x2F;p&gt;
+&lt;div class=&quot;layout&quot;&gt;
+&lt;div class=&quot;row&quot;&gt;
+&lt;div class=&quot;rlabel&quot;&gt;Before layout&lt;&#x2F;div&gt;
+&lt;div class=&quot;pages&quot; aria-label=&quot;Scattered hot and cold pages before layout&quot;&gt;
+&lt;span class=&quot;page hot&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page cold&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page hot&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page warm&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page cold&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page hot&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page cold&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page warm&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page hot&quot;&gt;&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;row&quot;&gt;
+&lt;div class=&quot;rlabel&quot;&gt;After layout&lt;&#x2F;div&gt;
+&lt;div class=&quot;pages&quot; aria-label=&quot;Clustered hot pages after layout&quot;&gt;
+&lt;span class=&quot;page hot&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page hot&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page hot&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page hot&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page warm&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page warm&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page cold&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page cold&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page cold&quot;&gt;&lt;&#x2F;span&gt;&lt;span class=&quot;page&quot;&gt;&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Compare page touches&lt;&#x2F;h4&gt;
+&lt;div class=&quot;seg&quot; role=&quot;tablist&quot; aria-label=&quot;Binary layout&quot;&gt;
+&lt;button class=&quot;active&quot; type=&quot;button&quot; onclick=&quot;xpgoShow(&#x27;layout-view&#x27;,&#x27;scattered&#x27;)&quot;&gt;Scattered&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoShow(&#x27;layout-view&#x27;,&#x27;clustered&#x27;)&quot;&gt;Clustered&lt;&#x2F;button&gt;
+&lt;&#x2F;div&gt;
+&lt;div data-xpgo-group=&quot;layout-view&quot; data-xpgo-panel=&quot;scattered&quot; class=&quot;panel active&quot;&gt;
+&lt;div class=&quot;bars&quot;&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;Pages touched&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill hot&quot; style=&quot;--w:92%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;11&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;Startup wait&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill warm&quot; style=&quot;--w:80%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;high&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;Startup functions are spread apart, so the launch path jumps across many pages.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div data-xpgo-group=&quot;layout-view&quot; data-xpgo-panel=&quot;clustered&quot; class=&quot;panel&quot;&gt;
+&lt;div class=&quot;bars&quot;&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;Pages touched&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill hot&quot; style=&quot;--w:38%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;5&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;Startup wait&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill warm&quot; style=&quot;--w:32%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;lower&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;Startup functions are adjacent, so the launch path reuses nearby pages.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;Function reordering does not make a function faster in isolation. It makes the startup walk through the binary cheaper: fewer scattered pages, fewer cold misses, less waiting before the app becomes interactive.&lt;&#x2F;p&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;For cold startup, where code lives can matter almost as much as what the code does.&lt;&#x2F;p&gt;
+&lt;p class=&quot;corollary&quot;&gt;That is the part of PGO I want to remember: profiles can guide not only compiler transforms, but also physical binary layout.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;Also keep two goals separate: the compressed IPA should be small so install&#x2F;update is fast, while the installed binary should be laid out so launch is fast. The app is not decompressing the IPA during startup; compression helps distribution, page-fault reduction helps launch.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part7&quot;&gt;Part 7 — Balanced partitioning&lt;&#x2F;h2&gt;
+&lt;p&gt;The hard part is that layout has two goals that can pull in different directions.&lt;&#x2F;p&gt;
+&lt;div class=&quot;cards&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Startup locality&lt;&#x2F;h4&gt;
+&lt;p&gt;Functions that run near each other in time should sit near each other in the file. This reduces page faults during cold startup and critical flows.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Compression locality&lt;&#x2F;h4&gt;
+&lt;p&gt;Functions with similar instruction patterns often compress better when placed near each other, because LZ-style compression benefits from repeated nearby patterns.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Pick the layout objective&lt;&#x2F;h4&gt;
+&lt;div class=&quot;seg&quot; role=&quot;tablist&quot; aria-label=&quot;Balanced partitioning objective&quot;&gt;
+&lt;button class=&quot;active&quot; type=&quot;button&quot; onclick=&quot;xpgoShow(&#x27;bp-view&#x27;,&#x27;startup&#x27;)&quot;&gt;Startup&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoShow(&#x27;bp-view&#x27;,&#x27;compression&#x27;)&quot;&gt;Compression&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoShow(&#x27;bp-view&#x27;,&#x27;both&#x27;)&quot;&gt;Both&lt;&#x2F;button&gt;
+&lt;&#x2F;div&gt;
+&lt;div data-xpgo-group=&quot;bp-view&quot; data-xpgo-panel=&quot;startup&quot; class=&quot;panel active&quot;&gt;
+&lt;div class=&quot;mini-flow&quot;&gt;
+&lt;div class=&quot;node hot&quot;&gt;&lt;strong&gt;A&lt;&#x2F;strong&gt;main&lt;&#x2F;div&gt;&lt;div class=&quot;node hot&quot;&gt;&lt;strong&gt;B&lt;&#x2F;strong&gt;bootstrap&lt;&#x2F;div&gt;&lt;div class=&quot;node hot&quot;&gt;&lt;strong&gt;C&lt;&#x2F;strong&gt;feed&lt;&#x2F;div&gt;&lt;div class=&quot;node cold&quot;&gt;&lt;strong&gt;X&lt;&#x2F;strong&gt;settings&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;Prioritize functions that execute close together in the startup trace.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div data-xpgo-group=&quot;bp-view&quot; data-xpgo-panel=&quot;compression&quot; class=&quot;panel&quot;&gt;
+&lt;div class=&quot;mini-flow&quot;&gt;
+&lt;div class=&quot;node cold&quot;&gt;&lt;strong&gt;X1&lt;&#x2F;strong&gt;similar bytes&lt;&#x2F;div&gt;&lt;div class=&quot;node cold&quot;&gt;&lt;strong&gt;X2&lt;&#x2F;strong&gt;similar bytes&lt;&#x2F;div&gt;&lt;div class=&quot;node warm&quot;&gt;&lt;strong&gt;Y1&lt;&#x2F;strong&gt;similar bytes&lt;&#x2F;div&gt;&lt;div class=&quot;node warm&quot;&gt;&lt;strong&gt;Y2&lt;&#x2F;strong&gt;similar bytes&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;Prioritize functions with similar instruction patterns so compression sees repeated nearby sequences.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div data-xpgo-group=&quot;bp-view&quot; data-xpgo-panel=&quot;both&quot; class=&quot;panel&quot;&gt;
+&lt;div class=&quot;mini-flow&quot;&gt;
+&lt;div class=&quot;node hot&quot;&gt;&lt;strong&gt;Hot trace&lt;&#x2F;strong&gt;A · B · C&lt;&#x2F;div&gt;&lt;div class=&quot;node warm&quot;&gt;&lt;strong&gt;Warm similar&lt;&#x2F;strong&gt;Y1 · Y2&lt;&#x2F;div&gt;&lt;div class=&quot;node cold&quot;&gt;&lt;strong&gt;Cold similar&lt;&#x2F;strong&gt;X1 · X2&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;Balanced partitioning searches for a useful compromise: startup locality first where it matters, compression locality elsewhere.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;Balanced partitioning treats layout like a graph problem. Functions are nodes. Relationships between functions are utilities: &quot;these two run near each other&quot; or &quot;these two look similar for compression&quot;. The algorithm recursively partitions the graph so strongly related functions tend to stay together. With an option such as &lt;code&gt;--compression-sort=both&lt;&#x2F;code&gt;, the linker can balance temporal locality and compression locality instead of choosing only one.&lt;&#x2F;p&gt;
+&lt;div class=&quot;diagram&quot;&gt;
+&lt;div class=&quot;dgrid&quot;&gt;
+&lt;div class=&quot;dbox&quot;&gt;&lt;div class=&quot;dtitle&quot;&gt;Temporal utility&lt;&#x2F;div&gt;&lt;code&gt;A → B → C&lt;&#x2F;code&gt; appeared in the startup trace, so A, B, and C should be close.&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox&quot;&gt;&lt;div class=&quot;dtitle&quot;&gt;Compression utility&lt;&#x2F;div&gt;&lt;code&gt;X&lt;&#x2F;code&gt; and &lt;code&gt;Y&lt;&#x2F;code&gt; have similar machine-code patterns, so placing them close may shrink the compressed IPA.&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox&quot;&gt;&lt;div class=&quot;dtitle&quot;&gt;Partitioning decision&lt;&#x2F;div&gt;Keep high-utility relationships inside the same partition when possible; split weaker relationships first.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;This is why the same optimization can improve startup and reduce size. The layout is optimized using real execution traces plus code-similarity signals.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;The LLVM talk gives a concrete compression model: LZ-style compression benefits from repeated instruction sequences appearing within a sliding window. Function contents can be represented by stable hashes of instructions; functions sharing many utility vertices are good candidates to place near each other. For startup, the utility vertices come from temporal traces instead.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part8&quot;&gt;Part 8 — Reddit&#x27;s iOS pipeline&lt;&#x2F;h2&gt;
+&lt;p&gt;Reddit&#x27;s production story becomes much easier to read once the pieces are separated.&lt;&#x2F;p&gt;
+&lt;div class=&quot;cards&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;1. Representative workloads&lt;&#x2F;h4&gt;
+&lt;p&gt;They reused UI performance tests around important P0 use cases: fresh install, signed-out, logged-in, account switching, opening posts, and feed paths. HTTP stubbing reduced noise so the profiles reflected app behavior instead of network timing.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;2. Two profile families&lt;&#x2F;h4&gt;
+&lt;p&gt;Coverage profiles fed compiler optimization through &lt;code&gt;-profile-use&lt;&#x2F;code&gt;. Temporal profiles fed linker function ordering through LLD.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;3. Final optimized release build&lt;&#x2F;h4&gt;
+&lt;p&gt;The final App Store binary was built with profile inputs, a custom LLVM linker, and balanced partitioning for startup locality and compression.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;pre&gt;instrumented app + UI tests
+  ├─ coverage .profraw files  → llvm-profdata merge → coverage.profdata
+  └─ temporal .profraw files  → llvm-profdata merge → temporal.profdata
+
+release build
+  ├─ swiftc &#x2F; clang use coverage.profdata for compiler PGO
+  └─ LLD uses temporal.profdata for function ordering&lt;&#x2F;pre&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Follow one profile through the release pipeline&lt;&#x2F;h4&gt;
+&lt;div class=&quot;seg&quot; role=&quot;tablist&quot; aria-label=&quot;Reddit pipeline&quot;&gt;
+&lt;button class=&quot;active&quot; type=&quot;button&quot; onclick=&quot;xpgoStage(&#x27;reddit&#x27;,1)&quot;&gt;UI tests&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoStage(&#x27;reddit&#x27;,2)&quot;&gt;Merge&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoStage(&#x27;reddit&#x27;,3)&quot;&gt;Compile&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoStage(&#x27;reddit&#x27;,4)&quot;&gt;Link&lt;&#x2F;button&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;mini-flow&quot; data-xpgo-stage-group=&quot;reddit&quot;&gt;
+&lt;div class=&quot;node stage active&quot; data-xpgo-stage=&quot;1&quot;&gt;&lt;strong&gt;Tests&lt;&#x2F;strong&gt;realistic app paths&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node stage&quot; data-xpgo-stage=&quot;2&quot;&gt;&lt;strong&gt;Profiles&lt;&#x2F;strong&gt;coverage + temporal&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node stage&quot; data-xpgo-stage=&quot;3&quot;&gt;&lt;strong&gt;swiftc&#x2F;clang&lt;&#x2F;strong&gt;use coverage data&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow&quot;&gt;→&lt;&#x2F;div&gt;
+&lt;div class=&quot;node stage&quot; data-xpgo-stage=&quot;4&quot;&gt;&lt;strong&gt;LLD&lt;&#x2F;strong&gt;uses temporal layout&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p id=&quot;xpgo-reddit-caption&quot; class=&quot;dcaption&quot;&gt;The profile starts as UI-test behavior, not as a hand-written order file.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;They also tuned the inlining threshold upward. That is an important reminder: PGO is not just one flag. It is a build pipeline. Profiles make bolder optimization choices safer, but they do not remove trade-offs. More inlining can speed hot paths and expose optimization, but it can increase binary size. In Reddit&#x27;s case, the layout&#x2F;compression savings created room to be more aggressive.&lt;&#x2F;p&gt;
+&lt;h3&gt;Results Worth Remembering&lt;&#x2F;h3&gt;
+&lt;div class=&quot;metric-row&quot;&gt;
+&lt;div class=&quot;metric&quot;&gt;&lt;div class=&quot;label&quot;&gt;Compressed IPA&lt;&#x2F;div&gt;&lt;div class=&quot;value&quot;&gt;280.6 → 239.6 MiB&lt;&#x2F;div&gt;&lt;div class=&quot;sub&quot;&gt;14.6% reduction&lt;&#x2F;div&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;metric&quot;&gt;&lt;div class=&quot;label&quot;&gt;Uncompressed payload&lt;&#x2F;div&gt;&lt;div class=&quot;value&quot;&gt;359.8 → 313.1 MiB&lt;&#x2F;div&gt;&lt;div class=&quot;sub&quot;&gt;15.3% reduction&lt;&#x2F;div&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;metric&quot;&gt;&lt;div class=&quot;label&quot;&gt;Main binary&lt;&#x2F;div&gt;&lt;div class=&quot;value&quot;&gt;198.6 → 157.1 MiB&lt;&#x2F;div&gt;&lt;div class=&quot;sub&quot;&gt;20.8% reduction&lt;&#x2F;div&gt;&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;Those are size wins. The startup win was subtler to measure because iOS performs background optimizations after installation. Reddit focused on first-day behavior after install&#x2F;update, where cold-start layout matters most, and used a dual-release strategy: one standard release, then an identical-code optimized release.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part9&quot;&gt;Part 9 — Case study: reading a real profile&lt;&#x2F;h2&gt;
+&lt;p&gt;Everything above was theory plus other people&#x27;s numbers. So I collected an IR PGO profile from the app I work on — a large marketplace iOS app, ~100 build modules — using a UI test that performs 6 cold launches and a feed browse pass. Then I actually read the profile. This section is what the theory looks like against production-scale code, and it changed how I think about two things: how extreme the hot&#x2F;cold split really is, and whose code the hot set is made of.&lt;&#x2F;p&gt;
+&lt;div class=&quot;metric-row&quot;&gt;
+&lt;div class=&quot;metric&quot;&gt;&lt;div class=&quot;label&quot;&gt;Functions instrumented&lt;&#x2F;div&gt;&lt;div class=&quot;value&quot;&gt;383,676&lt;&#x2F;div&gt;&lt;div class=&quot;sub&quot;&gt;the whole app + every dependency&lt;&#x2F;div&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;metric&quot;&gt;&lt;div class=&quot;label&quot;&gt;Executions recorded&lt;&#x2F;div&gt;&lt;div class=&quot;value&quot;&gt;36.65M&lt;&#x2F;div&gt;&lt;div class=&quot;sub&quot;&gt;sum of every branch-point counter&lt;&#x2F;div&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;metric&quot;&gt;&lt;div class=&quot;label&quot;&gt;Never called&lt;&#x2F;div&gt;&lt;div class=&quot;value&quot;&gt;96.32%&lt;&#x2F;div&gt;&lt;div class=&quot;sub&quot;&gt;369,574 functions had entry count 0&lt;&#x2F;div&gt;&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;h3&gt;How skewed is &quot;skewed&quot;?&lt;&#x2F;h3&gt;
+&lt;p&gt;Before looking, I assumed hot&#x2F;cold meant something like 20&#x2F;80. The real distribution is not in that universe. &lt;code&gt;llvm-profdata show --detailed-summary&lt;&#x2F;code&gt; prints a cumulative table: how many counter blocks (branch points) does it take to cover each share of all recorded executions? Verbatim output:&lt;&#x2F;p&gt;
+&lt;pre&gt;$ xcrun llvm-profdata show --detailed-summary app.profdata
+Total functions: 383676
+Total number of blocks: 1073586
+Total count: 36654739
+Detailed summary:
+26 blocks (0.00%) with count &gt;= 197216 account for 50% of the total counts.
+485 blocks (0.05%) with count &gt;= 6384 account for 90% of the total counts.
+1084 blocks (0.10%) with count &gt;= 1505 account for 95% of the total counts.
+4666 blocks (0.43%) with count &gt;= 133 account for 99% of the total counts.&lt;&#x2F;pre&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Blocks needed to cover each share of execution&lt;&#x2F;h4&gt;
+&lt;div class=&quot;bars&quot;&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;50% of counts&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill hot&quot; style=&quot;--w:50%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;26&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;80%&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill hot&quot; style=&quot;--w:80%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;181&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;90%&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill warm&quot; style=&quot;--w:90%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;485&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;95%&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill warm&quot; style=&quot;--w:95%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;1,084&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;99%&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill cold&quot; style=&quot;--w:99%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;4,666&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;100%&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill cold&quot; style=&quot;--w:100%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;24,071&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;Bar length = share of execution covered; the number on the right = blocks needed, out of 1,073,586. Only 24,071 blocks (2.2%) executed at all.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;If execution were uniform, covering 50% of the counts would take ~537,000 blocks. It took 26. That is a concentration factor of roughly 20,000×.&lt;&#x2F;p&gt;
+&lt;p class=&quot;corollary&quot;&gt;This is why PGO works at all: the compiler can lavish attention on a few hundred functions and treat literally everything else as cold, and that policy is correct for 97.8% of the binary.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h3&gt;Whose code is hot? Not mine.&lt;&#x2F;h3&gt;
+&lt;p&gt;My second wrong assumption: that the hot set would be my app&#x27;s code. Bucketing all 21M function &lt;em&gt;entries&lt;&#x2F;em&gt; by what kind of code was entered:&lt;&#x2F;p&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Share of function entries by code kind&lt;&#x2F;h4&gt;
+&lt;div class=&quot;bars&quot;&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;Swift runtime helpers&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill hot&quot; style=&quot;--w:43.5%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;43.5%&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;Compiler glue&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill warm&quot; style=&quot;--w:37.8%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;37.8%&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;Third-party SDKs&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill cold&quot; style=&quot;--w:16%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;16.0%&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;barrow&quot;&gt;&lt;span&gt;My app&#x27;s code&lt;&#x2F;span&gt;&lt;span class=&quot;track&quot;&gt;&lt;span class=&quot;fill&quot; style=&quot;--w:1.5%&quot;&gt;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;span&gt;1.5%&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;&quot;Compiler glue&quot; = protocol&#x2F;value witnesses, outlined copy&#x2F;destroy helpers, thunks, metadata accessors — machinery the compiler generates around everyone&#x27;s code.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;The single most-called function in the entire app was &lt;code&gt;__swift_memcpy1_1&lt;&#x2F;code&gt; — 2,920,324 calls. That is 2.9 million &lt;em&gt;one-byte copies&lt;&#x2F;em&gt;, almost all driven by one third-party experimentation SDK that round-trips its JSON payloads through type-erased &lt;code&gt;Any&lt;&#x2F;code&gt; boxes during launch. The hottest single branch point in the binary was the read loop of nanopb — the C protobuf parser inside the analytics SDK — at 3.31M executions, because analytics state is parsed &lt;em&gt;and re-encoded&lt;&#x2F;em&gt; on every cold start.&lt;&#x2F;p&gt;
+&lt;table&gt;
+&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Hottest spots in the binary&lt;&#x2F;th&gt;&lt;th&gt;What it is&lt;&#x2F;th&gt;&lt;th&gt;Max count&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;buf_read&lt;&#x2F;code&gt; (nanopb)&lt;&#x2F;td&gt;&lt;td&gt;protobuf decode loop, analytics SDK&lt;&#x2F;td&gt;&lt;td&gt;3,312,715&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;__swift_memcpy1_1&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;runtime helper: copy one byte&lt;&#x2F;td&gt;&lt;td&gt;2,920,324&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;__swift_noop_void_return&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;runtime helper: do nothing&lt;&#x2F;td&gt;&lt;td&gt;2,629,953&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;AnyEncodable&lt;&#x2F;code&gt; destroy&#x2F;copy witnesses&lt;&#x2F;td&gt;&lt;td&gt;Codable type-erasure glue, experiments SDK&lt;&#x2F;td&gt;&lt;td&gt;535,920 &#x2F; 446,600&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;
+&lt;&#x2F;table&gt;
+&lt;p&gt;Three more things the profile revealed that no amount of code review would have surfaced:&lt;&#x2F;p&gt;
+&lt;div class=&quot;cards&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;The profile is a free product audit&lt;&#x2F;h4&gt;
+&lt;p&gt;17% of all function entries belonged to one experimentation SDK&#x27;s Codable glue. The localization layer burned 250K entries in just 56 functions, copying a large enum payload on every string lookup. Neither showed up in any Instruments session we had run — they were spread across too many tiny calls.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;Dead weight is measurable&lt;&#x2F;h4&gt;
+&lt;p&gt;A generated analytics-events package contributed 6.8% of all functions in the binary but ~0.05% of execution. That is exactly the code the cold-marking half of PGO shrinks — and the strongest argument for the layout techniques in Parts 5–7.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;The hot set is glue, so PGO&#x27;s wins are glue wins&lt;&#x2F;h4&gt;
+&lt;p&gt;Inlining a 3-line value witness into its hot caller eliminates call overhead on millions of one-byte copies. The classic C wins apply too: precise branch weights in nanopb&#x27;s decode loops, the hottest code in the binary.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;To do this on any app: build with &lt;code&gt;-fprofile-generate&lt;&#x2F;code&gt; (plus swiftc&#x27;s IR-profile flags on iOS), run a launch workload, merge, then read the result before applying it:&lt;&#x2F;p&gt;
+&lt;pre&gt;xcrun llvm-profdata show --detailed-summary app.profdata   &lt;span class=&quot;dim&quot;&gt;# the skew table&lt;&#x2F;span&gt;
+xcrun llvm-profdata show --topn=50 app.profdata | xcrun swift-demangle   &lt;span class=&quot;dim&quot;&gt;# hottest functions&lt;&#x2F;span&gt;
+xcrun llvm-profdata show --all-functions --counts app.profdata | less    &lt;span class=&quot;dim&quot;&gt;# everything&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;Read the profile before you feed it to the compiler. The same file that guides the optimizer is the most honest launch-behavior audit you will ever get for free.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part10&quot;&gt;Part 10 — Measurement and traps&lt;&#x2F;h2&gt;
+&lt;p&gt;PGO sounds mechanical, but the quality of the result depends on the quality of the profile and the measurement plan.&lt;&#x2F;p&gt;
+&lt;table&gt;
+&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Trap&lt;&#x2F;th&gt;&lt;th&gt;Why it matters&lt;&#x2F;th&gt;&lt;th&gt;Mitigation&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;Unrepresentative profile&lt;&#x2F;td&gt;&lt;td&gt;The optimizer improves the behavior you showed it, not the behavior you hoped it would infer.&lt;&#x2F;td&gt;&lt;td&gt;Profile critical user flows, feature-flag combinations, and startup states.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;Profile staleness&lt;&#x2F;td&gt;&lt;td&gt;As code changes, old profiles mention removed functions and miss new hot paths.&lt;&#x2F;td&gt;&lt;td&gt;Regenerate profiles automatically in CI, especially before release.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;Instrumentation distortion&lt;&#x2F;td&gt;&lt;td&gt;If the instrumented app is much larger or slower, temporal order may differ from release.&lt;&#x2F;td&gt;&lt;td&gt;Prefer low-overhead temporal instrumentation for layout profiles where available.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;Speed-vs-size policy&lt;&#x2F;td&gt;&lt;td&gt;Inlining-heavy PGO can improve CPU-bound paths while making mobile startup worse through code growth.&lt;&#x2F;td&gt;&lt;td&gt;Use size-aware optimization settings and measure both binary size and startup&#x2F;page-fault behavior.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;Toolchain mismatch&lt;&#x2F;td&gt;&lt;td&gt;Profiles and compilers&#x2F;linkers need compatible formats and versions.&lt;&#x2F;td&gt;&lt;td&gt;Pin toolchain versions and treat profile corruption&#x2F;version errors as infrastructure failures.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;Confounded rollout&lt;&#x2F;td&gt;&lt;td&gt;If code changes and optimization changes ship together, impact is hard to isolate.&lt;&#x2F;td&gt;&lt;td&gt;Use a controlled release plan when measuring pure optimization impact.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;
+&lt;&#x2F;table&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Tap a trap&lt;&#x2F;h4&gt;
+&lt;div class=&quot;choice-grid&quot;&gt;
+&lt;button class=&quot;choice&quot; type=&quot;button&quot; onclick=&quot;xpgoTrap(&#x27;profile&#x27;)&quot;&gt;&lt;strong&gt;Bad profile&lt;&#x2F;strong&gt;Tests do not match real behavior.&lt;&#x2F;button&gt;
+&lt;button class=&quot;choice&quot; type=&quot;button&quot; onclick=&quot;xpgoTrap(&#x27;stale&#x27;)&quot;&gt;&lt;strong&gt;Stale profile&lt;&#x2F;strong&gt;Code changed after collection.&lt;&#x2F;button&gt;
+&lt;button class=&quot;choice&quot; type=&quot;button&quot; onclick=&quot;xpgoTrap(&#x27;rollout&#x27;)&quot;&gt;&lt;strong&gt;Confounded rollout&lt;&#x2F;strong&gt;Code and optimization ship together.&lt;&#x2F;button&gt;
+&lt;&#x2F;div&gt;
+&lt;div id=&quot;xpgo-trap-card&quot; class=&quot;term-card&quot;&gt;Pick a trap to see the failure mode.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;The hard engineering is not &quot;turn on PGO&quot;. The hard engineering is collecting profiles you trust and proving the optimized binary helped.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part11&quot;&gt;Part 11 — Diagnostic reference&lt;&#x2F;h2&gt;
+&lt;p&gt;Useful commands and flags to recognize when reading a PGO pipeline:&lt;&#x2F;p&gt;
+&lt;table&gt;
+&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Thing&lt;&#x2F;th&gt;&lt;th&gt;Role&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;-fprofile-generate&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;Build an instrumented binary that emits raw profile data.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;LLVM_PROFILE_FILE&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;Common runtime environment variable used to control where profile files are written.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;llvm-profdata merge&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;Merge one or more &lt;code&gt;.profraw&lt;&#x2F;code&gt; files into a &lt;code&gt;.profdata&lt;&#x2F;code&gt; file consumed by the compiler&#x2F;linker.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;-fprofile-use=path&lt;&#x2F;code&gt; &#x2F; &lt;code&gt;-profile-use=path&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;Use a merged profile during the optimized build.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;-pgo-temporal-instrumentation&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;LLVM temporal profiling instrumentation for ordering-sensitive profile data.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;--compression-sort=both&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;LLD layout mode that balances startup-oriented ordering and compression-oriented ordering.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;-Oz&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;Optimize for size. Important on mobile because code size can affect page faults and startup.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;PGSO &#x2F; inlining controls&lt;&#x2F;td&gt;&lt;td&gt;Size-aware policy knobs that can mitigate binary growth from PGO-guided inlining.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;pgo-warn-missing-function=false&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;Suppress warnings&#x2F;errors when profiles mention functions not present in the final binary. Useful when profiled and release builds are close but not identical.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;
+&lt;&#x2F;table&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Command map&lt;&#x2F;h4&gt;
+&lt;div class=&quot;term-grid&quot;&gt;
+&lt;button class=&quot;active&quot; type=&quot;button&quot; onclick=&quot;xpgoTerm(&#x27;cmd&#x27;,&#x27;generate&#x27;)&quot;&gt;-fprofile-generate&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoTerm(&#x27;cmd&#x27;,&#x27;merge&#x27;)&quot;&gt;llvm-profdata merge&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoTerm(&#x27;cmd&#x27;,&#x27;use&#x27;)&quot;&gt;-fprofile-use&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoTerm(&#x27;cmd&#x27;,&#x27;temporal&#x27;)&quot;&gt;-pgo-temporal-instrumentation&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoTerm(&#x27;cmd&#x27;,&#x27;sort&#x27;)&quot;&gt;--compression-sort=both&lt;&#x2F;button&gt;
+&lt;&#x2F;div&gt;
+&lt;div id=&quot;xpgo-cmd-card&quot; class=&quot;term-card&quot;&gt;Build an instrumented binary that emits raw profile data. This is the learning build, not the final release build.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part12&quot;&gt;Part 12 — FAQ&lt;&#x2F;h2&gt;
+&lt;details class=&quot;faq&quot;&gt;
+&lt;summary&gt;Is PGO the same as test coverage?&lt;&#x2F;summary&gt;
+&lt;p&gt;No. Both may use instrumentation, but the goal differs. Test coverage asks &quot;did tests execute this code?&quot; PGO asks &quot;how should the optimizer spend effort based on execution behavior?&quot; A profile can be useful for PGO even if it is not a complete coverage report.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;faq&quot;&gt;
+&lt;summary&gt;Does PGO require production user data?&lt;&#x2F;summary&gt;
+&lt;p&gt;No. Production profiles can be more representative, but they are operationally harder. Reddit chose UI tests with stable stubs and many important use cases. That is a practical trade-off: less real-world diversity, more repeatability and lower complexity.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;faq&quot;&gt;
+&lt;summary&gt;Can PGO make code slower?&lt;&#x2F;summary&gt;
+&lt;p&gt;Yes. A stale or biased profile can over-optimize the wrong paths, increase code size, or damage instruction-cache locality. That is why measurement and rollback matter.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;faq&quot;&gt;
+&lt;summary&gt;Why does binary layout affect compressed size?&lt;&#x2F;summary&gt;
+&lt;p&gt;Compression algorithms such as LZ variants exploit repeated patterns within a window. If similar machine-code sequences are placed near each other, the compressed artifact can shrink.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;faq&quot;&gt;
+&lt;summary&gt;Is the app decompressing its IPA during startup?&lt;&#x2F;summary&gt;
+&lt;p&gt;No. The compressed IPA matters for download and installation. Startup page faults come from touching installed binary pages that are not resident in memory yet. These are related optimization goals, but not the same mechanism.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;faq&quot;&gt;
+&lt;summary&gt;Why not always use speed optimization with PGO?&lt;&#x2F;summary&gt;
+&lt;p&gt;Because mobile startup is sensitive to code size. A speed-oriented profile can encourage more inlining, which can increase the amount of code the app has to page in. For mobile, the best policy often balances speed, size, and layout.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;details class=&quot;faq&quot;&gt;
+&lt;summary&gt;Why is startup impact strongest after install or update?&lt;&#x2F;summary&gt;
+&lt;p&gt;Because the first launches touch cold filesystem and memory state. Over time, OS-level caching and background optimizations can reduce the visible difference, so first-day metrics are often the cleanest window.&lt;&#x2F;p&gt;
+&lt;&#x2F;details&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Quick check&lt;&#x2F;h4&gt;
+&lt;div class=&quot;seg&quot; role=&quot;tablist&quot; aria-label=&quot;PGO quiz&quot;&gt;
+&lt;button class=&quot;active&quot; type=&quot;button&quot; onclick=&quot;xpgoShow(&#x27;quiz-view&#x27;,&#x27;q&#x27;)&quot;&gt;Question&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoShow(&#x27;quiz-view&#x27;,&#x27;a&#x27;)&quot;&gt;Answer&lt;&#x2F;button&gt;
+&lt;&#x2F;div&gt;
+&lt;div data-xpgo-group=&quot;quiz-view&quot; data-xpgo-panel=&quot;q&quot; class=&quot;panel active&quot;&gt;
+&lt;p&gt;If the optimized app has a smaller compressed IPA but the same startup page faults, which half of the optimization probably helped?&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div data-xpgo-group=&quot;quiz-view&quot; data-xpgo-panel=&quot;a&quot; class=&quot;panel&quot;&gt;
+&lt;p&gt;&lt;strong&gt;Compression locality.&lt;&#x2F;strong&gt; Startup locality is measured through page faults and time-to-interactive behavior; compressed IPA size is a distribution&#x2F;install win.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part13&quot;&gt;Part 13 — Glossary&lt;&#x2F;h2&gt;
+&lt;div class=&quot;iviz&quot;&gt;
+&lt;h4&gt;Pick a term&lt;&#x2F;h4&gt;
+&lt;div class=&quot;term-grid&quot;&gt;
+&lt;button class=&quot;active&quot; type=&quot;button&quot; onclick=&quot;xpgoTerm(&#x27;gloss&#x27;,&#x27;pgo&#x27;)&quot;&gt;PGO&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoTerm(&#x27;gloss&#x27;,&#x27;coverage&#x27;)&quot;&gt;Coverage profile&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoTerm(&#x27;gloss&#x27;,&#x27;temporal&#x27;)&quot;&gt;Temporal profile&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoTerm(&#x27;gloss&#x27;,&#x27;reorder&#x27;)&quot;&gt;Function reordering&lt;&#x2F;button&gt;
+&lt;button type=&quot;button&quot; onclick=&quot;xpgoTerm(&#x27;gloss&#x27;,&#x27;fault&#x27;)&quot;&gt;Page fault&lt;&#x2F;button&gt;
+&lt;&#x2F;div&gt;
+&lt;div id=&quot;xpgo-gloss-card&quot; class=&quot;term-card&quot;&gt;A feedback loop: collect execution behavior from an instrumented run, then use it to optimize a later build.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;dl class=&quot;gloss&quot;&gt;
+&lt;dt&gt;PGO&lt;&#x2F;dt&gt;
+&lt;dd&gt;Profile-Guided Optimization: optimizing a later build using profiles collected from an earlier instrumented run.&lt;&#x2F;dd&gt;
+&lt;dt&gt;IRPGO&lt;&#x2F;dt&gt;
+&lt;dd&gt;Instrumentation-based PGO at the LLVM IR level. The compiler inserts instrumentation into intermediate representation to collect execution data.&lt;&#x2F;dd&gt;
+&lt;dt&gt;Coverage profile&lt;&#x2F;dt&gt;
+&lt;dd&gt;A profile describing which functions, branches, and paths ran and how often.&lt;&#x2F;dd&gt;
+&lt;dt&gt;Temporal profile&lt;&#x2F;dt&gt;
+&lt;dd&gt;A profile describing execution order over time, useful for function layout.&lt;&#x2F;dd&gt;
+&lt;dt&gt;Function reordering&lt;&#x2F;dt&gt;
+&lt;dd&gt;Changing the order of functions in the final binary so related code is physically close.&lt;&#x2F;dd&gt;
+&lt;dt&gt;Page fault&lt;&#x2F;dt&gt;
+&lt;dd&gt;An event where the system must bring a memory page into the process because the app touched code or data not currently resident.&lt;&#x2F;dd&gt;
+&lt;dt&gt;LLD&lt;&#x2F;dt&gt;
+&lt;dd&gt;LLVM&#x27;s linker. In this context, it consumes temporal profiles and performs function layout optimizations.&lt;&#x2F;dd&gt;
+&lt;dt&gt;Profile staleness&lt;&#x2F;dt&gt;
+&lt;dd&gt;The loss of profile usefulness as source code and behavior drift away from the workload that produced the profile.&lt;&#x2F;dd&gt;
+&lt;&#x2F;dl&gt;
+&lt;h2 id=&quot;sources&quot;&gt;Sources&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Reddit Engineering: &lt;a href=&quot;https:&#x2F;&#x2F;www.reddit.com&#x2F;r&#x2F;RedditEng&#x2F;comments&#x2F;1hgbldp&#x2F;reddits_ios_app_binary_optimization&#x2F;&quot;&gt;Reddit&#x27;s iOS App Binary Optimization&lt;&#x2F;a&gt;, written by Karim Alweheshy.&lt;&#x2F;li&gt;
+&lt;li&gt;YouTube &#x2F; LLVM talk: &lt;a href=&quot;https:&#x2F;&#x2F;youtu.be&#x2F;yd4pbSTjwuA&quot;&gt;temporal profiling and balanced partitioning for mobile PGO&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;LLVM Clang Users Manual: &lt;a href=&quot;https:&#x2F;&#x2F;clang.llvm.org&#x2F;docs&#x2F;UsersManual.html#profile-guided-optimization&quot;&gt;Profile Guided Optimization&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;LLVM discourse RFC: &lt;a href=&quot;https:&#x2F;&#x2F;discourse.llvm.org&#x2F;t&#x2F;rfc-temporal-profiling-extension-for-irpgo&#x2F;68068&quot;&gt;Temporal profiling extension for IRPGO&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;script&gt;
+function xpgoShow(group, panel) {
+  document.querySelectorAll(&#x27;[data-xpgo-group=&quot;&#x27; + group + &#x27;&quot;]&#x27;).forEach(function (el) {
+    el.classList.toggle(&#x27;active&#x27;, el.getAttribute(&#x27;data-xpgo-panel&#x27;) === panel);
+  });
+  document.querySelectorAll(&#x27;[onclick*=&quot;&#x27; + group + &#x27;&quot;]&#x27;).forEach(function (btn) {
+    btn.classList.toggle(&#x27;active&#x27;, btn.getAttribute(&#x27;onclick&#x27;).indexOf(&quot;&#x27;&quot; + panel + &quot;&#x27;&quot;) !== -1);
+  });
+}
+
+function xpgoInline(value) {
+  var inline = Number(value);
+  var overhead = 100 - inline;
+  var pageRisk = Math.min(100, Math.round(inline * 1.2));
+  document.getElementById(&#x27;xpgo-inline-label&#x27;).textContent = inline + &#x27;%&#x27;;
+  document.getElementById(&#x27;xpgo-overhead&#x27;).style.setProperty(&#x27;--w&#x27;, overhead + &#x27;%&#x27;);
+  document.getElementById(&#x27;xpgo-overhead-label&#x27;).textContent = overhead + &#x27;%&#x27;;
+  document.getElementById(&#x27;xpgo-codesize&#x27;).style.setProperty(&#x27;--w&#x27;, inline + &#x27;%&#x27;);
+  document.getElementById(&#x27;xpgo-codesize-label&#x27;).textContent = inline + &#x27;%&#x27;;
+  document.getElementById(&#x27;xpgo-pagerisk&#x27;).style.setProperty(&#x27;--w&#x27;, pageRisk + &#x27;%&#x27;);
+  document.getElementById(&#x27;xpgo-pagerisk-label&#x27;).textContent = pageRisk + &#x27;%&#x27;;
+}
+
+function xpgoStage(group, step) {
+  document.querySelectorAll(&#x27;[data-xpgo-stage-group=&quot;&#x27; + group + &#x27;&quot;] .stage&#x27;).forEach(function (el) {
+    el.classList.toggle(&#x27;active&#x27;, Number(el.getAttribute(&#x27;data-xpgo-stage&#x27;)) === step);
+  });
+  document.querySelectorAll(&quot;[onclick*=\&quot;xpgoStage(&#x27;&quot; + group + &quot;&#x27;\&quot;]&quot;).forEach(function (btn) {
+    btn.classList.toggle(&#x27;active&#x27;, btn.getAttribute(&#x27;onclick&#x27;).indexOf(&#x27;,&#x27; + step + &#x27;)&#x27;) !== -1);
+  });
+  var captions = {
+    loop: {
+      1: &#x27;The first build is deliberately instrumented; it is not the final app you ship.&#x27;,
+      2: &#x27;The run must look like real behavior, because the optimizer will believe it.&#x27;,
+      3: &#x27;Raw profile files become a stable .profdata input for the next build.&#x27;,
+      4: &#x27;The final build uses evidence to guide compiler and linker choices.&#x27;
+    },
+    reddit: {
+      1: &#x27;The profile starts as UI-test behavior, not as a hand-written order file.&#x27;,
+      2: &#x27;Many raw runs are merged so one path does not dominate the release.&#x27;,
+      3: &#x27;Coverage data guides compiler choices such as inlining and branch layout.&#x27;,
+      4: &#x27;Temporal data guides linker layout so startup functions sit together.&#x27;
+    }
+  };
+  var caption = document.getElementById(&#x27;xpgo-&#x27; + group + &#x27;-caption&#x27;);
+  if (caption) caption.textContent = captions[group][step];
+}
+
+function xpgoTrace(step) {
+  var order = [
+    [&#x27;xpgo-stamp-main&#x27;, &#x27;main&#x27;, 1],
+    [&#x27;xpgo-stamp-app&#x27;, &#x27;App&#x27;, 2],
+    [&#x27;xpgo-stamp-feed&#x27;, &#x27;Feed&#x27;, 3],
+    [&#x27;xpgo-stamp-cell&#x27;, &#x27;Cell&#x27;, 4]
+  ];
+  [&#x27;xpgo-stamp-main&#x27;, &#x27;xpgo-stamp-app&#x27;, &#x27;xpgo-stamp-feed&#x27;, &#x27;xpgo-stamp-cell&#x27;, &#x27;xpgo-stamp-settings&#x27;].forEach(function (id) {
+    var el = document.getElementById(id);
+    var name = el.textContent.split(&#x2F;\s+&#x2F;)[0];
+    el.innerHTML = name + &#x27;&lt;br&gt;0&#x27;;
+    el.classList.remove(&#x27;on&#x27;);
+  });
+  order.slice(0, step).forEach(function (item) {
+    var el = document.getElementById(item[0]);
+    el.innerHTML = item[1] + &#x27;&lt;br&gt;&#x27; + item[2];
+    el.classList.add(&#x27;on&#x27;);
+  });
+  var captions = [
+    &#x27;Before execution, every timestamp is zero. Zero means &quot;not observed in this run.&quot;&#x27;,
+    &#x27;main is first, so it receives timestamp 1.&#x27;,
+    &#x27;App startup code follows, so it receives timestamp 2.&#x27;,
+    &#x27;The feed path appears next in this workload.&#x27;,
+    &#x27;The first visible cell is part of the startup trace; Settings remains zero.&#x27;
+  ];
+  document.getElementById(&#x27;xpgo-trace-caption&#x27;).textContent = captions[step];
+}
+
+function xpgoTrap(kind) {
+  var text = {
+    profile: &#x27;&lt;strong&gt;Failure mode:&lt;&#x2F;strong&gt; the optimizer improves the test fantasy, not the real app. Fix it by profiling critical flows and feature-flag combinations.&#x27;,
+    stale: &#x27;&lt;strong&gt;Failure mode:&lt;&#x2F;strong&gt; old profiles miss new hot code and mention deleted functions. Fix it by regenerating profiles in CI before release.&#x27;,
+    rollout: &#x27;&lt;strong&gt;Failure mode:&lt;&#x2F;strong&gt; you cannot tell whether PGO helped because code changed too. Fix it with an identical-code optimized release when measuring impact.&#x27;
+  };
+  document.getElementById(&#x27;xpgo-trap-card&#x27;).innerHTML = text[kind];
+}
+
+function xpgoTerm(group, key) {
+  var cards = {
+    cmd: {
+      generate: &#x27;Build an instrumented binary that emits raw profile data. This is the learning build, not the final release build.&#x27;,
+      merge: &#x27;Combine multiple .profraw files into one .profdata file so the next build can consume it.&#x27;,
+      use: &#x27;Feed the merged profile into the optimized build so compiler decisions use runtime evidence.&#x27;,
+      temporal: &#x27;Record first-call timing so the linker can reconstruct function order for startup layout.&#x27;,
+      sort: &#x27;Ask the linker to balance startup locality and compression locality when ordering functions.&#x27;
+    },
+    gloss: {
+      pgo: &#x27;A feedback loop: collect execution behavior from an instrumented run, then use it to optimize a later build.&#x27;,
+      coverage: &#x27;The &quot;what ran and how often&quot; profile. It mostly guides compiler decisions.&#x27;,
+      temporal: &#x27;The &quot;when did it run&quot; profile. It mostly guides linker layout.&#x27;,
+      reorder: &#x27;Changing physical function order in the final binary so related code sits close together.&#x27;,
+      fault: &#x27;The cost paid when the app touches a code page that is not resident in memory yet.&#x27;
+    }
+  };
+  var card = document.getElementById(&#x27;xpgo-&#x27; + group + &#x27;-card&#x27;);
+  if (card) card.textContent = cards[group][key];
+  var onclickPrefix = &quot;xpgoTerm(&#x27;&quot; + group + &quot;&#x27;&quot;;
+  document.querySelectorAll(&#x27;[onclick*=&quot;&#x27; + onclickPrefix + &#x27;&quot;]&#x27;).forEach(function (btn) {
+    btn.classList.toggle(&#x27;active&#x27;, btn.getAttribute(&#x27;onclick&#x27;).indexOf(&quot;&#x27;&quot; + key + &quot;&#x27;&quot;) !== -1);
+  });
+}
+&lt;&#x2F;script&gt;
+&lt;&#x2F;div&gt;
+</content>
+        
+    </entry>
+</feed>

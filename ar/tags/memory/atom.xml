@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="ar">
+    <title>مصطفى - memory</title>
+    <subtitle>أفكار وتجارب من مهندس حاسوب يطارد الأساسيات.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/ar/tags/memory/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2020-11-07T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/ar/tags/memory/atom.xml</id>
+    <entry xml:lang="ar">
+        <title>إزاي تعرف احجام ال Types بتاعتك في سويفت</title>
+        <published>2020-11-07T00:00:00+00:00</published>
+        <updated>2020-11-07T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ar/blog/memory-alignment-swift/"/>
+        <id>https://imostfa.github.io/Blog/ar/blog/memory-alignment-swift/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ar/blog/memory-alignment-swift/">&lt;h1 id=&quot;zy-t-rf-hjm-l-types-bt-tk-fy-swyft&quot;&gt;إزاي تعرف احجام ال Types بتاعتك في سويفت ؟&lt;&#x2F;h1&gt;
+&lt;p&gt;في سويفت، اي اوبجيكت او تايب، ليه ٣ خصائص ممكن يعبرولك عن تعامل الميموري مع الأوبجيكت دا، هنتعرف على خاصيتين من الخصائص دي في التدوينة دي، و بعضها فيه تدوينات اخرى،&lt;&#x2F;p&gt;
+&lt;p&gt;الخصائص اللي هنتكلم عنها النهاردة هي Size , alignment&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;lhjm-size-package&quot;&gt;الحجم | Size 📦&lt;&#x2F;h2&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;لو عندك اتنين &lt;code&gt;struct&lt;&#x2F;code&gt; في البرنامج بتاعك زي دول:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Student&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Professor&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; phoneNumber:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; mostfa &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; Student&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;age&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 10&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; ahmed &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; Professor&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;age&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 10&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;phoneNumber&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 010&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;و سألتك تتوقع الأوبجيكت اللي اسمه مصطفى اكبر ؟ ولا الللي اسمه احمد ؟ بالمنطق، الأوبجيكت اللي اسمه احمد اكبر علشان هو مكون من متغيرين، &lt;code&gt;age&lt;&#x2F;code&gt; و &lt;code&gt;phoneNumber&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;بس ازاي نتأكد من انه كلامنا صح ؟ لازم ارقام تثبت صحة كلامنا ؟ علشان نتأكد هنستخدم MemoryLayout&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;computer-memory-layout&quot;&gt;💻 Memory Layout&lt;&#x2F;h2&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;فيه في سويفت نوع اسمه MemoryLayout النوع دا بيخلينا نقدر نتأكد من احجام الأنواع اللي عندنا زي Student و Professor و اي نوع في سويفت زي String و Bool علشان نعرف الSize اللي اي اوبجيكت من نوع Student او من نوع Professor هياخده من الميموري:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; studentSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; professorSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span&gt;(studentSize)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F; prints 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span&gt;(professorSize)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;prints 16 😉&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;هنا استخدمنا MemoryLayout و طلبنا منها تجيب حجم&#x2F;size اي اوبجيكت هيتعمل من الtypes هيبقى حجمه كام زي ما توقعنا، professor هتاخد مساحة اكبر من الميموري&lt;&#x2F;p&gt;
+&lt;p&gt;ولو عاوزين نتأكد من الكلام على الأوبجيكتس، زي اوبجيكت آحمد و مصطفى اللي فوق&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; mostfaSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;ofValue&lt;&#x2F;span&gt;&lt;span&gt;: mostfa)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; ahmedSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;ofValue&lt;&#x2F;span&gt;&lt;span&gt;: ahmed)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span&gt;(mostfaSize)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;prints 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;print&lt;&#x2F;span&gt;&lt;span&gt;(ahmedSize)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;also prints 16&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;لكن ليه ؟ ليه ٨ ؟ و ليه ١٦ ؟ نرجع تاني للحجم## للحجم | Size&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;nrj-llhjm-size-package&quot;&gt;نرجع للحجم | Size 📦&lt;&#x2F;h2&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;في سويفت سهل انك تحسب حجم اي ستراكت في البرنامج، لأنه حجم الستراكت = حجم المتغيرات اللي جواه بمعنى إيه ؟ بمعنى انه&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Student&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;     let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; inSchool:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Bool&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; let&lt;&#x2F;span&gt;&lt;span&gt; intSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;  &#x2F;&#x2F;prints out 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; let&lt;&#x2F;span&gt;&lt;span&gt; boolSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;  &#x2F;&#x2F;prints out 1&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; studentSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;prints out 9 ( 1+ 8 )&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;علشان الستراكت دا متكون من متغير من نوع Int و متغير من نوع Bool , حجمه هيساوي مجموع حجم الBool و حجم الInt ، سهلة خالص، صح ؟🦹🏻‍♂️&lt;&#x2F;p&gt;
+&lt;p&gt;طيب خلينا نتأكد بمثال تاني&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; OtherStudent&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; inSchool:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Bool&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;هنا دا OtherStudent نفس الStudent اللي فوق بالظبط، لكن الفرق اننا غيرنا ترتيب الproperties بتاعنا، المفروض يكون نفس الSize ؟!!!&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; OtherStudentSize &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;size&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F; 16 .alignment &#x2F;&#x2F;prints out 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;ال Alignment لأي Integer في سويفت عبارة عن ٨، الرقم دا معناه إيه ؟ معناه انه عنوان الMemory اللي هيتم وضع فيه الInteger لازم يكون من مضاعفات ال٨&lt;&#x2F;p&gt;
+&lt;p&gt;لو عندي الكود الآتي&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; A &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 88&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; b &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 17&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;دا معناه انه المتغير A و b لازم يتحطوا في عنوان ميموري من مضاعفات ال٨، نلاحظ عنوان الميموري للمتغير A في الصورة = صفر، و بما انه الصفر من مضاعفات ال٨، يبقى معندناش مشكلة ايضًا، المتغير b موجود في العنوان ٨ وبما انه ال٨ من مضاعفات ال ٨ ايضًا معندناش مشاكل&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;امتى يكون عندنا مشكلة ؟ يكون عندنا مشكلة في الموقف الآتي&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;&#x2F;*&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;A lot of other code in the app which will be saved in memory&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;*&#x2F;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; A &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt; 88&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;لو فيه بيانات اخرى Other موجودة في الميموري من العنوان صفر الى العنوان ٤ ، و جينا نحط المتغير a في العنوان رقم ٥، مش هنقدر ! ليه ؟ لأنه طبقًا ل Alignment الخاص ب Integer لازم يتم وضعه في عنوان من مضاعفات ال ٨ وبناء عليه هيتم وضع المتغير A في العنوان رقم ٨، و هيكون العناوين ٥،٦،٧ فاضيين&lt;&#x2F;p&gt;
+&lt;p&gt;ومن هنا نقدر نرجع للسؤال الأساسي، ليه OtherStudent حجمه اختلف عن Student&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;alignment-and-size-bowling&quot;&gt;Alignment and size 🎳&lt;&#x2F;h2&gt;
+&lt;hr &#x2F;&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; boolAlignment &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;alignment&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;prints out 1&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span&gt; IntegerAlignment &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; MemoryLayout&lt;&#x2F;span&gt;&lt;span&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;alignment&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;prints out 8&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Student&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;     let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; inSchool:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Bool&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;بمعرفة انه ال Alignment للBool يساوي ١، دا يعني انه ممكن احط الBoolean values في اي عنوان في الميموري، لأنه كل الارقام تعتبر من مضاعفات الواحد، وايضا بمعرفة انه الAlignment للIntegers يساوي ٨ دا معناه انه ممكن نحط الIntegers في العنواين اللي من مضاعفات ٨&lt;&#x2F;p&gt;
+&lt;p&gt;هنا، الInteger عنوان صفر، و الصفر من مضاعفات ال ٨&lt;&#x2F;p&gt;
+&lt;p&gt;و الBoolean عنوان٨، و ال٨ من مضاعفات ال ١ ودا معناه انه ال Alignment تحقق و شغال و زي الفل و بناء عليه حجم الStudent يساوي ٩&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;struct&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; OtherStudent&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; inSchool:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Bool&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    let&lt;&#x2F;span&gt;&lt;span&gt; age:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; Int&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;لو جينا نطبق قواعد الAlignment هنا هنلاقي الآتي&lt;&#x2F;p&gt;
+&lt;p&gt;اول حاجة هيتم وضع الBoolean value في العنوان صفر، و لأنه الصفر من مضاعفات ال١، الAlignment تصبح مظبوطة ✅&lt;&#x2F;p&gt;
+&lt;p&gt;لكن الInteger مينفعش يتحط في العنوان رقم ١ ❌ لأن العنوان رقم ١ مش من مضاعفات ال ٨ وبناء عليه هيتم تركه فاضي، وترك جميع العناوين اللي مش من مضاعفات ٨ فاضية، حتى نصل الى اول رقم من مضاعفات ٨، وهو ال ٨، ونحط فيه الInteger&lt;&#x2F;p&gt;
+&lt;p&gt;النتيجة هنا، انه بسبب ال Alignment اصبح الstruct حجمه ١٦ 🤯&lt;&#x2F;p&gt;
+&lt;p&gt;To be continued …&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

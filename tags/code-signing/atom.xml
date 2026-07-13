@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Mostafa - code-signing</title>
+    <subtitle>Thoughts, learnings, and experiences from a computer engineer chasing the fundamentals.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/tags/code-signing/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2026-06-27T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/tags/code-signing/atom.xml</id>
+    <entry xml:lang="en">
+        <title>iOS Code Signing, From First Principles</title>
+        <published>2026-06-27T00:00:00+00:00</published>
+        <updated>2026-06-27T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/ai-learnings/ios-code-signing/"/>
+        <id>https://imostfa.github.io/Blog/ai-learnings/ios-code-signing/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/ai-learnings/ios-code-signing/">&lt;p&gt;This write-up was distilled from a real session: wiring a CI pipeline to ship a &lt;strong&gt;ShowCase&lt;&#x2F;strong&gt;
+app (a design-system demo app) to &lt;strong&gt;TestFlight&lt;&#x2F;strong&gt;, debugged end-to-end with an AI agent. The release
+build failed with &lt;code&gt;no provisioning profile was found named &#x27;match AppStore com.example.designkit.ShowCase&#x27;&lt;&#x2F;code&gt;.
+A profile was downloaded to “fix” it — and turned out to be the &lt;em&gt;wrong type&lt;&#x2F;em&gt;. Untangling that one error
+required understanding the entire chain: certificates, App IDs, devices, profiles, the four distribution
+channels, fastlane match, and where a profile has to physically sit for a build to find it. This document
+builds every concept from scratch and ends with a reference you can reuse. Prerequisites: you’ve built an
+iOS app once and know what an &lt;code&gt;.ipa&lt;&#x2F;code&gt; roughly is. Nothing more.&lt;&#x2F;p&gt;
+&lt;style&gt;
+.csign { --pos:#1a7f37; --neg:#b3261e; --warn:#9a6700; }
+[data-theme=&quot;dark&quot;] .csign { --pos:#7ee787; --neg:#ff7b72; --warn:#e3b341; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=&quot;light&quot;]) .csign { --pos:#7ee787; --neg:#ff7b72; --warn:#e3b341; } }
+.csign .toc-grid { display:grid; grid-template-columns:1fr 1fr; gap:.25rem 2rem; list-style:none; padding:0; margin:.5rem 0 0; }
+.csign .toc-grid a { display:block; padding:.15rem 0; }
+.csign .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:.75rem; margin:1rem 0; }
+.csign .card { background:var(--bg-light); border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:1rem; }
+.csign .card h4 { margin:.1rem 0 .5rem; font-size:1rem; }
+.csign .card p, .csign .card li { font-size:.9rem; margin:.5rem 0; }
+.csign .card ul { margin:.25rem 0; padding-left:1.2rem; }
+.csign pre { font-size:.8rem; line-height:1.5; overflow-x:auto; }
+.csign .err { color:var(--neg); font-weight:700; }
+.csign .ok { color:var(--pos); font-weight:700; }
+.csign .dim { color:var(--text-light); }
+.csign .diagram { border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:1.25rem; background:var(--bg-light); margin:1rem 0; }
+.csign .dgrid { display:flex; flex-wrap:wrap; gap:.6rem; }
+.csign .dbox { border:1px solid var(--border); border-radius:var(--standard-border-radius); padding:.7rem .8rem; background:var(--bg); font-size:.8rem; line-height:1.5; flex:1; min-width:200px; }
+.csign .dbox .dtitle { font-weight:700; font-size:.85rem; margin-bottom:.4rem; }
+.csign .dbox.big { flex-basis:100%; }
+.csign .arrow-down { text-align:center; color:var(--text-light); width:100%; margin:.2rem 0; }
+.csign .dcaption { font-size:.85rem; color:var(--text-light); margin-top:.8rem; line-height:1.6; }
+.csign .callout { border:1px solid var(--accent); border-left:4px solid var(--accent); border-radius:var(--standard-border-radius); padding:1.1rem 1.25rem; margin:1rem 0; background:var(--bg-light); }
+.csign .callout .rule { font-weight:700; font-size:1.02rem; line-height:1.5; margin:.2rem 0; }
+.csign .callout .corollary { color:var(--text-light); font-size:.9rem; margin:.6rem 0 0; }
+.csign table td, .csign table th { font-size:.86rem; vertical-align:top; }
+.csign .pill { display:inline-block; border-radius:999px; padding:0 .55rem; font-size:.7rem; font-weight:700; }
+.csign .pill.red { color:var(--neg); border:1px solid var(--neg); }
+.csign .pill.green { color:var(--pos); border:1px solid var(--pos); }
+.csign .pill.blue { color:var(--link); border:1px solid var(--link); }
+.csign .gloss dt { font-weight:700; color:var(--accent); margin-top:.9rem; }
+.csign .gloss dd { margin:.15rem 0 0; font-size:.9rem; }
+.csign details.faq { border:1px solid var(--border); border-radius:var(--standard-border-radius); margin-bottom:.5rem; padding:.2rem .6rem; }
+.csign details.faq summary { cursor:pointer; font-weight:700; padding:.4rem 0; }
+.csign details.faq p { font-size:.92rem; margin:.4rem 0; }
+@media (max-width:600px) { .csign .toc-grid { grid-template-columns:1fr; } }
+&lt;&#x2F;style&gt;
+&lt;div class=&quot;csign&quot;&gt;
+&lt;nav aria-label=&quot;Contents&quot;&gt;
+&lt;h2 id=&quot;contents&quot;&gt;Contents&lt;&#x2F;h2&gt;
+&lt;ol class=&quot;toc-grid&quot;&gt;
+&lt;li&gt;&lt;a href=&quot;#part1&quot;&gt;The cast of five&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part2&quot;&gt;Certificates: who you are&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part3&quot;&gt;App IDs &amp;amp; entitlements: what the app is&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part4&quot;&gt;The provisioning profile: the knot&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part5&quot;&gt;Four profile types, two flags&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part6&quot;&gt;Channels: how a build reaches a human&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part7&quot;&gt;fastlane match: signing for teams&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part8&quot;&gt;Where the profile must physically be&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part9&quot;&gt;Case study: the ShowCase failure&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part10&quot;&gt;Diagnostic reference&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part11&quot;&gt;FAQ&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;#part12&quot;&gt;Glossary&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;&#x2F;nav&gt;
+&lt;h2 id=&quot;part1&quot;&gt;Part 1 — The cast of five&lt;&#x2F;h2&gt;
+&lt;p&gt;Apple code signing answers one question at install&#x2F;launch time: &lt;em&gt;&quot;Is this exact app allowed to run on this device, and who vouches for it?&quot;&lt;&#x2F;em&gt; Everything else is bookkeeping that supports that check. There are exactly five primitives. Learn what each one &lt;strong&gt;binds&lt;&#x2F;strong&gt; and the rest follows.&lt;&#x2F;p&gt;
+&lt;div class=&quot;cards&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;1. Team &#x2F; Account&lt;&#x2F;h4&gt;
+&lt;p&gt;Your Apple Developer Program membership, identified by a &lt;strong&gt;Team ID&lt;&#x2F;strong&gt; (e.g. &lt;code&gt;ABCDE12345&lt;&#x2F;code&gt;). Everything below is scoped to one team. Two apps in the same team share certificates; two apps in different accounts share nothing.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;2. Certificate&lt;&#x2F;h4&gt;
+&lt;p&gt;Proves &lt;em&gt;who built the app&lt;&#x2F;em&gt;. A public&#x2F;private key pair where Apple signs your public key. &lt;span class=&quot;dim&quot;&gt;Team-scoped, not app-scoped.&lt;&#x2F;span&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;3. App ID&lt;&#x2F;h4&gt;
+&lt;p&gt;The app&#x27;s identity — its &lt;strong&gt;bundle id&lt;&#x2F;strong&gt; (&lt;code&gt;com.example.designkit.ShowCase&lt;&#x2F;code&gt;) plus the capabilities it&#x27;s allowed to use.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;4. Device&lt;&#x2F;h4&gt;
+&lt;p&gt;A specific iPhone&#x2F;iPad registered by &lt;strong&gt;UDID&lt;&#x2F;strong&gt;. Only matters for two of the four profile types. Capped at 100 per device class per year.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;5. Provisioning profile&lt;&#x2F;h4&gt;
+&lt;p&gt;The document that &lt;strong&gt;ties the other four together&lt;&#x2F;strong&gt; and is signed by Apple. This is the piece everyone finds confusing, because it&#x27;s the knot — so we build up to it.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;The mental model: a certificate says &lt;em&gt;who&lt;&#x2F;em&gt;, an App ID says &lt;em&gt;what&lt;&#x2F;em&gt;, devices say &lt;em&gt;where&lt;&#x2F;em&gt;, and a provisioning profile is Apple&#x27;s signed statement that this &lt;em&gt;who + what + where&lt;&#x2F;em&gt; combination is permitted.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part2&quot;&gt;Part 2 — Certificates: who you are&lt;&#x2F;h2&gt;
+&lt;p&gt;A signing certificate is a &lt;strong&gt;public&#x2F;private key pair&lt;&#x2F;strong&gt;. You generate the pair locally; the private key never leaves your Keychain. You send a Certificate Signing Request (the public half) to Apple, and Apple hands back a certificate — essentially your public key with Apple&#x27;s signature on it, saying &quot;this key belongs to this team.&quot;&lt;&#x2F;p&gt;
+&lt;p&gt;When you &lt;em&gt;sign&lt;&#x2F;em&gt; an app, &lt;code&gt;codesign&lt;&#x2F;code&gt; uses the &lt;strong&gt;private key&lt;&#x2F;strong&gt; to produce a signature over the app bundle. When iOS verifies the app, it checks that signature against the &lt;strong&gt;certificate&lt;&#x2F;strong&gt; embedded (by reference) in the provisioning profile. No private key → you cannot sign. No matching certificate in the profile → the device rejects the signature.&lt;&#x2F;p&gt;
+&lt;p&gt;Two kinds matter:&lt;&#x2F;p&gt;
+&lt;table&gt;
+&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Certificate&lt;&#x2F;th&gt;&lt;th&gt;Purpose&lt;&#x2F;th&gt;&lt;th&gt;Scope&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;Apple Development&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td&gt;Sign debug builds you run from Xcode on your own registered devices.&lt;&#x2F;td&gt;&lt;td&gt;Per-developer (each dev usually has their own).&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;Apple Distribution&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td&gt;Sign everything you ship: Ad-Hoc, TestFlight, App Store.&lt;&#x2F;td&gt;&lt;td&gt;&lt;strong&gt;One per team, shared.&lt;&#x2F;strong&gt; The same distribution cert signs every app in the team.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;
+&lt;&#x2F;table&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;Certificates are team-scoped, never app-scoped.&lt;&#x2F;p&gt;
+&lt;p class=&quot;corollary&quot;&gt;This is why, in our session, the existing Apple Distribution certificate could sign a brand-new app (&lt;code&gt;com.example.designkit.ShowCase&lt;&#x2F;code&gt;) without anything new — as long as the app lived in the same team. A new bundle id does &lt;em&gt;not&lt;&#x2F;em&gt; require a new certificate. (It &lt;em&gt;does&lt;&#x2F;em&gt; require a new profile — see Part 4.)&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;Practical gotcha: Apple limits the number of distribution certificates per account (historically ~2–3). If every engineer and every CI machine generated their own, you&#x27;d exhaust the limit and break each other&#x27;s signing. That problem is exactly what &lt;a href=&quot;#part7&quot;&gt;fastlane match&lt;&#x2F;a&gt; exists to solve.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part3&quot;&gt;Part 3 — App IDs &amp;amp; entitlements: what the app is&lt;&#x2F;h2&gt;
+&lt;p&gt;An &lt;strong&gt;App ID&lt;&#x2F;strong&gt; registers a bundle id with Apple and records which &lt;strong&gt;capabilities&lt;&#x2F;strong&gt; it may use (Push Notifications, Associated Domains, Keychain Sharing, App Groups, …). Two forms:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Explicit&lt;&#x2F;strong&gt;: &lt;code&gt;com.example.designkit.ShowCase&lt;&#x2F;code&gt; — matches exactly one app. Required for capabilities like Push.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Wildcard&lt;&#x2F;strong&gt;: &lt;code&gt;com.example.*&lt;&#x2F;code&gt; — matches a family of apps, but can&#x27;t carry most capabilities.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;&lt;strong&gt;Entitlements&lt;&#x2F;strong&gt; are the runtime permissions your app actually requests (in an &lt;code&gt;.entitlements&lt;&#x2F;code&gt; file). The rule the OS enforces: the entitlements baked into your signed app must be a &lt;em&gt;subset&lt;&#x2F;em&gt; of what the App ID enables and what the provisioning profile grants. Ask for an entitlement the profile doesn&#x27;t carry → install fails. This is a common source of &quot;it ran in debug but the release build won&#x27;t install.&quot;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part4&quot;&gt;Part 4 — The provisioning profile: the knot&lt;&#x2F;h2&gt;
+&lt;p&gt;A provisioning profile is a single file (&lt;code&gt;.mobileprovision&lt;&#x2F;code&gt;) that is a &lt;strong&gt;CMS-signed property list&lt;&#x2F;strong&gt;. &quot;Signed&quot; means Apple has cryptographically endorsed its contents — you can&#x27;t edit it. Inside, it bundles:&lt;&#x2F;p&gt;
+&lt;div class=&quot;diagram&quot;&gt;
+&lt;div class=&quot;dgrid&quot;&gt;
+&lt;div class=&quot;dbox big&quot;&gt;&lt;div class=&quot;dtitle&quot;&gt;embedded.mobileprovision — what&#x27;s inside&lt;&#x2F;div&gt;
+One or more &lt;strong&gt;certificates&lt;&#x2F;strong&gt; (the allowed signers) · exactly one &lt;strong&gt;App ID&lt;&#x2F;strong&gt; (bundle id + entitlements) · a &lt;strong&gt;device list&lt;&#x2F;strong&gt; (for some types) · the &lt;strong&gt;Team ID&lt;&#x2F;strong&gt; · an &lt;strong&gt;expiry date&lt;&#x2F;strong&gt; · a &lt;strong&gt;UUID&lt;&#x2F;strong&gt; and a human &lt;strong&gt;Name&lt;&#x2F;strong&gt;.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow-down&quot;&gt;↓ at build time&lt;&#x2F;div&gt;
+&lt;div class=&quot;dgrid&quot;&gt;
+&lt;div class=&quot;dbox&quot;&gt;codesign signs the &lt;code&gt;.app&lt;&#x2F;code&gt; with your &lt;strong&gt;private key&lt;&#x2F;strong&gt;, and copies the profile into the bundle as &lt;code&gt;embedded.mobileprovision&lt;&#x2F;code&gt;.&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;arrow-down&quot;&gt;↓ at install &#x2F; launch&lt;&#x2F;div&gt;
+&lt;div class=&quot;dgrid&quot;&gt;
+&lt;div class=&quot;dbox&quot;&gt;iOS checks: signature matches a cert in the profile? bundle id matches the App ID? device in the list (or channel allows all)? entitlements ⊆ profile? profile not expired? &lt;strong&gt;All must pass.&lt;&#x2F;strong&gt;&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;The profile is the contract the device evaluates. It is the only one of the five primitives that travels &lt;em&gt;inside&lt;&#x2F;em&gt; the shipped app.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;Two consequences that trip everyone up:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Profiles are bundle-id-scoped.&lt;&#x2F;strong&gt; A profile for &lt;code&gt;com.example.OtherApp&lt;&#x2F;code&gt; can never sign &lt;code&gt;com.example.designkit.ShowCase&lt;&#x2F;code&gt;, even in the same team with the same certificate. A new app always needs a new profile.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Profiles expire&lt;&#x2F;strong&gt; (typically one year). The cert can be valid while the profile is stale, or vice-versa. &quot;It built last quarter&quot; is not evidence it builds today.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;part5&quot;&gt;Part 5 — Four profile types, two flags&lt;&#x2F;h2&gt;
+&lt;p&gt;There are four profile types, and you can tell them apart by just &lt;strong&gt;two fields&lt;&#x2F;strong&gt; inside the decoded plist: &lt;code&gt;get-task-allow&lt;&#x2F;code&gt; (is the app debuggable?) and &lt;code&gt;ProvisionedDevices&lt;&#x2F;code&gt; (is there a UDID allowlist?).&lt;&#x2F;p&gt;
+&lt;table&gt;
+&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Type&lt;&#x2F;th&gt;&lt;th&gt;&lt;code&gt;get-task-allow&lt;&#x2F;code&gt;&lt;&#x2F;th&gt;&lt;th&gt;&lt;code&gt;ProvisionedDevices&lt;&#x2F;code&gt;&lt;&#x2F;th&gt;&lt;th&gt;Signed with&lt;&#x2F;th&gt;&lt;th&gt;Used for&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;Development&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td class=&quot;ok&quot;&gt;true&lt;&#x2F;td&gt;&lt;td&gt;yes (your devices)&lt;&#x2F;td&gt;&lt;td&gt;Apple Development&lt;&#x2F;td&gt;&lt;td&gt;Xcode run&#x2F;debug&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;Ad-Hoc&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td&gt;false&lt;&#x2F;td&gt;&lt;td&gt;&lt;strong&gt;yes&lt;&#x2F;strong&gt; (allowlist)&lt;&#x2F;td&gt;&lt;td&gt;Apple Distribution&lt;&#x2F;td&gt;&lt;td&gt;OTA install to listed devices&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;App Store&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td&gt;false&lt;&#x2F;td&gt;&lt;td&gt;&lt;strong&gt;none&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td&gt;Apple Distribution&lt;&#x2F;td&gt;&lt;td&gt;TestFlight &amp;amp; App Store&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;Enterprise&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td&gt;false&lt;&#x2F;td&gt;&lt;td&gt;none, but &lt;code&gt;ProvisionsAllDevices=true&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;In-House Distribution&lt;&#x2F;td&gt;&lt;td&gt;Internal distribution (Apple Enterprise Program only)&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;
+&lt;&#x2F;table&gt;
+&lt;p&gt;The single most useful distinction in practice:&lt;&#x2F;p&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;Ad-Hoc and App Store profiles are &lt;em&gt;both&lt;&#x2F;em&gt; signed with the same distribution certificate and &lt;em&gt;both&lt;&#x2F;em&gt; have &lt;code&gt;get-task-allow=false&lt;&#x2F;code&gt;. They differ in one thing: &lt;strong&gt;Ad-Hoc has a device allowlist, App Store does not.&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p class=&quot;corollary&quot;&gt;That one difference decides everything downstream. A device list means &quot;only these phones.&quot; No device list means &quot;this goes through Apple&#x27;s store infrastructure (TestFlight&#x2F;App Store), which controls distribution instead.&quot; You cannot mix them: an Ad-Hoc profile cannot be uploaded to TestFlight, and an App Store profile cannot sideload onto a random device.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part6&quot;&gt;Part 6 — Channels: how a build reaches a human&lt;&#x2F;h2&gt;
+&lt;p&gt;&quot;How do I get the app onto someone&#x27;s phone?&quot; has four answers, and each is locked to a profile type. Choosing the channel &lt;em&gt;is&lt;&#x2F;em&gt; choosing the profile.&lt;&#x2F;p&gt;
+&lt;div class=&quot;cards&quot;&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;&lt;span class=&quot;pill blue&quot;&gt;Development&lt;&#x2F;span&gt;&lt;&#x2F;h4&gt;
+&lt;p&gt;Xcode → your own registered device, with the debugger attached. Devices must be in the profile. For engineers, not testers.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;&lt;span class=&quot;pill red&quot;&gt;Ad-Hoc&lt;&#x2F;span&gt;&lt;&#x2F;h4&gt;
+&lt;p&gt;Build an &lt;code&gt;.ipa&lt;&#x2F;code&gt;, host it on an OTA install page (Bitrise public install page, Firebase App Distribution, Diawi…). &lt;strong&gt;Every tester&#x27;s UDID must be registered&lt;&#x2F;strong&gt; and the profile regenerated. Hard cap ~100 devices&#x2F;year&#x2F;class.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;&lt;span class=&quot;pill green&quot;&gt;TestFlight&lt;&#x2F;span&gt;&lt;&#x2F;h4&gt;
+&lt;p&gt;Upload an App-Store-signed build to App Store Connect. Testers join by &lt;strong&gt;email &#x2F; group — no UDID&lt;&#x2F;strong&gt;. Up to 100 internal + 10,000 external testers (external needs a light review).&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;card&quot;&gt;
+&lt;h4&gt;&lt;span class=&quot;pill green&quot;&gt;App Store&lt;&#x2F;span&gt;&lt;&#x2F;h4&gt;
+&lt;p&gt;Same App Store profile, but submitted for full App Review and released publicly.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;If the destination is TestFlight, the profile must be App Store. Full stop.&lt;&#x2F;p&gt;
+&lt;p class=&quot;corollary&quot;&gt;This is the crux of the whole session. The goal was &quot;designers install the ShowCase app via TestFlight.&quot; TestFlight only accepts App-Store-signed builds, so Ad-Hoc was never an option — even though Ad-Hoc &lt;em&gt;feels&lt;&#x2F;em&gt; simpler. The payoff for App Store signing is huge for this use case: &lt;strong&gt;zero UDID management&lt;&#x2F;strong&gt;. Designers come and go; nobody wants to register and re-register phones.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part7&quot;&gt;Part 7 — fastlane match: signing for teams&lt;&#x2F;h2&gt;
+&lt;p&gt;Everything above works for one developer on one Mac. It falls apart for a team + CI, for two reasons: (1) Apple limits distribution certificates, so you can&#x27;t let everyone generate their own; (2) certificates depend on a &lt;em&gt;private key&lt;&#x2F;em&gt; that lives in one Keychain — a CI machine that didn&#x27;t generate the key can&#x27;t sign at all.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;docs.fastlane.tools&#x2F;actions&#x2F;match&#x2F;&quot;&gt;fastlane &lt;strong&gt;match&lt;&#x2F;strong&gt;&lt;&#x2F;a&gt; solves this with one idea: &lt;strong&gt;store the shared distribution certificate (including its private key) and all the provisioning profiles in a private, encrypted git repository.&lt;&#x2F;strong&gt; Every machine — laptops and CI — runs &lt;code&gt;match&lt;&#x2F;code&gt; to &lt;em&gt;download and install&lt;&#x2F;em&gt; the same identity instead of creating new ones.&lt;&#x2F;p&gt;
+&lt;div class=&quot;diagram&quot;&gt;
+&lt;div class=&quot;dgrid&quot;&gt;
+&lt;div class=&quot;dbox&quot;&gt;Private repo &lt;code&gt;ios-match&lt;&#x2F;code&gt;&lt;br&gt;&lt;span class=&quot;dim&quot;&gt;encrypted .p12 (cert+key) + .mobileprovision files&lt;&#x2F;span&gt;&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox&quot;&gt;→ &lt;code&gt;fastlane match&lt;&#x2F;code&gt; on any machine →&lt;&#x2F;div&gt;
+&lt;div class=&quot;dbox&quot;&gt;Keychain gets the cert+key&lt;br&gt;profiles land in &lt;code&gt;~&#x2F;Library&#x2F;MobileDevice&#x2F;Provisioning&amp;nbsp;Profiles&#x2F;&lt;&#x2F;code&gt;&lt;&#x2F;div&gt;
+&lt;&#x2F;div&gt;
+&lt;p class=&quot;dcaption&quot;&gt;One source of truth, encrypted with a passphrase. New CI box? Run match, you&#x27;re signing in seconds.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;match also imposes a &lt;strong&gt;naming convention&lt;&#x2F;strong&gt; on the profiles it creates: &lt;code&gt;match {Type} {bundleid}&lt;&#x2F;code&gt; — e.g. &lt;code&gt;match AppStore com.example.designkit.ShowCase&lt;&#x2F;code&gt;. That exact string becomes the profile&#x27;s &lt;em&gt;Name&lt;&#x2F;em&gt;, which matters in the next part. A subtle trap we hit: the &lt;code&gt;app_identifier&lt;&#x2F;code&gt; list in the &lt;code&gt;Matchfile&lt;&#x2F;code&gt; is only a &lt;em&gt;default&lt;&#x2F;em&gt;; if your Fastfile lanes call &lt;code&gt;match(app_identifier: [...])&lt;&#x2F;code&gt; with an explicit list, that list wins and the Matchfile is ignored. Adding a new bundle id means editing the lane, not just the Matchfile.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;part8&quot;&gt;Part 8 — Where the profile must physically be&lt;&#x2F;h2&gt;
+&lt;p&gt;Creating a profile in the portal (or in the match repo) is not enough. The signing tool has to &lt;em&gt;find&lt;&#x2F;em&gt; it on the machine doing the build. There is one canonical location:&lt;&#x2F;p&gt;
+&lt;pre&gt;~&#x2F;Library&#x2F;MobileDevice&#x2F;Provisioning Profiles&#x2F;*.mobileprovision&lt;&#x2F;pre&gt;
+&lt;p&gt;How it gets there, and how a build refers to it, depends on the toolchain:&lt;&#x2F;p&gt;
+&lt;table&gt;
+&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Toolchain&lt;&#x2F;th&gt;&lt;th&gt;How it finds the profile&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;Xcode (automatic)&lt;&#x2F;td&gt;&lt;td&gt;Manages and installs profiles for you, matching by bundle id + capabilities.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;fastlane match&lt;&#x2F;td&gt;&lt;td&gt;Downloads from the encrypted repo into the folder above.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;Bitrise CI&lt;&#x2F;td&gt;&lt;td&gt;The &lt;code&gt;certificate-and-profile-installer&lt;&#x2F;code&gt; step installs whatever profiles&#x2F;certs are uploaded to the Bitrise app&#x27;s &quot;Code Signing &amp;amp; Files&quot; store into that folder.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;Bazel (rules_apple &lt;code&gt;local_provisioning_profile&lt;&#x2F;code&gt;)&lt;&#x2F;td&gt;&lt;td&gt;Searches the folder above &lt;strong&gt;by the profile&#x27;s Name field&lt;&#x2F;strong&gt; — not by bundle id, not by file path.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;
+&lt;&#x2F;table&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;Bazel resolves the profile by &lt;em&gt;name&lt;&#x2F;em&gt;, so the name in your BUILD config must equal the &lt;em&gt;Name&lt;&#x2F;em&gt; field inside the actual installed profile.&lt;&#x2F;p&gt;
+&lt;p class=&quot;corollary&quot;&gt;Our build config asked for &lt;code&gt;match AppStore com.example.designkit.ShowCase&lt;&#x2F;code&gt; (the match convention). A hand-made portal profile named &lt;code&gt;showcase-adhoc-testflight&lt;&#x2F;code&gt; would not be found even if it were the right type — the names don&#x27;t match. Either name the portal profile to match, or point the build config at the real name.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part9&quot;&gt;Part 9 — Case study: the ShowCase failure&lt;&#x2F;h2&gt;
+&lt;p&gt;Now the whole session reads cleanly. The pipeline ran a release (App Store) build of &lt;code&gt;&#x2F;&#x2F;ShowCase:ShowCaseApp&lt;&#x2F;code&gt; and died:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;span class=&quot;err&quot;&gt;error: no provisioning profile was found named &#x27;match AppStore com.example.designkit.ShowCase&#x27;&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Correct and expected: the certificate (team-scoped) was reusable, but the &lt;em&gt;profile&lt;&#x2F;em&gt; (bundle-id-scoped) for this brand-new app didn&#x27;t exist anywhere yet — not in the portal, not in the match repo, not installed on the runner.&lt;&#x2F;p&gt;
+&lt;p&gt;A profile was then downloaded to unblock it. The right move before trusting any &lt;code&gt;.mobileprovision&lt;&#x2F;code&gt; is to &lt;strong&gt;decode and inspect it&lt;&#x2F;strong&gt;:&lt;&#x2F;p&gt;
+&lt;pre&gt;security cms -D -i showcase-testflight.mobileprovision &amp;gt; &#x2F;tmp&#x2F;p.plist
+plutil -extract Name        raw -o - &#x2F;tmp&#x2F;p.plist   &lt;span class=&quot;dim&quot;&gt;# showcase-adhoc-testflight&lt;&#x2F;span&gt;
+plutil -extract TeamIdentifier.0 raw -o - &#x2F;tmp&#x2F;p.plist &lt;span class=&quot;dim&quot;&gt;# ABCDE12345  ✅&lt;&#x2F;span&gt;
+plutil -extract Entitlements.get-task-allow raw -o - &#x2F;tmp&#x2F;p.plist &lt;span class=&quot;dim&quot;&gt;# false&lt;&#x2F;span&gt;
+plutil -extract ProvisionedDevices raw -o - &#x2F;tmp&#x2F;p.plist &lt;span class=&quot;dim&quot;&gt;# 69  ← devices!&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Team ✅, bundle id ✅ — but &lt;code&gt;get-task-allow=false&lt;&#x2F;code&gt; &lt;strong&gt;and&lt;&#x2F;strong&gt; a 69-device &lt;code&gt;ProvisionedDevices&lt;&#x2F;code&gt; list. Cross-reference the table in Part 5: that is an &lt;strong&gt;Ad-Hoc&lt;&#x2F;strong&gt; profile, despite the word &quot;testflight&quot; in its filename. App Store Connect would reject it. The fix wasn&#x27;t to install it — it was to go back to the portal and create the &lt;em&gt;App Store&lt;&#x2F;em&gt; distribution type (Distribution → App Store Connect, no device selection) for the same App ID.&lt;&#x2F;p&gt;
+&lt;div class=&quot;callout&quot;&gt;
+&lt;p class=&quot;rule&quot;&gt;A profile&#x27;s filename is a human label and lies freely. Its &lt;em&gt;type&lt;&#x2F;em&gt; lives in two fields you must decode to see.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;h2 id=&quot;part10&quot;&gt;Part 10 — Diagnostic reference&lt;&#x2F;h2&gt;
+&lt;p&gt;Keep these. They turn &quot;signing is magic&quot; into &quot;signing is a plist I can read.&quot;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Decode any profile to readable XML:&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;pre&gt;security cms -D -i Some.mobileprovision        &lt;span class=&quot;dim&quot;&gt;# prints the plist&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;strong&gt;Identify a profile&#x27;s type&lt;&#x2F;strong&gt; (run after piping the decode to a file, e.g. &lt;code&gt;&#x2F;tmp&#x2F;p.plist&lt;&#x2F;code&gt;):&lt;&#x2F;p&gt;
+&lt;pre&gt;plutil -extract Name              raw -o - &#x2F;tmp&#x2F;p.plist
+plutil -extract AppIDName         raw -o - &#x2F;tmp&#x2F;p.plist
+plutil -extract TeamIdentifier.0  raw -o - &#x2F;tmp&#x2F;p.plist
+plutil -extract Entitlements.application-identifier raw -o - &#x2F;tmp&#x2F;p.plist
+plutil -extract Entitlements.get-task-allow         raw -o - &#x2F;tmp&#x2F;p.plist
+plutil -extract ExpirationDate    raw -o - &#x2F;tmp&#x2F;p.plist
+plutil -extract ProvisionedDevices raw -o - &#x2F;tmp&#x2F;p.plist  &lt;span class=&quot;dim&quot;&gt;# errors&#x2F;absent ⇒ App Store; a number ⇒ Ad-Hoc&#x2F;Dev&lt;&#x2F;span&gt;
+plutil -extract ProvisionsAllDevices raw -o - &#x2F;tmp&#x2F;p.plist &lt;span class=&quot;dim&quot;&gt;# true ⇒ Enterprise&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;strong&gt;List what&#x27;s installed on this machine:&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;pre&gt;ls -1 ~&#x2F;Library&#x2F;MobileDevice&#x2F;Provisioning\ Profiles&#x2F;
+&lt;span class=&quot;dim&quot;&gt;# then decode each to read its Name&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;strong&gt;Inspect signing certificates in your Keychain:&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;pre&gt;security find-identity -v -p codesigning   &lt;span class=&quot;dim&quot;&gt;# lists usable signing identities&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;strong&gt;See how an already-built app was signed:&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;pre&gt;codesign -dvvv --entitlements :- &#x2F;path&#x2F;to&#x2F;Your.app&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;part11&quot;&gt;FAQ&lt;&#x2F;h2&gt;
+&lt;details class=&quot;faq&quot;&gt;&lt;summary&gt;I added a new app to the same team. Do I need a new certificate?&lt;&#x2F;summary&gt;
+&lt;p&gt;&lt;strong&gt;No.&lt;&#x2F;strong&gt; Certificates are team-scoped. The existing Apple Distribution certificate signs any app in the team. You &lt;em&gt;do&lt;&#x2F;em&gt; need a new App ID and a new provisioning profile, because both are bundle-id-scoped.&lt;&#x2F;p&gt;&lt;&#x2F;details&gt;
+&lt;details class=&quot;faq&quot;&gt;&lt;summary&gt;Why can&#x27;t I just use my Ad-Hoc profile for TestFlight? It&#x27;s distribution-signed.&lt;&#x2F;summary&gt;
+&lt;p&gt;TestFlight distribution is handled by Apple&#x27;s store infrastructure, which requires an App Store profile (no device list). An Ad-Hoc profile carries a UDID allowlist and is meant for direct OTA installs; App Store Connect rejects it on upload.&lt;&#x2F;p&gt;&lt;&#x2F;details&gt;
+&lt;details class=&quot;faq&quot;&gt;&lt;summary&gt;The build says it can&#x27;t find a profile, but I can see it in the Apple portal.&lt;&#x2F;summary&gt;
+&lt;p&gt;Existing in the portal ≠ installed on the build machine. It must be downloaded into &lt;code&gt;~&#x2F;Library&#x2F;MobileDevice&#x2F;Provisioning Profiles&#x2F;&lt;&#x2F;code&gt; (via Xcode, fastlane match, or a CI installer step). And if you build with Bazel, the profile&#x27;s &lt;em&gt;Name&lt;&#x2F;em&gt; must match what your BUILD config asks for.&lt;&#x2F;p&gt;&lt;&#x2F;details&gt;
+&lt;details class=&quot;faq&quot;&gt;&lt;summary&gt;Development vs Ad-Hoc — both have my devices. What&#x27;s the difference?&lt;&#x2F;summary&gt;
+&lt;p&gt;&lt;code&gt;get-task-allow&lt;&#x2F;code&gt;. Development profiles set it &lt;code&gt;true&lt;&#x2F;code&gt; (the app is debuggable and signed with a &lt;em&gt;development&lt;&#x2F;em&gt; cert); Ad-Hoc sets it &lt;code&gt;false&lt;&#x2F;code&gt; (release behaviour, signed with the &lt;em&gt;distribution&lt;&#x2F;em&gt; cert). Same device list, different runtime posture and certificate.&lt;&#x2F;p&gt;&lt;&#x2F;details&gt;
+&lt;details class=&quot;faq&quot;&gt;&lt;summary&gt;How long do these last?&lt;&#x2F;summary&gt;
+&lt;p&gt;Provisioning profiles typically expire after one year; certificates similarly. They expire independently, so always check &lt;code&gt;ExpirationDate&lt;&#x2F;code&gt; rather than assuming &quot;it worked before.&quot;&lt;&#x2F;p&gt;&lt;&#x2F;details&gt;
+&lt;h2 id=&quot;part12&quot;&gt;Glossary&lt;&#x2F;h2&gt;
+&lt;dl class=&quot;gloss&quot;&gt;
+&lt;dt&gt;Team ID&lt;&#x2F;dt&gt;&lt;dd&gt;Identifier for your Apple Developer account (e.g. &lt;code&gt;ABCDE12345&lt;&#x2F;code&gt;). The scope for certificates.&lt;&#x2F;dd&gt;
+&lt;dt&gt;Certificate&lt;&#x2F;dt&gt;&lt;dd&gt;A public&#x2F;private key pair endorsed by Apple, proving who signed an app. Development (per-dev) or Distribution (team-shared).&lt;&#x2F;dd&gt;
+&lt;dt&gt;Private key&lt;&#x2F;dt&gt;&lt;dd&gt;The secret half of a certificate, kept in the Keychain. Without it you cannot sign — which is why CI needs it shared (see match).&lt;&#x2F;dd&gt;
+&lt;dt&gt;App ID&lt;&#x2F;dt&gt;&lt;dd&gt;A registered bundle id plus its allowed capabilities. Explicit or wildcard.&lt;&#x2F;dd&gt;
+&lt;dt&gt;Bundle id&lt;&#x2F;dt&gt;&lt;dd&gt;The app&#x27;s unique reverse-DNS identifier, e.g. &lt;code&gt;com.example.designkit.ShowCase&lt;&#x2F;code&gt;.&lt;&#x2F;dd&gt;
+&lt;dt&gt;Entitlements&lt;&#x2F;dt&gt;&lt;dd&gt;Runtime permissions the app requests; must be a subset of what the App ID and profile grant.&lt;&#x2F;dd&gt;
+&lt;dt&gt;UDID&lt;&#x2F;dt&gt;&lt;dd&gt;Unique identifier of a physical device. Listed in Development and Ad-Hoc profiles.&lt;&#x2F;dd&gt;
+&lt;dt&gt;Provisioning profile&lt;&#x2F;dt&gt;&lt;dd&gt;Apple-signed file binding certificate(s) + App ID + (maybe) devices + entitlements + team. Embedded in the shipped app as &lt;code&gt;embedded.mobileprovision&lt;&#x2F;code&gt;.&lt;&#x2F;dd&gt;
+&lt;dt&gt;get-task-allow&lt;&#x2F;dt&gt;&lt;dd&gt;Entitlement flag; &lt;code&gt;true&lt;&#x2F;code&gt; = debuggable (Development), &lt;code&gt;false&lt;&#x2F;code&gt; = release (Ad-Hoc &#x2F; App Store).&lt;&#x2F;dd&gt;
+&lt;dt&gt;ProvisionedDevices&lt;&#x2F;dt&gt;&lt;dd&gt;The UDID allowlist inside a profile. Present ⇒ Development or Ad-Hoc. Absent ⇒ App Store.&lt;&#x2F;dd&gt;
+&lt;dt&gt;Ad-Hoc&lt;&#x2F;dt&gt;&lt;dd&gt;Distribution profile with a device allowlist; for direct OTA installs, not TestFlight.&lt;&#x2F;dd&gt;
+&lt;dt&gt;App Store profile&lt;&#x2F;dt&gt;&lt;dd&gt;Distribution profile with no device list; required for TestFlight and the App Store.&lt;&#x2F;dd&gt;
+&lt;dt&gt;TestFlight&lt;&#x2F;dt&gt;&lt;dd&gt;Apple&#x27;s beta distribution service. Accepts App-Store-signed builds; testers join by email, no UDID.&lt;&#x2F;dd&gt;
+&lt;dt&gt;fastlane match&lt;&#x2F;dt&gt;&lt;dd&gt;Stores the shared certificate and profiles in an encrypted git repo so all machines install the same signing identity. Names profiles &lt;code&gt;match {Type} {bundleid}&lt;&#x2F;code&gt;.&lt;&#x2F;dd&gt;
+&lt;dt&gt;codesign&lt;&#x2F;dt&gt;&lt;dd&gt;The macOS tool that signs an app bundle with your private key and embeds the profile.&lt;&#x2F;dd&gt;
+&lt;dt&gt;local_provisioning_profile&lt;&#x2F;dt&gt;&lt;dd&gt;The rules_apple Bazel rule that finds an installed profile by its Name field.&lt;&#x2F;dd&gt;
+&lt;&#x2F;dl&gt;
+&lt;&#x2F;div&gt;
+</content>
+        
+    </entry>
+</feed>

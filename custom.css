@@ -1,0 +1,51 @@
+/* ── Black palette ──────────────────────────────────────────────────────────
+ * Duckquill derives the page background from the accent color
+ * (--bg-color: color-mix(accent 10%, black)). With a cool blue-grey accent that
+ * is already nearly neutral, but we pin it to a pure neutral near-black here so
+ * there is zero color tint. Links/buttons keep the subtle accent and stay
+ * readable. */
+[data-theme="dark"] {
+	--bg-color: #0d0d0f;
+	--bg-overlay: linear-gradient(rgb(0 0 0 / 0.9), rgb(0 0 0 / 0.9));
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		--bg-color: #0d0d0f;
+		--bg-overlay: linear-gradient(rgb(0 0 0 / 0.9), rgb(0 0 0 / 0.9));
+	}
+}
+
+/* ── Legacy variable shim ─────────────────────────────────────────────────────
+ * Inline <style> blocks in posts (e.g. the .xstat widgets in the AI-learnings
+ * articles) were authored against the previous theme's suCSS variable names.
+ * Duckquill uses different names, so map the old ones to Duckquill equivalents
+ * here. CSS custom properties resolve at use-site, so this single :root
+ * definition works correctly in both light and dark themes. */
+:root {
+	--bg: var(--bg-color);
+	--bg-light: var(--fg-muted-1);
+	--border: var(--fg-muted-2);
+	--text-light: var(--fg-muted-5);
+	--accent: var(--accent-color);
+	--accent-text: var(--contrast-color);
+	--link: var(--accent-color);
+	--mono-font: var(--font-monospace-code);
+	--standard-border-radius: var(--rounded-corner-small);
+}
+
+/* ── RTL / Arabic ─────────────────────────────────────────────────────────── */
+/* Code blocks always read left-to-right regardless of page language. */
+pre,
+code {
+	direction: ltr;
+	unicode-bidi: embed;
+	text-align: left;
+}
+
+/* Keep list indentation on the correct side for Arabic. */
+[dir="rtl"] ul,
+[dir="rtl"] ol {
+	padding-right: 1.5em;
+	padding-left: 0;
+}

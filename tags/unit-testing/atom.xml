@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>Mostafa - unit-testing</title>
+    <subtitle>Thoughts, learnings, and experiences from a computer engineer chasing the fundamentals.</subtitle>
+    <link rel="self" type="application/atom+xml" href="https://imostfa.github.io/Blog/tags/unit-testing/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2020-11-02T00:00:00+00:00</updated>
+    <id>https://imostfa.github.io/Blog/tags/unit-testing/atom.xml</id>
+    <entry xml:lang="en">
+        <title>What is Unit Testing?</title>
+        <published>2020-11-02T00:00:00+00:00</published>
+        <updated>2020-11-02T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            
+              Mostafa
+            
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://imostfa.github.io/Blog/blog/unit-testing-intro/"/>
+        <id>https://imostfa.github.io/Blog/blog/unit-testing-intro/</id>
+        
+        <content type="html" xml:base="https://imostfa.github.io/Blog/blog/unit-testing-intro/">&lt;h1 id=&quot;what-is-unit-testing&quot;&gt;What is Unit Testing?&lt;&#x2F;h1&gt;
+&lt;p&gt;In this post we’ll talk about what unit testing is as a general concept, with some simplified code examples.&lt;&#x2F;p&gt;
+&lt;p&gt;If we had to define unit testing in one sentence, we could say: it’s writing code that verifies the functions you wrote always work the way you intend, and always fulfill their purpose.&lt;&#x2F;p&gt;
+&lt;p&gt;Why bother? There are many reasons, but here are a few:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Sometimes we write code, come back to it after a long time not remembering what it does, modify it, and the app seems to work fine - but we didn’t notice we broke something else.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;ol&gt;
+&lt;li&gt;Sometimes we have a bug, fix it by changing some old working code, and the bug gets fixed - but we didn’t realize we broke something else in the process.&lt;&#x2F;li&gt;
+&lt;li&gt;When a team is working together, one person might write working code, then a teammate edits it mid-task and doesn’t realize they changed something fundamental.&lt;&#x2F;li&gt;
+&lt;li&gt;You can catch bugs before your QA tester or the client does.&lt;&#x2F;li&gt;
+&lt;li&gt;It reduces unnecessary code in your functions and encourages writing cleaner, better code - this is especially true with practices like TDD.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;Now that we have a basic definition and some reasons to write unit tests, let’s look at an example. And let’s never forget our goal:&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;the-goal-any-function-we-write-should-always-work-as-we-intend-and-always-fulfill-its-purpose&quot;&gt;The goal: any function we write should always work as we intend and always fulfill its purpose&lt;&#x2F;h2&gt;
+&lt;p&gt;What does that mean? Imagine we have this function:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; insertDot&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;to&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; sentance&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;String&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; -&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; String&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;if the last character in sentance is &amp;quot;.&amp;quot; will return the sentance without any modification&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    guard&lt;&#x2F;span&gt;&lt;span&gt; sentance.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;last&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; !=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; else&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; return&lt;&#x2F;span&gt;&lt;span&gt; sentance }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;return the senance with a dot added at the end&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    return&lt;&#x2F;span&gt;&lt;span&gt; sentance &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;+&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h3 id=&quot;this-function-s-purpose-is-to-add-a-period-at-the-end-of-a-sentence&quot;&gt;This function’s purpose is to add a period at the end of a sentence&lt;&#x2F;h3&gt;
+&lt;p&gt;How does it fulfill that purpose? Through two behaviors:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;If the sentence already ends with a period, don’t add another one.&lt;&#x2F;li&gt;
+&lt;li&gt;If the sentence doesn’t end with a period, add one.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;What we want to do is protect those two behaviors - in other words, write code that verifies this function always achieves both goals. That code is called a “test”, or more precisely a “unit test”. We’ll need to write 2 unit tests, one for each goal.&lt;&#x2F;p&gt;
+&lt;p&gt;Here’s the code we need to verify both goals - without worrying about where exactly this code lives in the project, just focusing on the concept:&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;The unit test for the first goal:&lt;&#x2F;p&gt;
+&lt;p&gt;The goal of this test: when the function receives &lt;code&gt;&quot;Mostfa.&quot;&lt;&#x2F;code&gt;, the output should be &lt;code&gt;&quot;Mostfa.&quot;&lt;&#x2F;code&gt; - unchanged.&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; test_NoDublicate_dots&lt;&#x2F;span&gt;&lt;span&gt;() {&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;1&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;        let&lt;&#x2F;span&gt;&lt;span&gt; output &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; insertDot&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;to&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Mostfa.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;2&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;           XCTAssertEqual&lt;&#x2F;span&gt;&lt;span&gt;(output, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Mostfa.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;No dot&amp;#39;s should be added&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt; &#x2F;&#x2F;3&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;In &lt;code&gt;&#x2F;&#x2F;1&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;p&gt;We name the function to describe what it’s testing. The name here says we don’t want duplicate dots in the output.&lt;&#x2F;p&gt;
+&lt;p&gt;In &lt;code&gt;&#x2F;&#x2F;2&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;p&gt;We call the function we’re testing and store the result in &lt;code&gt;output&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Notice that the sentence we’re passing already ends with a period - so the function should return it unchanged, without adding a second period.&lt;&#x2F;p&gt;
+&lt;p&gt;In &lt;code&gt;&#x2F;&#x2F;3&lt;&#x2F;code&gt;: We use &lt;code&gt;XCTAssertEqual&lt;&#x2F;code&gt;, a function from the testing framework, to declare our expectation. We’re saying: &lt;code&gt;output&lt;&#x2F;code&gt; should equal &lt;code&gt;&quot;Mostfa.&quot;&lt;&#x2F;code&gt; - that’s our goal.&lt;&#x2F;p&gt;
+&lt;p&gt;You can think of this function as doing this:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; test_NoDublicate_dots&lt;&#x2F;span&gt;&lt;span&gt;() {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;        let&lt;&#x2F;span&gt;&lt;span&gt; output &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; insertDot&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;to&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Mostfa.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;        XCTAssertEqual&lt;&#x2F;span&gt;&lt;span&gt;(output, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Mostfa.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;No dots should be added&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;        if&lt;&#x2F;span&gt;&lt;span&gt; output &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;==&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Mostfa.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;            &#x2F;&#x2F;we are happy, no errors!&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;        }&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; else&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;            assertionFailure&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;stop here!, we are not happy, that&amp;#39;s not supposed to happen&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;        }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;When you run this test, you’ll get a green checkmark ✅ because &lt;code&gt;insertDot&lt;&#x2F;code&gt; correctly doesn’t add a period to a sentence that already ends with one.&lt;&#x2F;p&gt;
+&lt;p&gt;Congrats, that’s your first test!&lt;&#x2F;p&gt;
+&lt;p&gt;Now imagine someone went and tampered with the original function like this:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; insertDot&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;to&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; sentance&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;String&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; -&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; String&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;if the last character in sentance is &amp;quot;.&amp;quot; will return it with any modification&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    guard&lt;&#x2F;span&gt;&lt;span&gt; sentance.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;last&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; !=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; else&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; return&lt;&#x2F;span&gt;&lt;span&gt; sentance }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;return the senance with a dot added at the end&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    return&lt;&#x2F;span&gt;&lt;span&gt; sentance &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;+&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;When we run our test, we’ll see a red X ❌&lt;&#x2F;p&gt;
+&lt;p&gt;Why? Because the test found that the output was &lt;code&gt;&quot;Mostfa..&quot;&lt;&#x2F;code&gt; - not what we expected, and not what the function is supposed to do.&lt;&#x2F;p&gt;
+&lt;p&gt;In practice, after every change we make to the project, we run the test functions. If everything is green, we’re good. If something is red, we know we broke something and we go find out what.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;Now let’s write the second test - which is actually more intuitive:&lt;&#x2F;p&gt;
+&lt;p&gt;Here we verify that if the sentence doesn’t already end with a period, one gets added:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; test_dot_isAdded&lt;&#x2F;span&gt;&lt;span&gt;() {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;        let&lt;&#x2F;span&gt;&lt;span&gt; output &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt; insertDot&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;to&lt;&#x2F;span&gt;&lt;span&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Essam&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #8BE9FD;&quot;&gt;        XCTAssertEqual&lt;&#x2F;span&gt;&lt;span&gt;(output, &lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;Essam.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Simple - we call the function with &lt;code&gt;&quot;Essam&quot;&lt;&#x2F;code&gt; and assert that the output is always &lt;code&gt;&quot;Essam.&quot;&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Now if someone goes and modifies the original function like this:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color: #F8F8F2; background-color: #282A36;&quot;&gt;&lt;code data-lang=&quot;swift&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt; insertDot&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: #50FA7B;&quot;&gt;to&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FFB86C;font-style: italic;&quot;&gt; sentance&lt;&#x2F;span&gt;&lt;span&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt;String&lt;&#x2F;span&gt;&lt;span&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; -&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #8BE9FD;font-style: italic;&quot;&gt; String&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;if the last character in sentance is &amp;quot;.&amp;quot; will return it with any modification&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    guard&lt;&#x2F;span&gt;&lt;span&gt; sentance.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #BD93F9;&quot;&gt;last&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; !=&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; else&lt;&#x2F;span&gt;&lt;span&gt; {&lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt; return&lt;&#x2F;span&gt;&lt;span&gt; sentance }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #6272A4;&quot;&gt;    &#x2F;&#x2F;return the senance with a dot added at the end&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;    return&lt;&#x2F;span&gt;&lt;span&gt; sentance &lt;&#x2F;span&gt;&lt;span style=&quot;color: #FF79C6;&quot;&gt;+&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: #F1FA8C;&quot;&gt;💕&lt;&#x2F;span&gt;&lt;span style=&quot;color: #E9F284;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;When we run the test, it fails - and that’s expected. It tells us the output should be &lt;code&gt;&quot;Essam.&quot;&lt;&#x2F;code&gt;, not &lt;code&gt;&quot;Essam💕&quot;&lt;&#x2F;code&gt;. So we go look at the function and figure out what changed, and fix it so the test passes again.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;That’s the end of today’s post. We covered an introduction to testing with a very simple example that shows how to think about it and what to do to write a test.&lt;&#x2F;p&gt;
+&lt;p&gt;There are things still missing - like where exactly the test code lives in a project, and how to test something more complex. We can cover all of that in a follow-up post, and eventually write tests for our API layer in a more advanced way.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>
