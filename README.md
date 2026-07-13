@@ -5,7 +5,6 @@ A bilingual (en/ar) [Zola](https://www.getzola.org/) static site using the
 fully hermetic (Bazel fetches its own Zola, Node, and Chromium).
 
 ## Setup
-
 ```sh
 # 1. Clone with the theme submodule
 git clone --recurse-submodules <repo-url>
